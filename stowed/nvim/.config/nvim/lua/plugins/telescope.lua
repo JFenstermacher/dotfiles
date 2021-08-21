@@ -6,7 +6,6 @@ telescope.setup {
   defaults = {
     file_sorter = sorters.get_fzy_sorter,
     color_devicons = true,
-
     file_previewer   = previewers.vim_buffer_cat.new,
     grep_previewer   = previewers.vim_buffer_vimgrep.new,
     qflist_previewer = previewers.vim_buffer_qflist.new,
@@ -33,12 +32,12 @@ telescope.setup {
 telescope.load_extension('fzy_native')
 
 local bind = require 'keymaps'.bind_keymaps
-
 local silent = { silent = true }
+
 bind{
   {'n', '<leader>pf', '<cmd>Telescope find_files<cr>', silent},
   {'n', '<leader>bf', '<cmd>Telescope buffers<cr>'},
-  {'n', '<leader>gf', '<cmd>Telescope git_files<cr>', silent},
-  {'n', '<leader>pg', '<cmd>Telescope live_grep<cr>', silent}
+  {'n', '<C-p>',      '<cmd>Telescope git_files<cr>',  silent},
+  {'n', '<leader>pg', '<cmd>Telescope live_grep<cr>',  silent}
 }
 

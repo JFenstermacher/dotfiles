@@ -24,7 +24,7 @@ local function safeload(name)
 end
 
 local function use(plugins)
-  packer = init()
+  local packer = init()
 
   packer.startup(function()
     for repo, plugin in pairs(plugins) do
