@@ -88,7 +88,6 @@ use{
   ['justinmk/vim-sneak'] = {},
   ['tpope/vim-vinegar'] = {},
   ['tpope/vim-surround'] = {},
-  ['tpope/vim-repeat'] = {},
 
   -- Database
   ['kristijanhusak/vim-dadbod'] = {

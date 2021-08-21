@@ -16,12 +16,12 @@ require 'compe'.setup{
     path = true,
     buffer = true,
     calc = true,
-    vsnip = true,
+    -- vsnip = true,
     nvim_lsp = true,
     nvim_lua = true,
     spell = true,
     tags = true,
-    snippets_nvim = true,
+    -- snippets_nvim = true,
     treesitter = true
   }
 }
@@ -66,7 +66,8 @@ local bind = require 'keymaps'.bind_keymaps
 local expr = { expr = true }
 
 bind{
- {'i', '<cr>', "compe#confirm({ 'keys': '<CR>', 'select': v:true })", expr},
+ {'i', '<cr>', [[compe#confirm({ 'keys': '<cr>', 'select': v:true })]], expr},
+ {'i', '<c-space>', 'compe#complete()', expr},
  {'is', '<tab>', 'v:lua.tab_complete()', expr},
  {'is', '<s-tab>', 'v:lua.s_tab_complete()', expr}
 }

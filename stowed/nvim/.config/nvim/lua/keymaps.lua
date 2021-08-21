@@ -22,7 +22,7 @@ local mappings = {
   -- <Esc> binding
 
   {'i', 'jk', '<esc>'},
-  {'i', '<c-c>', '<esc>'},
+  {'ni', '<esc>', '<c-c>'},
 
   -- Buffer bindings
 
