@@ -25,7 +25,6 @@ local function disable_plugins()
     'gzip',
     'man',
     'matchit',
-    'matchparen',
     'shada_plugin',
     'tarPlugin',
     'tar',

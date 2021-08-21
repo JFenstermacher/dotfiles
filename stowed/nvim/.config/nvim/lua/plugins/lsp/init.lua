@@ -30,15 +30,26 @@ protocol.CompletionItemKind = {
   '', -- TypeParameter
 }
 
+vim.lsp.handlers['textDocument/publishDiagnostics'] = vim.lsp.with(
+  vim.lsp.diasgnostic.on_publish_diagnostics, {
+    underline = true,
+    virtual_text = {
+      spacing = 4,
+      prefix = ''
+    }
+  }
+)
+
 local function setup_servers()
   lspinstall.setup()
 
   local servers = lspinstall.installed_servers()
   local configs = require 'plugins.lsp.langs'
+  local on_attach = require 'plugins.lsp.on_attach'
 
   local lspconfig = require 'lspconfig'
   for _, server in pairs(servers) do
-    local config = configs[server] or {}  
+    local config = configs[server] or { on_attach = on_attach }
 
     lspconfig[server].setup(config)
   end
