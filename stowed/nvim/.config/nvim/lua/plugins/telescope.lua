@@ -1,6 +1,7 @@
-local telescope = require('telescope')
-local sorters = require('telescope.sorters')
-local previewers = require('telescope.previewers')
+local telescope = require 'telescope'
+local actions = require 'telescope.actions'
+local sorters = require 'telescope.sorters'
+local previewers = require 'telescope.previewers'
 
 telescope.setup {
   defaults = {
@@ -9,6 +10,12 @@ telescope.setup {
     file_previewer   = previewers.vim_buffer_cat.new,
     grep_previewer   = previewers.vim_buffer_vimgrep.new,
     qflist_previewer = previewers.vim_buffer_qflist.new,
+
+    mappings = {
+      i = {
+        ['<C-q>'] = actions.send_to_qflist
+      }
+    }
   },
   pickers = {
     buffers = {

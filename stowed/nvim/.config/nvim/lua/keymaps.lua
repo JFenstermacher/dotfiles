@@ -34,10 +34,10 @@ local mappings = {
 
   -- Window bindings
 
-  {'nt', '<leader>wh', ":lua _G.win_move_or_split('h')<CR>", silent},
-  {'nt', '<leader>wj', ":lua _G.win_move_or_split('j')<CR>", silent},
-  {'nt', '<leader>wk', ":lua _G.win_move_or_split('k')<CR>", silent},
-  {'nt', '<leader>wl', ":lua _G.win_move_or_split('l')<CR>", silent},
+  {'nt', '<leader>wh', ":lua win_move_or_split('h')<CR>", silent},
+  {'nt', '<leader>wj', ":lua win_move_or_split('j')<CR>", silent},
+  {'nt', '<leader>wk', ":lua win_move_or_split('k')<CR>", silent},
+  {'nt', '<leader>wl', ":lua win_move_or_split('l')<CR>", silent},
   {'n', '<leader>wH', '<c-w>5<'},
   {'n', '<leader>wJ', ':resize +5<cr>'},
   {'n', '<leader>wK', ':resize -5<cr>'},
@@ -45,6 +45,16 @@ local mappings = {
   {'n', '<leader>w=', '<c-w>='},
   {'n', '<leader>wr', '<c-w>r'},
   {'n', '<leader>wo', '<c-w>o'},
+
+  -- Location list
+  {'n', '<leader>q', ':lua toggle_loclist()<cr>'},
+  {'n', '<leader>j', ':lnext<cr>'},
+  {'n', '<leader>k', ':lprev<cr>'},
+
+  -- QuickFix
+  {'n', '<c-q>', ':lua toggle_quickfix()<cr>'},
+  {'n', '<c-j>', ':cnext<cr>'},
+  {'n', '<c-k>', ':prev<cr>'},
 
   -- Terminal Keys
 

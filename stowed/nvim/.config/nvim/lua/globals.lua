@@ -16,6 +16,24 @@ _G.win_move_or_split = function(key)
   end
 end
 
+_G.toggle_quickfix = function()
+  local cmd = 'copen'
+  for _, win in pairs(fn.getwininfo()) do
+    if win.quickfix == 1 then cmd = 'cclose' end
+  end
+
+  vim.cmd(cmd)
+end
+
+_G.toggle_loclist = function()
+  local cmd = 'lopen'
+  for _, win in pairs(fn.getwininfo()) do
+    if win.loclist == 1 then cmd = 'lclose' end
+  end
+
+  vim.cmd(cmd)
+end
+
 -- Map leader to space
 vim.g.mapleader = [[ ]]
 
