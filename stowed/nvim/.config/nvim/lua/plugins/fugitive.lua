@@ -1,5 +1,4 @@
 local bind = require 'keymaps'.bind_keymaps
-
 local silent = { silent = true }
 
 bind{
