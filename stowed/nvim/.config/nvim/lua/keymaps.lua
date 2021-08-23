@@ -34,10 +34,14 @@ local mappings = {
 
   -- Window bindings
 
-  {'nt', '<leader>wh', ":lua win_move_or_split('h')<CR>", silent},
-  {'nt', '<leader>wj', ":lua win_move_or_split('j')<CR>", silent},
-  {'nt', '<leader>wk', ":lua win_move_or_split('k')<CR>", silent},
-  {'nt', '<leader>wl', ":lua win_move_or_split('l')<CR>", silent},
+  {'n', '<leader>wh', ":lua win_move_or_split('h')<CR>", silent},
+  {'n', '<leader>wj', ":lua win_move_or_split('j')<CR>", silent},
+  {'n', '<leader>wk', ":lua win_move_or_split('k')<CR>", silent},
+  {'n', '<leader>wl', ":lua win_move_or_split('l')<CR>", silent},
+  {'t', '<leader>wh', [[<c-\><c-n>:lua win_move_or_split('h')<CR>]], silent},
+  {'t', '<leader>wj', [[<c-\><c-n>:lua win_move_or_split('j')<CR>]], silent},
+  {'t', '<leader>wk', [[<c-\><c-n>:lua win_move_or_split('k')<CR>]], silent},
+  {'t', '<leader>wl', [[<c-\><c-n>:lua win_move_or_split('l')<CR>]], silent},
   {'n', '<leader>wH', '<c-w>5<'},
   {'n', '<leader>wJ', ':resize +5<cr>'},
   {'n', '<leader>wK', ':resize -5<cr>'},
