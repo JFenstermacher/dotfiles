@@ -58,6 +58,7 @@ use{
 
   -- Git
   ['tpope/vim-fugitive'] = {
+    cmd = { 'Git', 'Gdiff' },
     as = 'fugitive'
   },
 
