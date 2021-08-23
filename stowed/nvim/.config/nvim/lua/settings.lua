@@ -65,3 +65,5 @@ cmd 'highlight ColorColumn ctermbg=0 guibg=lightgrey'
 
 cmd 'syntax enable'
 cmd 'filetype plugin indent on'
+
+return M
