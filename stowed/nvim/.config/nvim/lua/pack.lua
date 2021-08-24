@@ -91,7 +91,8 @@ use{
   ['tpope/vim-surround'] = {},
 
   -- Database
-  ['kristijanhusak/vim-dadbod'] = {
+  ['kristijanhusak/vim-dadbod-ui'] = {
+    as = "dadbod",
     cmd = { 'DBUIToggle', 'DBUIAddConnection', 'DBUI', 'DBUIFindBuffer', 'DBUIRenameBuffer' },
     requires = {
       { 'tpope/vim-dadbod', opt = true },

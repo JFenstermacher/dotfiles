@@ -20,9 +20,15 @@ function M.bind_opts(opts)
   for _, opt in ipairs(opts) do M.bind_opt(unpack(opt)) end
 end
 
+function M.bind_globals(opts)
+  for key, value in pairs(opts) do
+    vim.g[key] = value
+  end
+end
+
 local opts = {
   -- Global Scoped Options
-  
+
   {'autowrite', true, global},
   {'background', 'dark', global},
   {'clipboard', 'unnamed,unnamedplus', global},
@@ -47,7 +53,7 @@ local opts = {
   {'relativenumber', true, window},
 
   -- Buffer Scoped Options
-  
+
   {'expandtab', true, buffer},
   {'shiftwidth', indent, buffer},
   {'smartindent', true, buffer},

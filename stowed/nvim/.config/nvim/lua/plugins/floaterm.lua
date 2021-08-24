@@ -1,10 +1,5 @@
+local bind_opts = require 'settings'.bind_globals
 local bind_keymaps = require 'keymaps'.bind_keymaps
-
-local function bind_opts(opts)
-  for key, value in pairs(opts) do
-    vim.g[key] = value
-  end
-end
 
 bind_opts{
   floaterm_wintype = 'split',
