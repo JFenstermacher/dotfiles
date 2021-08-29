@@ -10,14 +10,14 @@ bind_opts{
 local keymap_opts = { silent = true }
 
 bind_keymaps{
-  {'n', '<leader>tn', ':FloatermNew<cr>', keymap_opts},
-  {'t', '<leader>tn', [[<c-\><c-n>:FloatermNew<cr>]], keymap_opts},
-  {'n', '<leader>to', ':FloatermToggle<cr>', keymap_opts},
-  {'t', '<leader>to', [[<c-\><c-n>:FloatermToggle<cr>]], keymap_opts},
-  {'n', '<leader>tj', ':FloatermNext<cr>', keymap_opts},
-  {'t', '<leader>tj', [[<c-\><c-n>:FloatermNext<cr>]], keymap_opts},
-  {'n', '<leader>tk', ':FloatermPrev<cr>', keymap_opts},
-  {'t', '<leader>tk', [[<c-\><c-n>:FloatermPrev<cr>]], keymap_opts},
-  {'n', '<leader>tc', ':FloatermKill<cr>', keymap_opts},
-  {'t', '<leader>tc', [[<c-\><c-n>:FloatermKill<cr>]], keymap_opts}
+  {'n', '<F10>', ':FloatermNew<cr>', keymap_opts},
+  {'t', '<F10>', [[<c-\><c-n>:FloatermNew<cr>]], keymap_opts},
+  {'n', '<F7>', ':FloatermToggle<cr>', keymap_opts},
+  {'t', '<F7>', [[<c-\><c-n>:FloatermToggle<cr>]], keymap_opts},
+  {'n', '<F9>', ':FloatermNext<cr>', keymap_opts},
+  {'t', '<F9>', [[<c-\><c-n>:FloatermNext<cr>]], keymap_opts},
+  {'n', '<F8>', ':FloatermPrev<cr>', keymap_opts},
+  {'t', '<F8>', [[<c-\><c-n>:FloatermPrev<cr>]], keymap_opts},
+  {'n', '<F6>', ':FloatermKill<cr>', keymap_opts},
+  {'t', '<F6>', [[<c-\><c-n>:FloatermKill<cr>]], keymap_opts}
 }
