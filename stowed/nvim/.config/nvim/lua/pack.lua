@@ -95,8 +95,8 @@ use{
     as = "dadbod",
     cmd = { 'DBUIToggle', 'DBUIAddConnection', 'DBUI', 'DBUIFindBuffer', 'DBUIRenameBuffer' },
     requires = {
-      { 'tpope/vim-dadbod', opt = true },
-      { 'kristijanhusak/vim-dadbod-completion', opt = true }
+      { 'tpope/vim-dadbod' },
+      { 'kristijanhusak/vim-dadbod-completion' }
     }
   },
 
