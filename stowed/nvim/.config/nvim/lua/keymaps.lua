@@ -34,14 +34,10 @@ local mappings = {
 
   -- Window bindings
 
-  {'n', '<leader>wh', ":lua win_move_or_split('h')<CR>", silent},
-  {'n', '<leader>wj', ":lua win_move_or_split('j')<CR>", silent},
-  {'n', '<leader>wk', ":lua win_move_or_split('k')<CR>", silent},
-  {'n', '<leader>wl', ":lua win_move_or_split('l')<CR>", silent},
-  {'t', '<leader>wh', [[<c-\><c-n>:lua win_move_or_split('h')<CR>]], silent},
-  {'t', '<leader>wj', [[<c-\><c-n>:lua win_move_or_split('j')<CR>]], silent},
-  {'t', '<leader>wk', [[<c-\><c-n>:lua win_move_or_split('k')<CR>]], silent},
-  {'t', '<leader>wl', [[<c-\><c-n>:lua win_move_or_split('l')<CR>]], silent},
+  {'n', '<C-H>', ":lua win_move_or_split('h')<CR>", silent},
+  {'n', '<C-J>', ":lua win_move_or_split('j')<CR>", silent},
+  {'n', '<C-K>', ":lua win_move_or_split('k')<CR>", silent},
+  {'n', '<C-L>', ":lua win_move_or_split('l')<CR>", silent},
   {'n', '<leader>wH', '<c-w>5<'},
   {'n', '<leader>wJ', ':resize +5<cr>'},
   {'n', '<leader>wK', ':resize -5<cr>'},
@@ -51,14 +47,14 @@ local mappings = {
   {'n', '<leader>wo', '<c-w>o'},
 
   -- Location list
-  {'n', '<leader>q', ':lua toggle_loclist()<cr>'},
-  {'n', '<leader>j', ':lnext<cr>'},
-  {'n', '<leader>k', ':lprev<cr>'},
+  {'n', '<leader>tl', ':lua toggle_loclist()<cr>'},
+  {'n', ']l', ':lnext<cr>'},
+  {'n', '[l', ':lprev<cr>'},
 
   -- QuickFix
-  {'n', '<c-q>', ':lua toggle_quickfix()<cr>'},
-  {'n', '<c-j>', ':cnext<cr>'},
-  {'n', '<c-k>', ':prev<cr>'},
+  {'n', '<leader>tq', ':lua toggle_quickfix()<cr>'},
+  {'n', ']c', ':cnext<cr>'},
+  {'n', '[c', ':cprev<cr>'},
 
   -- Terminal Keys
 
