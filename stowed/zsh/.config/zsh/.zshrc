@@ -28,3 +28,8 @@ zsh_load_theme "romkatv/powerlevel10k"
 
 # Powerlevel10k customizations
 [[ ! -f $ZDOTDIR/.p10k.zsh ]] || source $ZDOTDIR/.p10k.zsh
+
+# FZF
+export FZF_DEFAULT_COMMAND='fd --type f --hidden --exclude .git'
+
+[ -f $ZDOTDIR/.fzf.zsh ] && source $ZOTDIR/.fzf.zsh

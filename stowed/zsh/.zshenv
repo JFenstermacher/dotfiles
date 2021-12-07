@@ -11,6 +11,4 @@ export SAVEHIST=10000
 export EDITOR=nvim
 export VISUAL=nvim
 
-export FZF_DEFAULT_COMMAND='fd --type f --hidden --exclude .git'
-
 export AWS_REGION=us-east-1

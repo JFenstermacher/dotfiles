@@ -1,4 +1,5 @@
 .config/zsh/themes
 .config/zsh/plugins
+.config/zsh/personal
 .config/zsh/.zshistory
 .config/zsh/.zcompdump
