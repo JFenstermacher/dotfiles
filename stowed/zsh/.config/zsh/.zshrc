@@ -1,3 +1,7 @@
+#!/bin/sh
+
+export ZDOTDIR=$HOME/.config/zsh
+
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
@@ -5,13 +9,12 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-# NVM
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
 # Useful functions
 source $ZDOTDIR/zsh-functions
+
+# Normal files to source
+zsh_add_file "zsh-exports"
+zsh_add_file "zsh-aliases"
 
 PLUGINS=(
   "zsh-users/zsh-autosuggestions"
@@ -20,9 +23,6 @@ PLUGINS=(
 
 zsh_add_plugins "${PLUGINS[@]}"
 
-# Aliases
-source $ZDOTDIR/zsh-aliases
-
 # Load favorite theme
 zsh_load_theme "romkatv/powerlevel10k"
 
@@ -30,6 +30,10 @@ zsh_load_theme "romkatv/powerlevel10k"
 [[ ! -f $ZDOTDIR/.p10k.zsh ]] || source $ZDOTDIR/.p10k.zsh
 
 # FZF
-export FZF_DEFAULT_COMMAND='fd --type f --hidden --exclude .git'
+[ -f "$ZDOTDIR/.fzf.zsh" ] && source "$ZDOTDIR/.fzf.zsh"
 
-[ -f $ZDOTDIR/.fzf.zsh ] && source $ZOTDIR/.fzf.zsh
+# NVM
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
