@@ -1,4 +1,4 @@
-local lspinstall = require 'lspinstall'
+local lsp_installer = require 'nvim-lsp-installer'
 local on_attach = require 'plugins.lsp.on_attach'
 local protocol = require 'vim.lsp.protocol'
 
@@ -41,18 +41,10 @@ vim.lsp.handlers['textDocument/publishDiagnostics'] = vim.lsp.with(
   }
 )
 
-local function setup_servers()
-  lspinstall.setup()
+lsp_installer.on_server_ready(function(server)
+  local server_opts = require 'plugins.lsp.langs'
 
-  local servers = lspinstall.installed_servers()
-  local configs = require 'plugins.lsp.langs'
+  local server_options = server_opts[server.name] or { on_attach = on_attach }
 
-  local lspconfig = require 'lspconfig'
-  for _, server in pairs(servers) do
-    local config = configs[server] or { on_attach = on_attach }
-
-    lspconfig[server].setup(config)
-  end
-end
-
-setup_servers()
+  server:setup(server_options)
+end)

@@ -65,7 +65,7 @@ use{
   -- LSP
   ['neovim/nvim-lspconfig'] = {
     as = 'lsp',
-    requires = {{'kabouzeid/nvim-lspinstall'}}
+    requires = {{'williamboman/nvim-lsp-installer'}}
   },
 
   -- Treesitter
