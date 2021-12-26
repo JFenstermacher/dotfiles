@@ -1,0 +1,40 @@
+# Function to source files if they exist
+function zsh_add_file() {
+  [ -f $ZDOTDIR/$1 ] && source $ZDOTDIR/$1
+}
+
+function zsh_add_plugin() {
+  PLUGIN_NAME=$(echo $1 | cut -d "/" -f 2)
+
+  if [ ! -d $ZDOTDIR/plugins/$PLUGIN_NAME ]; then
+    git clone "https://github.com/$1.git" --depth=1 $ZDOTDIR/plugins/$PLUGIN_NAME
+  fi
+
+  zsh_add_file plugins/$PLUGIN_NAME/$PLUGIN_NAME.plugin.zsh || zsh_add_file plugins/$PLUGIN_NAME/$PLUGIN_NAME.zsh
+}
+
+function zsh_load_theme() {
+  THEME_NAME=$(echo $1 | cut -d "/" -f 2)
+  
+  if [ ! -d $ZDOTDIR/themes/$THEME_NAME ]; then
+    git clone "https://github.com/$1.git" --depth=1 $ZDOTDIR/themes/$THEME_NAME
+  fi
+
+  source $ZDOTDIR/themes/$THEME_NAME/$THEME_NAME.zsh-theme
+}
+
+function zsh_add_plugins() {
+  local PLUGINS=($@)
+
+  for plugin in "${PLUGINS[@]}"; do
+    zsh_add_plugin $plugin
+  done
+}
+
+function zsh_load_personal() {
+  local PERSONAL_DIR=$ZDOTDIR/personal
+
+  for filename in $PERSONAL_DIR/*; do
+    zsh_add_file $filename
+  done
+}
