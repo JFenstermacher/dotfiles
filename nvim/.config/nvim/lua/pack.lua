@@ -99,10 +99,4 @@ use{
       { 'kristijanhusak/vim-dadbod-completion' }
     }
   },
-
-  -- Terminal
-  ['voldikss/vim-floaterm'] = {
-    cmd = { 'FloatermNew', 'FloatermToggle', 'FloatermNext', 'FloatermPrev', 'FloatermKill' },
-    as = 'floaterm'
-  }
 }

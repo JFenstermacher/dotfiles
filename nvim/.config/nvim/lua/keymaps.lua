@@ -34,14 +34,10 @@ local mappings = {
 
   -- Window bindings
 
-  {'n', '<C-H>', ":lua win_move_or_split('h')<CR>", silent},
-  {'n', '<C-J>', ":lua win_move_or_split('j')<CR>", silent},
-  {'n', '<C-K>', ":lua win_move_or_split('k')<CR>", silent},
-  {'n', '<C-L>', ":lua win_move_or_split('l')<CR>", silent},
-  {'t', '<C-H>', [[<C-\><C-N>:lua win_move_or_split('h')<CR>]], silent},
-  {'t', '<C-J>', [[<C-\><C-N>:lua win_move_or_split('j')<CR>]], silent},
-  {'t', '<C-K>', [[<C-\><C-N>:lua win_move_or_split('k')<CR>]], silent},
-  {'t', '<C-L>', [[<C-\><C-N>:lua win_move_or_split('l')<CR>]], silent},
+  {'n', '<C-H>', "<C-W>h", silent},
+  {'n', '<C-J>', "<C-W>j", silent},
+  {'n', '<C-K>', "<C-W>k", silent},
+  {'n', '<C-L>', "<C-W>l", silent},
   {'n', '<leader>wH', '<c-w>5<'},
   {'n', '<leader>wJ', ':resize +5<cr>'},
   {'n', '<leader>wK', ':resize -5<cr>'},
@@ -77,9 +73,6 @@ local mappings = {
   {'nv', 'k', 'gk', remap},
   {'n', 'H', '^'},
   {'n', 'L', '$'},
-
-  -- Easy Command
-  {'n', '<cr>', ':'},
 
   -- Yank
   {'nv', '<leader>y', '"+y'},
