@@ -38,6 +38,8 @@ local mappings = {
   {'n', '<C-J>', "<C-W>j", silent},
   {'n', '<C-K>', "<C-W>k", silent},
   {'n', '<C-L>', "<C-W>l", silent},
+  {'n', '<leader>wl', ':vsplit<CR>'},
+  {'n', '<leader>wj', ':split<CR>'},
   {'n', '<leader>wH', '<c-w>5<'},
   {'n', '<leader>wJ', ':resize +5<cr>'},
   {'n', '<leader>wK', ':resize -5<cr>'},
