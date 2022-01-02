@@ -99,4 +99,7 @@ use{
       { 'kristijanhusak/vim-dadbod-completion' }
     }
   },
+  
+  -- Tmux Navigation
+  ['christoomey/vim-tmux-navigator'] = {},
 }

@@ -20,7 +20,6 @@ local remap = { noremap = false }
 
 local mappings = {
   -- <Esc> binding
-
   {'i', 'jk', '<esc>'},
   {'ni', '<esc>', '<c-c>'},
 
@@ -34,12 +33,8 @@ local mappings = {
 
   -- Window bindings
 
-  {'n', '<C-H>', "<C-W>h", silent},
-  {'n', '<C-J>', "<C-W>j", silent},
-  {'n', '<C-K>', "<C-W>k", silent},
-  {'n', '<C-L>', "<C-W>l", silent},
-  {'n', '<leader>wl', ':vsplit<CR>'},
-  {'n', '<leader>wj', ':split<CR>'},
+  {'n', '<leader>wv', ':vsplit<CR>'},
+  {'n', '<leader>ws', ':split<CR>'},
   {'n', '<leader>wH', '<c-w>5<'},
   {'n', '<leader>wJ', ':resize +5<cr>'},
   {'n', '<leader>wK', ':resize -5<cr>'},
@@ -62,9 +57,6 @@ local mappings = {
 
   {'t', 'jk', [[<C-\><C-n>]]},
   {'t', '<esc>', '<c-c>'},
-
-  -- Close everything
-  {'n', '<leader>qa', ':qa'},
 
   -- Better indenting
   {'v', '<', '<gv'},
