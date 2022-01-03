@@ -10,6 +10,7 @@ import XMonad
 import XMonad.Hooks.ManageDocks
 import XMonad.Util.SpawnOnce
 import XMonad.Util.Run(spawnPipe)
+import XMonad.Hooks.DynamicLog
 import Data.Monoid
 import System.Exit
 
@@ -235,7 +236,14 @@ myEventHook = mempty
 -- Perform an arbitrary action on each internal state change or X event.
 -- See the 'XMonad.Hooks.DynamicLog' extension for examples.
 --
-myLogHook = return ()
+myLogHook = {
+  dynamicLogWithPP $ xmobarPP {
+      ppOutput = hPutStrLn xmproc
+    , ppTitle = xmobarColor xmobarTitleColor "" . shorten 100
+    , ppCurrent = xmobarColor xmobarCurrentWorkspaceColor ""
+    , ppSep = " "
+  }
+}
 
 ------------------------------------------------------------------------
 -- Startup hook

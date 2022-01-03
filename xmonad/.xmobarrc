@@ -26,6 +26,7 @@ Config { font = "xft:MesloLGS NF:pixelsize=12:antialias=true:hinting=true"
                     , Run Swap [] 10
                     , Run Com "uname" ["-s","-r"] "" 36000
                     , Run Date "%a %b %_d %Y %H:%M:%S" "date" 10
+                    , Run StdinReader
                     ]
        , sepChar = "%"
        , alignSep = "}{"

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+languages=( golang lua cpp c typescript nodejs )
+core_utils=( xargs find mv sed awk )
+
+selected=$( echo "${languages[*]} ${core_utils[*]}" | tr ' ' '\n' | fzf )
+
+if [ -z $selected ]; then
+  echo "Valid selection not specified. Exiting."
+  exit 1
+fi
+
+read -p "query: " query
+
+if [[ "$languages[*]" =~ "$selected" ]]; then
+  curl cht.sh/$selected/$( echo $query | tr ' ' '+' )
+else
+  curl cht.sh/$selected-$query
+fi
