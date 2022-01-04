@@ -55,7 +55,7 @@ local opts = {
 
   -- Buffer Scoped Options
 
-  {'autoident', true, buffer},
+  {'autoindent', true, buffer},
   {'expandtab', true, buffer},
   {'shiftwidth', indent, buffer},
   {'smartindent', true, buffer},
@@ -66,10 +66,10 @@ local opts = {
 M.bind_opts(opts)
 
 -- Highlight on yank
-cmd 'au TextYankPost * lua vim.highlight.on_yank {on_visual = false}'
+cmd 'au TextYankPost * silent! lua vim.highlight.on_yank {on_visual=false}'
 
 -- Change Color Column color
-cmd 'highlight ColorColumn ctermbg=0 guibg=lightgrey'
+cmd 'highlight colorcolumn ctermbg=0 guibg=lightgrey'
 
 cmd 'syntax enable'
 cmd 'filetype plugin indent on'
