@@ -40,7 +40,7 @@ zsh_load_directory $PERSONAL_DIR
 
 PLUGINS=(
   "zsh-users/zsh-autosuggestions"
-  "zsh-users/zsh-syntax-highlighting",
+  "zsh-users/zsh-syntax-highlighting"
   "hlissner/zsh-autopair"
 )
 
