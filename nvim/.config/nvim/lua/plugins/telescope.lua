@@ -20,8 +20,6 @@ telescope.setup {
   pickers = {
     buffers = {
       sort_lastused = true,
-      theme = 'dropdown',
-      previewer = false,
       mappings = {
         i = { ['<c-d>'] = require('telescope.actions').delete_buffer },
         n = { ['<c-d>'] = require('telescope.actions').delete_buffer }
@@ -42,9 +40,10 @@ local bind = require 'keymaps'.bind_keymaps
 local silent = { silent = true }
 
 bind{
-  {'n', '<leader>pf', '<cmd>Telescope find_files<cr>', silent},
-  {'n', '<leader>bf', '<cmd>Telescope buffers<cr>'},
-  {'n', '<C-p>',      '<cmd>Telescope git_files<cr>',  silent},
-  {'n', '<leader>pg', '<cmd>Telescope live_grep<cr>',  silent}
+  {'n', '<leader>pf', ':Telescope find_files<cr>', silent},
+  {'n', '<leader>gb', ':Telescope git_branches<cr>', silent},
+  {'n', '<leader>bf', ':Telescope buffers<cr>'},
+  {'n', '<C-p>',      ':Telescope git_files<cr>',  silent},
+  {'n', '<leader>pg', ':Telescope live_grep<cr>',  silent}
 }
 
