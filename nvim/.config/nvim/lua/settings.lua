@@ -31,6 +31,7 @@ local opts = {
 
   {'autowrite', true, global},
   {'background', 'dark', global},
+  {'belloff', 'all', global},
   {'clipboard', 'unnamed,unnamedplus', global},
   {'completeopt', 'menuone,noselect', global},
   {'display', 'lastline', global},
@@ -48,12 +49,13 @@ local opts = {
   -- Window Scoped Options
 
   {'colorcolumn', '120', window},
-  {'wrap', false, window},
+  {'wrap', true, window},
   {'number', true, window},
   {'relativenumber', true, window},
 
   -- Buffer Scoped Options
 
+  {'autoident', true, buffer},
   {'expandtab', true, buffer},
   {'shiftwidth', indent, buffer},
   {'smartindent', true, buffer},
