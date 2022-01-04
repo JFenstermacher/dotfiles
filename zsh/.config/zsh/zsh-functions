@@ -5,7 +5,7 @@ function zsh_add_file() {
 
 function zsh_load_directory() {
   if [ -d $1 ]; then
-    for filename in $1; do
+    for filename in $1/*; do
       if [ -f $filename ]; then
         source $filename > /dev/null 2>&1
       fi
