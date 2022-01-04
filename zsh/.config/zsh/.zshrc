@@ -31,13 +31,14 @@ setopt appendhistory
 unsetopt BEEP
 
 # Completions
-autoload -Uz compinit
+autoload -Uz compinit && compinit
 zstyle ':completion:*' menu select
 zmodload zsh/complist
 _comp_options+=(globdots)
 
 zsh_load_directory $PERSONAL_DIR
 
+# Load some plugins
 PLUGINS=(
   "zsh-users/zsh-autosuggestions"
   "zsh-users/zsh-syntax-highlighting"
