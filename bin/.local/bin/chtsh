@@ -1,18 +1,12 @@
 #!/usr/bin/env bash
-languages=( golang lua cpp c typescript nodejs )
-core_utils=( xargs find mv sed awk )
 
-selected=$( echo "${languages[*]} ${core_utils[*]}" | tr ' ' '\n' | fzf )
+USER_LOCAL_BIN=$HOME/.local/bin
 
-if [ -z $selected ]; then
-  echo "Valid selection not specified. Exiting."
-  exit 1
+if [ ! -f $USER_LOCAL_BIN/cht.sh ]; then
+  CHTSH_PATH=$USER_LOCAL_BIN/cht.sh
+  mkdir -p $USER_LOCAL_BIN
+  curl https://cht.sh/:cht.sh | sudo tee $CHTSH_PATH
+  sudo chmod +x $CHTSH_PATH
 fi
 
-read -p "query: " query
-
-if [[ "$languages[*]" =~ "$selected" ]]; then
-  curl cht.sh/$selected/$( echo $query | tr ' ' '+' )
-else
-  curl cht.sh/$selected-$query
-fi
+tmux neww bash -c "cht.sh --shell"

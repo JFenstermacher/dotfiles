@@ -1,3 +1,4 @@
+--
 -- xmonad example config file.
 --
 -- A template showing all available configuration hooks,
@@ -7,20 +8,26 @@
 --
 
 import XMonad
-import XMonad.Hooks.ManageDocks
-import XMonad.Util.SpawnOnce
-import XMonad.Util.Run(spawnPipe)
-import XMonad.Hooks.DynamicLog
 import Data.Monoid
 import System.Exit
+import System.IO
 
 import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
 
+import XMonad.Layout.ThreeColumns
+import XMonad.Util.Run(spawnPipe)
+import XMonad.Hooks.ManageDocks
+import XMonad.Hooks.DynamicLog
+
 -- The preferred terminal program, which is used in a binding below and by
 -- certain contrib modules.
 --
-myTerminal      = "kitty"
+myTerminal = "kitty"
+
+-- Xmobar Configurations
+xmobarTitleColor = "#FFB6B0"
+xmobarCurrentWorkspaceColor = "#CEFFAC"
 
 -- Whether focus follows the mouse pointer.
 myFocusFollowsMouse :: Bool
@@ -184,10 +191,10 @@ myMouseBindings (XConfig {XMonad.modMask = modm}) = M.fromList $
 -- The available layouts.  Note that each layout is separated by |||,
 -- which denotes layout choice.
 --
-myLayout = avoidStruts (tiled ||| Mirror tiled ||| Full)
+myLayout = avoidStruts (tiled ||| Full)
   where
      -- default tiling algorithm partitions the screen into two panes
-     tiled   = Tall nmaster delta ratio
+     tiled   = ThreeColMid nmaster delta ratio
 
      -- The default number of windows in the master pane
      nmaster = 1
@@ -213,7 +220,7 @@ myLayout = avoidStruts (tiled ||| Mirror tiled ||| Full)
 -- To match on the WM_NAME, you can use 'title' in the same way that
 -- 'className' and 'resource' are used below.
 --
-myManageHook = composeAll
+myManageHook = manageDocks <+> composeAll
     [ className =? "MPlayer"        --> doFloat
     , className =? "Gimp"           --> doFloat
     , resource  =? "desktop_window" --> doIgnore
@@ -228,7 +235,7 @@ myManageHook = composeAll
 -- return (All True) if the default handler is to be run afterwards. To
 -- combine event hooks use mappend or mconcat from Data.Monoid.
 --
-myEventHook = mempty
+myEventHook = docksEventHook
 
 ------------------------------------------------------------------------
 -- Status bars and logging
@@ -236,14 +243,7 @@ myEventHook = mempty
 -- Perform an arbitrary action on each internal state change or X event.
 -- See the 'XMonad.Hooks.DynamicLog' extension for examples.
 --
-myLogHook = {
-  dynamicLogWithPP $ xmobarPP {
-      ppOutput = hPutStrLn xmproc
-    , ppTitle = xmobarColor xmobarTitleColor "" . shorten 100
-    , ppCurrent = xmobarColor xmobarCurrentWorkspaceColor ""
-    , ppSep = " "
-  }
-}
+myLogHook = return ()
 
 ------------------------------------------------------------------------
 -- Startup hook
@@ -253,18 +253,23 @@ myLogHook = {
 -- per-workspace layout choices.
 --
 -- By default, do nothing.
-myStartupHook = do
-            spawnOnce "nitrogen --restore &" 
-            spawnOnce "compton &"
+myStartupHook = return ()
 
 ------------------------------------------------------------------------
 -- Now run xmonad with all the defaults we set up.
 
 -- Run xmonad with the settings you specify. No need to modify this.
 --
-main = do 
-  xmproc <- spawnPipe "xmobar"
-  xmonad $ docks defaults
+main = do
+    xmproc <- spawnPipe "xmobar "
+    xmonad $ defaults {
+      logHook = dynamicLogWithPP $ xmobarPP {
+            ppOutput = hPutStrLn xmproc
+          , ppTitle = xmobarColor xmobarTitleColor "" . shorten 100
+          , ppCurrent = xmobarColor xmobarCurrentWorkspaceColor ""
+          , ppSep = "   "
+      }
+    }
 
 -- A structure containing your configuration settings, overriding
 -- fields in the default config. Any you don't override, will
