@@ -85,8 +85,8 @@ use{
 
   -- Movements Improvement
   ['junegunn/vim-easy-align'] = { as = 'easy-align' },
-  ['hrsh7th/vim-eft'] = { as = 'eft' },
-  ['justinmk/vim-sneak'] = {},
+  -- ['hrsh7th/vim-eft'] = { as = 'eft' },
+  ['justinmk/vim-sneak'] = { as = 'sneak' },
   ['tpope/vim-vinegar'] = {},
   ['tpope/vim-surround'] = {},
 
@@ -99,6 +99,9 @@ use{
       { 'kristijanhusak/vim-dadbod-completion' }
     }
   },
+
+  -- Status Line
+  ['nvim-lualine/lualine.nvim'] = { as = 'lualine' },
   
   -- Tmux Navigation
   ['christoomey/vim-tmux-navigator'] = {},
