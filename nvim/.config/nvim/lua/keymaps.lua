@@ -24,7 +24,6 @@ local mappings = {
   {'ni', '<esc>', '<c-c>'},
 
   -- Buffer bindings
-
   {'n', '<leader>bj', ':bprevious<CR>'},
   {'n', '<leader>bk', ':bnext<CR>'},
   {'n', '<leader>bh', ':bfirst<CR>'},
@@ -32,7 +31,6 @@ local mappings = {
   {'n', '<leader>bd', ':bd!<CR>'},
 
   -- Window bindings
-
   {'n', '<leader>wv', ':vsplit<CR>'},
   {'n', '<leader>ws', ':split<CR>'},
   {'n', '<leader>wH', '<c-w>5<'},
@@ -54,7 +52,6 @@ local mappings = {
   {'n', '[c', ':cprev<cr>'},
 
   -- Terminal Keys
-
   {'t', 'jk', [[<C-\><C-n>]]},
   {'t', '<esc>', '<c-c>'},
 

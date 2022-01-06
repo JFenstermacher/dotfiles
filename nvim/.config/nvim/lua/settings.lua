@@ -58,7 +58,6 @@ local opts = {
   {'autoindent', true, buffer},
   {'expandtab', true, buffer},
   {'shiftwidth', indent, buffer},
-  {'smartindent', true, buffer},
   {'softtabstop', indent, buffer},
   {'tabstop', indent, buffer}
 }
