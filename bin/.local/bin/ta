@@ -7,9 +7,9 @@
 # If called with --start or without a directory name ta will create a plain
 # single window layout
 
- not_in_tmux() {
-   [ -z "$TMUX" ]
- }
+not_in_tmux() {
+  [ -z "$TMUX" ]
+}
 
 DIR=$1
 
@@ -56,7 +56,7 @@ create_detached_session() {
     else
         (TMUX='' 
         tmux new-session -Ad -s "$session_name" -c $path_name;
-        tmux send-keys -t "$session_name" "nvim '+Telescope find_files'" Enter;
+        tmux send-keys -t "$session_name" "nvim" Enter;
         )
     fi
  }
