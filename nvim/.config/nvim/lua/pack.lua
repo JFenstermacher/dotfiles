@@ -46,6 +46,8 @@ use{
   -- Color Scheme
   ['sainnhe/gruvbox-material'] = { config = [[vim.cmd('colorscheme gruvbox-material')]] },
 
+  ['glepnir/dashboard-nvim'] = { as = "dashboard" },
+
   -- Telescope
   ['nvim-telescope/telescope.nvim'] = {
     as = 'telescope',

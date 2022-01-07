@@ -42,8 +42,9 @@ local silent = { silent = true }
 bind{
   {'n', '<leader>pf', ':Telescope find_files<cr>', silent},
   {'n', '<leader>gb', ':Telescope git_branches<cr>', silent},
-  {'n', '<leader>bf', ':Telescope buffers<cr>'},
+  {'n', '<leader>fb', ':Telescope buffers<cr>', silent},
   {'n', '<C-p>',      ':Telescope git_files<cr>',  silent},
-  {'n', '<leader>pg', ':Telescope live_grep<cr>',  silent}
+  {'n', '<leader>fo', ':Telescope oldfiles<cr>', silent},
+  {'n', '<leader>fw', ':Telescope live_grep<cr>', silent},
 }
 
