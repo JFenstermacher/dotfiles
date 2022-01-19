@@ -77,9 +77,16 @@ use{
   },
 
   -- Complete
-  ['hrsh7th/nvim-compe'] = {
-    as = 'compe',
-    requires = {{'windwp/nvim-autopairs'}}
+  ['hrsh7th/nvim-cmp'] = {
+    as = 'cmp',
+    requires = {
+      {'windwp/nvim-autopairs'},
+      {'hrsh7th/cmp-nvim-lsp'},
+      {'hrsh7th/cmp-buffer'},
+      {'hrsh7th/cmp-path'},
+      {'hrsh7th/cmp-cmdline'},
+      {'hrsh7th/nvim-cmp'},
+    }
   },
 
   -- Comments
@@ -87,7 +94,6 @@ use{
 
   -- Movements Improvement
   ['junegunn/vim-easy-align'] = { as = 'easy-align' },
-  -- ['hrsh7th/vim-eft'] = { as = 'eft' },
   ['justinmk/vim-sneak'] = { as = 'sneak' },
   ['tpope/vim-vinegar'] = {},
   ['tpope/vim-surround'] = {},

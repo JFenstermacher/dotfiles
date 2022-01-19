@@ -33,7 +33,7 @@ local opts = {
   {'background', 'dark', global},
   {'belloff', 'all', global},
   {'clipboard', 'unnamed,unnamedplus', global},
-  {'completeopt', 'menuone,noselect', global},
+  {'completeopt', 'menu,menuone,noselect', global},
   {'display', 'lastline', global},
   {'guicursor', '', global},
   {'hidden', true, global},

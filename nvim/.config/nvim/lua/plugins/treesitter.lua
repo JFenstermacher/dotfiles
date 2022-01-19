@@ -1,10 +1,11 @@
 require 'nvim-treesitter.configs'.setup {
   ensure_installed = "maintained",
   highlight = {
-    enable = true
+    enable = true,
+    disable = {'elixir'}
   },
   indent = {
     enable = true,
-    disable = {'python'}
+    disable = {'elixir', 'python'}
   }
 }
