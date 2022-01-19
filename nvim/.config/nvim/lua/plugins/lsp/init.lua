@@ -46,5 +46,7 @@ lsp_installer.on_server_ready(function(server)
 
   local server_options = server_opts[server.name] or { on_attach = on_attach }
 
+  server_options.capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
+
   server:setup(server_options)
 end)
