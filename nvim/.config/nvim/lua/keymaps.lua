@@ -33,11 +33,12 @@ local mappings = {
   -- Window bindings
   {'n', '<leader>wv', ':vsplit<CR>'},
   {'n', '<leader>ws', ':split<CR>'},
-  {'n', '<leader>wH', '<c-w>5<'},
-  {'n', '<leader>wJ', ':resize +5<cr>'},
-  {'n', '<leader>wK', ':resize -5<cr>'},
-  {'n', '<leader>wL', '<c-w>5>'},
+  {'n', '<leader>wh', '<c-w>5<'},
+  {'n', '<leader>wj', ':resize +5<cr>'},
+  {'n', '<leader>wk', ':resize -5<cr>'},
+  {'n', '<leader>wl', '<c-w>5>'},
   {'n', '<leader>w=', '<c-w>='},
+  {'n', '<leader>w-', '<c-w>_<c-w>|'},
   {'n', '<leader>wr', '<c-w>r'},
   {'n', '<leader>wo', '<c-w>o'},
 

@@ -112,5 +112,9 @@ use{
   ['nvim-lualine/lualine.nvim'] = { as = 'lualine' },
   
   -- Tmux Navigation
-  ['christoomey/vim-tmux-navigator'] = {},
+  ['christoomey/vim-tmux-navigator'] = { 
+    config = function() 
+      vim.api.nvim_command [[autocmd VimResized * :wincmd =]] 
+    end
+  },
 }
