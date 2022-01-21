@@ -24,6 +24,9 @@ telescope.setup {
         i = { ['<c-d>'] = require('telescope.actions').delete_buffer },
         n = { ['<c-d>'] = require('telescope.actions').delete_buffer }
       }
+    },
+    find_files = {
+      find_command = {"fd", "--type", "f", "--hidden", "--exclude", ".git"}
     }
   },
   extensions = {
