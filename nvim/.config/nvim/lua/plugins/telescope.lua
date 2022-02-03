@@ -50,4 +50,3 @@ bind{
   {'n', '<leader>fo', ':Telescope oldfiles<cr>', silent},
   {'n', '<leader>fw', ':Telescope live_grep<cr>', silent},
 }
-
