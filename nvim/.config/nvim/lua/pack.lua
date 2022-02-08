@@ -119,4 +119,8 @@ use{
       vim.api.nvim_command [[autocmd VimResized * :wincmd =]] 
     end
   },
+
+  ['christoomey/vim-tmux-runner'] = {
+    as = "vim-tmux-runner"
+  }
 }

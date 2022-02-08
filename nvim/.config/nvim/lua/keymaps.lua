@@ -15,7 +15,6 @@ function M.bind_keymaps(mappings)
   end
 end
 
-local silent = { silent = true }
 local remap = { noremap = false }
 
 local mappings = {
@@ -43,12 +42,10 @@ local mappings = {
   {'n', '<leader>wo', '<c-w>o'},
 
   -- Location list
-  {'n', '<leader>tl', ':lua toggle_loclist()<cr>'},
   {'n', ']l', ':lnext<cr>'},
   {'n', '[l', ':lprev<cr>'},
 
   -- QuickFix
-  {'n', '<leader>tq', ':lua toggle_quickfix()<cr>'},
   {'n', ']c', ':cnext<cr>'},
   {'n', '[c', ':cprev<cr>'},
 
