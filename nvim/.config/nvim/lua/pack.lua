@@ -98,8 +98,8 @@ use{
   ['tpope/vim-commentary'] = {},
 
   -- Movements Improvement
-  ['junegunn/vim-easy-align'] = { as = 'easy-align' },
-  ['justinmk/vim-sneak'] = { as = 'sneak' },
+  ['junegunn/vim-easy-align'] = {},
+  ['justinmk/vim-sneak'] = {},
   ['tpope/vim-vinegar'] = {},
   ['tpope/vim-surround'] = {},
 

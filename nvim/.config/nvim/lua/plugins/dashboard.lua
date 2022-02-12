@@ -22,7 +22,7 @@ g.dashboard_custom_header = {
 }
 
 g.dashboard_custom_section = {
-   a = { description = { "  Find File                 SPC f f" }, command = "Telescope find_files" },
+   a = { description = { "  Find File                 SPC f j" }, command = "Telescope find_files" },
    b = { description = { "  Find Project              SPC f p" }, command = "Telescope projects" },
    c = { description = { "  Recents                   SPC f o" }, command = "Telescope oldfiles" },
    d = { description = { "  Find Word                 SPC f w" }, command = "Telescope live_grep" },
