@@ -15,6 +15,14 @@ local M = {
     {'n', '<leader>bd', ':bd!<CR>'},
 
     -- Window bindings
+    {'n', '<C-h>', '<C-w>h'},
+    {'n', '<C-j>', '<C-w>j'},
+    {'n', '<C-k>', '<C-w>k'},
+    {'n', '<C-l>', '<C-w>l'},
+    {'t', '<C-h>', [[<C-\><C-n><C-w>h]]},
+    {'t', '<C-j>', [[<C-\><C-n><C-w>j]]},
+    {'t', '<C-k>', [[<C-\><C-n><C-w>k]]},
+    {'t', '<C-l>', [[<C-\><C-n><C-w>l]]},
     {'n', '<leader>wv', ':vsplit<CR>'},
     {'n', '<leader>ws', ':split<CR>'},
     {'n', '<leader>wh', '<c-w>5<'},
@@ -88,6 +96,18 @@ local M = {
     {'nxso', 'F', '<Plug>Sneak_F', noremap},
     {'nxso', 't', '<Plug>Sneak_t', noremap},
     {'nxso', 'T', '<Plug>Sneak_T', noremap},
+  },
+  ['voldikss/vim-floaterm'] = {
+    {'n', '<F10>', ':FloatermNew<cr>',                silent},
+    {'t', '<F10>', [[<c-\><c-n>:FloatermNew<cr>]],    silent},
+    {'n', '<F7>',  ':FloatermToggle<cr>',             silent},
+    {'t', '<F7>',  [[<c-\><c-n>:FloatermToggle<cr>]], silent},
+    {'n', '<F9>',  ':FloatermNext<cr>',               silent},
+    {'t', '<F9>',  [[<c-\><c-n>:FloatermNext<cr>]],   silent},
+    {'n', '<F8>',  ':FloatermPrev<cr>',               silent},
+    {'t', '<F8>',  [[<c-\><c-n>:FloatermPrev<cr>]],   silent},
+    {'n', '<F6>',  ':FloatermKill<cr>',               silent},
+    {'t', '<F6>',  [[<c-\><c-n>:FloatermKill<cr>]],   silent}
   }
 }
 

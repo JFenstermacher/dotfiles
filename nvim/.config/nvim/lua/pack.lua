@@ -116,19 +116,5 @@ use{
   -- Status Line
   ['nvim-lualine/lualine.nvim'] = { as = 'lualine' },
 
-  -- Tmux Navigation
-  ['christoomey/vim-tmux-navigator'] = {
-    config = function()
-      vim.api.nvim_command [[autocmd VimResized * :wincmd =]]
-    end
-  },
-
-  ['christoomey/vim-tmux-runner'] = {
-    as = "vim-tmux-runner"
-  },
-
-  -- Handling Projects
-  ['ahmedkhalf/project.nvim'] = {
-    as = 'project'
-  }
+  ['voldikss/vim-floaterm'] = { as = "floaterm" }
 }
