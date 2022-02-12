@@ -127,6 +127,7 @@ use{
     as = "vim-tmux-runner"
   },
 
+  -- Handling Projects
   ['ahmedkhalf/project.nvim'] = {
     as = 'project'
   }
