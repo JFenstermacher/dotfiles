@@ -27,6 +27,8 @@ local function use(plugins)
   local packer = init()
 
   packer.startup(function()
+    local bind = require('keymaps').bind_plugin
+
     for repo, plugin in pairs(plugins) do
       plugin[1] = repo
 
@@ -35,6 +37,8 @@ local function use(plugins)
       end
 
       packer.use(plugin)
+
+      bind(repo)
     end
   end)
 end
@@ -61,7 +65,6 @@ use{
   -- Git
   ['tpope/vim-fugitive'] = {
     cmd = { 'Git', 'Gdiff' },
-    as = 'fugitive'
   },
 
   -- LSP
@@ -112,15 +115,19 @@ use{
 
   -- Status Line
   ['nvim-lualine/lualine.nvim'] = { as = 'lualine' },
-  
+
   -- Tmux Navigation
-  ['christoomey/vim-tmux-navigator'] = { 
-    config = function() 
-      vim.api.nvim_command [[autocmd VimResized * :wincmd =]] 
+  ['christoomey/vim-tmux-navigator'] = {
+    config = function()
+      vim.api.nvim_command [[autocmd VimResized * :wincmd =]]
     end
   },
 
   ['christoomey/vim-tmux-runner'] = {
     as = "vim-tmux-runner"
+  },
+
+  ['ahmedkhalf/project.nvim'] = {
+    as = 'project'
   }
 }

@@ -38,15 +38,3 @@ telescope.setup {
 }
 
 telescope.load_extension('fzy_native')
-
-local bind = require 'keymaps'.bind_keymaps
-local silent = { silent = true }
-
-bind{
-  {'n', '<leader>pf', ':Telescope find_files<cr>', silent},
-  {'n', '<leader>gb', ':Telescope git_branches<cr>', silent},
-  {'n', '<leader>fb', ':Telescope buffers<cr>', silent},
-  {'n', '<C-p>',      ':Telescope git_files<cr>',  silent},
-  {'n', '<leader>fo', ':Telescope oldfiles<cr>', silent},
-  {'n', '<leader>fw', ':Telescope live_grep<cr>', silent},
-}
