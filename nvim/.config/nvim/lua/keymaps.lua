@@ -107,7 +107,13 @@ local M = {
     {'n', '<F8>',  ':FloatermPrev<cr>',               silent},
     {'t', '<F8>',  [[<c-\><c-n>:FloatermPrev<cr>]],   silent},
     {'n', '<F6>',  ':FloatermKill<cr>',               silent},
-    {'t', '<F6>',  [[<c-\><c-n>:FloatermKill<cr>]],   silent}
+    {'t', '<F6>',  [[<c-\><c-n>:FloatermKill<cr>]],   silent},
+    -- Python Sucks
+    {'v', '<leader>ps', ':s/^$/#/ | execute "normal gv" | noh<cr>', silent},
+    -- Python UnSucks
+    {'v', '<leader>pu', ':s/^#//<cr>', silent},
+    {'n', '<leader>rl', ':FloatermNew --wintype=vsplit --name=repl --width=0.5<cr>', silent},
+    {'nv', '<leader>rs', ':FloatermSend --name=repl<cr>', silent}
   }
 }
 

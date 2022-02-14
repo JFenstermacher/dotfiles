@@ -7,8 +7,6 @@ local M = {
   on_attach = require 'plugins.lsp.on_attach',
   before_init = function(_, config)
     config.settings.python.pythonPath = get_python_path(config.root_dir)
-
-    print(config.settings.python.pythonPath)
   end,
   settings = {
     python = {
@@ -27,14 +25,10 @@ function get_python_path(workspace)
 
   -- Handle different sorts of setups
   local mappings = {
-    ['.venv']        = function(match) return path.dirname(match) end,
-    ['pyvenv.cfg']   = function(match) return path.dirname(match) end,
-    ['Pipfile'] = function(match)
-      local call = fmt('PIPENV_PIPFILE=%s pipenv --venv', match)
-
-      return fn.trim(fn.system(call))
-    end,
-    ['poetry.lock']  = function(_) return fn.trim(fn.system('poetry env info -p')) end
+    ['.venv']       = function(match) return match end,
+    ['pyvenv.cfg']  = function(match) return path.dirname(match) end,
+    ['Pipfile']     = function(_) return fn.trim(fn.system('pipenv --venv')) end,
+    ['poetry.lock'] = function(_) return fn.trim(fn.system('poetry env info -p')) end
   }
 
   for pattern, prefix_fn in pairs(mappings) do
