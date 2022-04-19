@@ -1,23 +1,7 @@
 local fn = vim.fn
-local execute = vim.api.nvim_command
 
 function P(tbl)
   print(vim.inspect(tbl))
-end
-
-_G.win_move_or_split = function(key)
-  if fn.winnr() == fn.winnr(key) then
-    local cmds = {
-      h = ':lefta vsp',
-      j = ':sp',
-      k = ':lefta sp',
-      l = ':vsp'
-    }
-
-    execute(cmds[key])
-  else
-    execute(':wincmd ' .. key)
-  end
 end
 
 _G.toggle_quickfix = function()
