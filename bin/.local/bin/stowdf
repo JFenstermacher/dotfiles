@@ -18,26 +18,19 @@ fi
 # Must specify at least one directory
 if [[ "$#" -eq 0 ]]; then
   echo "[ERROR] Please specify one or more dotfiles to $ACTION"
-  echo "[ERROR] Specify 'all' as first arg to $ACTION everything"
   exit 1
 fi
 
 TO_STOW=()
 
 # Determining which directories to stow
-if [[ "$1" == "all" ]]; then
-  for f in $DOTFILES_DIR/*; do
-    TO_STOW+=(basename $f)
-  done
-else
-  for dir in "$@"; do
-    if [ ! -d "$DOTFILES_DIR/$dir" ]; then
-      echo "[WARN] '$dir' doesn't exist. Skipping."
-    else
-      TO_STOW+=($dir)
-    fi
-  done
-fi
+for dir in "$@"; do
+  if [ ! -d "$DOTFILES_DIR/$dir" ]; then
+    echo "[WARN] '$dir' doesn't exist. Skipping."
+  else
+    TO_STOW+=($dir)
+  fi
+done
 
 # Stow directory
 echo "[INFO] ${ACTION^^}ING modules"
