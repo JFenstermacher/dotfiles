@@ -1,4 +1,4 @@
-local noremap = { noremap = false }
+local remap = { noremap = false }
 local silent = { silent = true }
 
 local M = {
@@ -51,8 +51,8 @@ local M = {
     {'v', '>', '>gv'},
 
     -- Better movements
-    {'nv', 'j', 'gj', noremap},
-    {'nv', 'k', 'gk', noremap},
+    {'nv', 'j', 'gj', remap},
+    {'nv', 'k', 'gk', remap},
     {'n', 'H', '^'},
     {'n', 'L', '$'},
 
@@ -60,6 +60,22 @@ local M = {
     {'nv', '<leader>y', '"+y'},
     {'n', '<leader>Y', 'gg"+yG'},
     {'nv', '<leader>d', '"_d'}
+  },
+  ['lsp'] = {
+    {'n', 'gD',         '<Cmd>lua vim.lsp.buf.declaration()<CR>',                  silent},
+    {'n', 'gd',         '<Cmd>lua vim.lsp.buf.definition()<CR>',                   silent},
+    {'n', 'K',          '<Cmd>lua vim.lsp.buf.hover()<CR>',                        silent},
+    {'n', 'gi',         '<cmd>lua vim.lsp.buf.implementation()<CR>',               silent},
+    {'i', '<C-k>',      '<cmd>lua vim.lsp.buf.signature_help()<CR>',               silent},
+    {'n', '<leader>cD', '<cmd>lua vim.lsp.buf.type_definition()<CR>',              silent},
+    {'n', '<leader>cr', '<cmd>lua vim.lsp.buf.rename()<CR>',                       silent},
+    {'n', '<leader>ca', '<cmd>lua vim.lsp.buf.code_action()<CR>',                  silent},
+    {'n', 'gr',         '<cmd>lua vim.lsp.buf.references()<CR>',                   silent},
+    {'n', '<leader>e',  '<cmd>lua vim.lsp.diagnostic.show_line_diagnostics()<CR>', silent},
+    {'n', '[d',         '<cmd>lua vim.lsp.diagnostic.goto_prev()<CR>',             silent},
+    {'n', ']d',         '<cmd>lua vim.lsp.diagnostic.goto_next()<CR>',             silent},
+    {'n', '<space>q',   '<cmd>lua vim.lsp.diagnostic.set_loclist()<CR>',           silent},
+    {"n", "<space>f",   "<cmd>lua vim.lsp.buf.formatting()<CR>",                   silent},
   },
   ['junegunn/vim-easy-align'] = {{'nx', 'ga', '<Plug>(EasyAlign)', { silent = true, noremap = false }}},
   ['kristijanhusak/vim-dadbod-ui'] = {
@@ -89,13 +105,14 @@ local M = {
     {'n', '<leader>fo', ':Telescope oldfiles<cr>',     silent},
     {'n', '<leader>fw', ':Telescope live_grep<cr>',    silent},
     {'n', '<leader>fk', ':Telescope keymaps<cr>',      silent},
-    {'n', '<leader>fp', ':Telescope projects<cr>',     silent}
+    {'n', '<leader>fp', ':Telescope projects<cr>',     silent},
+    {'n', '<leader>fq', ':Telescope quickfix<cr>',     silent}
   },
   ['justinmk/vim-sneak'] = {
-    {'nxso', 'f', '<Plug>Sneak_f', noremap},
-    {'nxso', 'F', '<Plug>Sneak_F', noremap},
-    {'nxso', 't', '<Plug>Sneak_t', noremap},
-    {'nxso', 'T', '<Plug>Sneak_T', noremap},
+    {'nxso', 'f', '<Plug>Sneak_f', remap},
+    {'nxso', 'F', '<Plug>Sneak_F', remap},
+    {'nxso', 't', '<Plug>Sneak_t', remap},
+    {'nxso', 'T', '<Plug>Sneak_T', remap},
   },
   ['voldikss/vim-floaterm'] = {
     {'n', '<F10>', ':FloatermNew<cr>',                silent},
@@ -108,14 +125,25 @@ local M = {
     {'t', '<F8>',  [[<c-\><c-n>:FloatermPrev<cr>]],   silent},
     {'n', '<F6>',  ':FloatermKill<cr>',               silent},
     {'t', '<F6>',  [[<c-\><c-n>:FloatermKill<cr>]],   silent},
-    -- Python Sucks
-    {'v', '<leader>ps', ':s/^$/#/ | execute "normal gv" | noh<cr>', silent},
-    -- Python UnSucks
-    {'v', '<leader>pu', ':s/^#//<cr>', silent},
     {'n', '<leader>rl', ':FloatermNew --wintype=vsplit --name=repl --width=0.5<cr>', silent},
     {'nv', '<leader>rs', ':FloatermSend --name=repl<cr>', silent}
   }
 }
+
+function M.bind_buf_keymap(bufnr, modes, lhs, rhs, opts)
+  local map = function(...) vim.api.nvim_buf_set_keymap(bufnr, ...) end
+  local defaults = { noremap = true }
+
+  for mode in modes:gmatch('.') do
+    map(mode, lhs, rhs, vim.tbl_extend('force', defaults, opts or {}))
+  end
+end
+
+function M.bind_buf_keymaps(bufnr, mappings)
+  for _, value in ipairs(mappings) do
+    M.bind_buf_keymap(bufnr, unpack(value))
+  end
+end
 
 function M.bind_keymap(modes, lhs, rhs, opts)
   local map = vim.api.nvim_set_keymap
