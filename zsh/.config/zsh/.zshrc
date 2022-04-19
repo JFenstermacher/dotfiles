@@ -23,7 +23,7 @@ zsh_add_file "zsh-exports"
 zsh_add_file "zsh-aliases"
 
 # Useful Options
-setopt autocd extendedglob nomatch menucomplete
+setopt autocd extendedglob nomatch
 setopt interactive_comments
 setopt appendhistory
 
@@ -43,6 +43,7 @@ PLUGINS=(
   "zsh-users/zsh-autosuggestions"
   "zsh-users/zsh-syntax-highlighting"
   "hlissner/zsh-autopair"
+  "jeffreytse/zsh-vi-mode"
 )
 
 zsh_add_plugins "${PLUGINS[@]}"
@@ -62,4 +63,8 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 # ASDF
-source /opt/homebrew/opt/asdf/libexec/asdf.sh
+if [[ $OSTYPE == "darwin"* ]]; then
+  source /opt/homebrew/opt/asdf/libexec/asdf.sh
+else
+  source /opt/asdf-vm/asdf.sh
+fi
