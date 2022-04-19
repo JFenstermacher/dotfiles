@@ -50,6 +50,7 @@ use{
   -- Color Scheme
   ['sainnhe/gruvbox-material'] = { config = [[vim.cmd('colorscheme gruvbox-material')]] },
 
+  -- Dashboard
   ['glepnir/dashboard-nvim'] = { as = "dashboard" },
 
   -- Telescope
@@ -62,24 +63,24 @@ use{
     }
   },
 
-  -- Git
+  -- -- Git
   ['tpope/vim-fugitive'] = {
     cmd = { 'Git', 'Gdiff' },
   },
 
-  -- LSP
+  -- -- LSP
   ['neovim/nvim-lspconfig'] = {
     as = 'lsp',
     requires = {{'williamboman/nvim-lsp-installer'}}
   },
 
-  -- Treesitter
+  -- -- Treesitter
   ['nvim-treesitter/nvim-treesitter'] = {
     as = "treesitter",
     run = ":TSUpdate"
   },
 
-  -- Complete
+  -- -- Complete
   ['hrsh7th/nvim-cmp'] = {
     as = 'cmp',
     requires = {
@@ -88,22 +89,21 @@ use{
       {'hrsh7th/cmp-buffer'},
       {'hrsh7th/cmp-path'},
       {'hrsh7th/cmp-cmdline'},
-      {'hrsh7th/nvim-cmp'},
       {'hrsh7th/cmp-vsnip'},
       {'hrsh7th/vim-vsnip'}
     }
   },
 
-  -- Comments
+  -- -- Comments
   ['tpope/vim-commentary'] = {},
 
-  -- Movements Improvement
+  -- -- Movements Improvement
   ['junegunn/vim-easy-align'] = {},
   ['justinmk/vim-sneak'] = {},
   ['tpope/vim-vinegar'] = {},
   ['tpope/vim-surround'] = {},
 
-  -- Database
+  -- -- Database
   ['kristijanhusak/vim-dadbod-ui'] = {
     as = "dadbod",
     cmd = { 'DBUIToggle', 'DBUIAddConnection', 'DBUI', 'DBUIFindBuffer', 'DBUIRenameBuffer' },
@@ -113,7 +113,7 @@ use{
     }
   },
 
-  -- Status Line
+  -- -- Status Line
   ['nvim-lualine/lualine.nvim'] = { as = 'lualine' },
 
   ['voldikss/vim-floaterm'] = { as = "floaterm" }
