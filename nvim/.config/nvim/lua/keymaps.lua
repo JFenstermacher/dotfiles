@@ -43,8 +43,7 @@ local M = {
     {'n', '[c', ':cprev<cr>'},
 
     -- Terminal Keys
-    {'t', 'jk', [[<C-\><C-n>]]},
-    {'t', '<esc>', '<c-c>'},
+    {'t', '<esc>', [[<C-\><C-n>]]},
 
     -- Better indenting
     {'v', '<', '<gv'},
