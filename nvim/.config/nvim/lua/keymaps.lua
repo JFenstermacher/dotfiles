@@ -50,8 +50,6 @@ local M = {
     {'v', '>', '>gv'},
 
     -- Better movements
-    {'nv', 'j', 'gj', remap},
-    {'nv', 'k', 'gk', remap},
     {'n', 'H', '^'},
     {'n', 'L', '$'},
 
