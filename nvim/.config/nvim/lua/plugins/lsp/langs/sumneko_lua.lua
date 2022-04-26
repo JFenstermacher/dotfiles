@@ -1,21 +1,18 @@
-local M = {
-  on_attach = require 'plugins.lsp.on_attach',
+return {
   settings = {
     Lua = {
-      completion = {keywordSnippet = "Disable"},
       diagnostics = {
-        globals = {'vim', 'use', 'packer_plugins'},
+        globals = { "vim" },
         disable = {'lowercase-global'}
       },
       runtime = {version = 'LuaJIT', path = vim.split(package.path, ';')},
       workspace = {
         library = {
-          [vim.fn.expand('$VIMRUNTIME/lua')] = true,
-          [vim.fn.expand('$VIMRUNTIME/lua/vim/lsp')] = true
-        }
-      }
-    }
-  }
+          [vim.fn.expand "$VIMRUNTIME/lua"] = true,
+          [vim.fn.expand('$VIMRUNTIME/lua/vim/lsp')] = true,
+          [vim.fn.stdpath "config" .. "/lua"] = true,
+        },
+      },
+    },
+  },
 }
-
-return M

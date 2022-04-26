@@ -1,6 +1,3 @@
-local M = {
-  on_attach = require 'plugins.lsp.on_attach',
+return {
   filetypes = { 'javascript', 'typescript', 'typescriptreact', 'typescript.tsx' }
 }
-
-return M

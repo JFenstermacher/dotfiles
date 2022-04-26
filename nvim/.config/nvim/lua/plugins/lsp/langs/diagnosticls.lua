@@ -1,5 +1,4 @@
-M = {
-  on_attach = require 'plugins.lsp.on_attach',
+return {
   filetypes = { 'javascript', 'javascriptreact', 'json', 'typescript', 'typescriptreact', 'css', 'less', 'scss', 'markdown', 'pandoc' },
   init_options = {
     linters = {
@@ -54,5 +53,3 @@ M = {
     }
   }
 }
-
-return M

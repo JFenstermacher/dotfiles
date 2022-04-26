@@ -143,7 +143,7 @@ function M.bind_buf_keymaps(bufnr, mappings)
 end
 
 function M.bind_keymap(modes, lhs, rhs, opts)
-  local map = vim.api.nvim_set_keymap
+  local map = vim.keymap.set
   local defaults = { noremap = true }
 
   for mode in modes:gmatch('.') do

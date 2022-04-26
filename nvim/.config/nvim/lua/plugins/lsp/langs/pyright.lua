@@ -1,21 +1,6 @@
 local fn = vim.fn
 local util = require('lspconfig.util')
 local path = util.path
-local fmt = string.format
-
-local M = {
-  on_attach = require 'plugins.lsp.on_attach',
-  before_init = function(_, config)
-    config.settings.python.pythonPath = get_python_path(config.root_dir)
-  end,
-  settings = {
-    python = {
-      analysis = {
-        typeCheckingMode = 'off'
-      }
-    }
-  }
-}
 
 function get_python_path(workspace)
   -- Use activated virtualenv
@@ -44,4 +29,15 @@ function get_python_path(workspace)
   return fn.exepath('python3') or fn.exepath('python3') or 'python'
 end
 
-return M
+return {
+  before_init = function(_, config)
+    config.settings.python.pythonPath = get_python_path(config.root_dir)
+  end,
+  settings = {
+    python = {
+      analysis = {
+        typeCheckingMode = 'off'
+      }
+    }
+  }
+}
