@@ -44,6 +44,7 @@ local M = {
 
     -- Terminal Keys
     {'t', '<esc>', [[<C-\><C-n>]]},
+    {'t', '<C-u>', [[<C-\><C-n><C-u>]]},
 
     -- Better indenting
     {'v', '<', '<gv'},
