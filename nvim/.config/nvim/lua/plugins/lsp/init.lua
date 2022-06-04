@@ -1,45 +1,33 @@
-require('plugins.lsp.lsp_installer')
-require('plugins.lsp.handlers').setup()
+require 'plugins.lsp.installer'
 
--- Do I want any of this now?
--- local on_attach = require 'plugins.lsp.on_attach'
--- local protocol = require 'vim.lsp.protocol'
+local signs = {
+  { name = "DiagnosticSignError", text = "" },
+  { name = "DiagnosticSignWarn", text = "" },
+  { name = "DiagnosticSignHint", text = "" },
+  { name = "DiagnosticSignInfo", text = "" },
+}
 
---protocol.SymbolKind = { }
--- protocol.CompletionItemKind = {
---   '', -- Text
---   '', -- Method
---   '', -- Function
---   '', -- Constructor
---   '', -- Field
---   '', -- Variable
---   '', -- Class
---   'ﰮ', -- Interface
---   '', -- Module
---   '', -- Property
---   '', -- Unit
---   '', -- Value
---   '', -- Enum
---   '', -- Keyword
---   '﬌', -- Snippet
---   '', -- Color
---   '', -- File
---   '', -- Reference
---   '', -- Folder
---   '', -- EnumMember
---   '', -- Constant
---   '', -- Struct
---   '', -- Event
---   'ﬦ', -- Operator
---   '', -- TypeParameter
--- }
+for _, sign in ipairs(signs) do
+  vim.fn.sign_define(sign.name, { texthl = sign.name, text = sign.text, numhl = "" })
+end
 
--- vim.lsp.handlers['textDocument/publishDiagnostics'] = vim.lsp.with(
---   vim.lsp.diagnostic.on_publish_diagnostics, {
---     underline = true,
---     virtual_text = {
---       spacing = 4,
---       prefix = ''
---     }
---   }
--- )
+vim.diagnostic.config({
+  virtual_text = true,
+  signs = {
+    active = signs,
+  },
+  update_in_insert = true,
+  underline = true,
+  severity_sort = true,
+  float = {
+    focusable = false,
+    style = "minimal",
+    border = "rounded",
+    source = "always",
+    header = "",
+    prefix = "",
+  },
+})
+
+vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, { border = "rounded" })
+vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, { border = "rounded" })

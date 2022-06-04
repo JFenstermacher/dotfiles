@@ -42,6 +42,9 @@ local function disable_plugins()
 end
 
 local function init()
+  vim.g.do_filetype_lua = 1
+  vim.g.did_load_filetype = 0
+
   disable_plugins()
 end
 

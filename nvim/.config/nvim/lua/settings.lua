@@ -44,10 +44,10 @@ M.bind_opts{
   spelllang      = "en",                    -- Support US english
 }
 
-M.bind_globals{
-  do_filetype_lua = 1,    -- use filetype.lua
-  did_load_filetypes = 0  -- don't use filetype.vim
-}
+-- M.bind_globals{
+--   do_filetype_lua = 1,    -- use filetype.lua
+--   did_load_filetypes = 0  -- don't use filetype.vim
+-- }
 
 -- Highlight on yank
 cmd 'au TextYankPost * silent! lua vim.highlight.on_yank {on_visual=false}'
@@ -55,7 +55,7 @@ cmd 'au TextYankPost * silent! lua vim.highlight.on_yank {on_visual=false}'
 -- Change Color Column color
 cmd 'highlight colorcolumn ctermbg=0 guibg=lightgrey'
 
-cmd 'syntax enable'
-cmd 'filetype plugin indent on'
+-- cmd 'syntax enable'
+-- cmd 'filetype plugin indent on'
 
 return M
