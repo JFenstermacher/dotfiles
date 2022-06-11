@@ -2,7 +2,7 @@ local M = {}
 
 local function lsp_highlight_document(client)
   if client.resolved_capabilities.document_highlight then
-    vim.api.nvim_create_augroup("lsp_document_highlight")
+    vim.api.nvim_create_augroup("lsp_document_highlight", {})
     vim.api.nvim_create_autocmd("CursorHold", {
       group = "lsp_document_highlight",
       pattern = "<buffer>",

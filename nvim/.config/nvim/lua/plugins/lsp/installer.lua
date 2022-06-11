@@ -1,4 +1,5 @@
 local lsp_installer = require('nvim-lsp-installer')
+local lspconfig = require 'lspconfig'
 local server_opts = require 'plugins.lsp.servers'
 local handlers = require 'plugins.lsp.handlers'
 
@@ -22,5 +23,5 @@ for _, server in ipairs(lsp_installer.get_installed_servers()) do
   local server_options = server_opts[server.name] or {}
   server_options = vim.tbl_deep_extend("force", defaults, server_options)
 
-  vim.lsp[server].setup(server_options)
+  lspconfig[server.name].setup(server_options)
 end
