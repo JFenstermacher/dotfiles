@@ -30,7 +30,7 @@ M.on_attach = function(client, bufnr)
 
   -- Autoformatting
   if client.resolved_capabilities.document_formatting then
-    vim.api.nvim_create_augroup("lsp_formatting")
+    vim.api.nvim_create_augroup("lsp_formatting", { clear = false })
     vim.api.nvim_create_autocmd("BufWritePre", {
       desc = "Auto format before save",
       pattern = "<buffer>",
