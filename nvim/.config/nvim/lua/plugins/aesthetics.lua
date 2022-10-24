@@ -1,10 +1,19 @@
-local bind_opts = require 'settings'.bind_globals
+local configs = {}
 
-bind_opts{
-  dashboard_disable_at_vimenter = 0,
-  dashboard_disable_statusline = 1,
-  dashboard_default_executive = "telescope",
-  dashboard_custom_header = {
+function configs.gruvbox_material()
+  vim.cmd('colorscheme gruvbox-material')
+end
+
+function configs.lualine()
+  require('lualine').setup{
+    options = { theme = 'gruvbox' }
+  }
+end
+
+function configs.dashboard_nvim()
+  local db = require('dashboard')
+
+  db.custom_header = {
      "                                   ",
      "                                   ",
      "                                   ",
@@ -20,15 +29,36 @@ bind_opts{
      "      ⢻⣿⣿⣄   ⠈⠻⣿⣿⣿⣷⣿⣿⣿⣿⣿⡟ ⠫⢿⣿⡆     ",
      "       ⠻⣿⣿⣿⣿⣶⣶⣾⣿⣿⣿⣿⣿⣿⣿⣿⡟⢀⣀⣤⣾⡿⠃     ",
      "                                   ",
-  },
-  dashboard_custom_section = {
-     a = { description = { "  Find File                 SPC p f" }, command = "Telescope find_files" },
-     b = { description = { "  Recents                   SPC f o" }, command = "Telescope oldfiles" },
-     c = { description = { "  Find Word                 SPC f w" }, command = "Telescope live_grep" },
-     d = { description = { "洛 New File                  SPC f n" }, command = "DashboardNewFile" },
-     e = { description = { "  Bookmarks                 SPC b m" }, command = "Telescope marks" },
-  },
-  dashboard_custom_footer = {
-     "   ",
   }
-}
+
+  db.custom_center = {
+    {
+      icon = ' ',
+      desc = 'Update Plugins                           ',
+      shortcut = 'SPC p u',
+      action = 'PackerUpdate',
+    },
+    {
+      icon = ' ',
+      desc = 'Find File                                ',
+      action = 'Telescope find_files find_command=rg,--hidden,--files',
+      shortcut = 'SPC f f',
+    },
+    {
+      icon = ' ',
+      desc = 'Recents                                  ',
+      shortcut = 'SPC f o',
+      action = 'Telescope oldfiles'
+    },
+    {
+      icon = ' ',
+      desc = 'Find Word                                ',
+      shortcut = 'SPC f w',
+      action = 'Telescope live_grep'
+    },
+  }
+
+  db.hide_statusline = true
+end
+
+return configs
