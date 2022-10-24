@@ -19,7 +19,7 @@ end
 local configs = get_configs()
 
 local plugins = {
-  -- Aesthetics
+  -- Aesthetics [aesthetics.lua]
   {
     'sainnhe/gruvbox-material',
     config = configs.gruvbox_material
@@ -33,7 +33,7 @@ local plugins = {
     config = configs.dashboard_nvim
   },
 
-  -- Fuzzy Finder
+  -- Fuzzy Finder [telescope.lua]
   {
     'nvim-telescope/telescope.nvim',
     config   = configs.telescope,
@@ -45,7 +45,7 @@ local plugins = {
     }
   },
 
-  -- Treesitter
+  -- Treesitter [nvim-treesitter.lua]
   {
     'nvim-treesitter/nvim-treesitter',
     event    = 'BufRead',
@@ -54,7 +54,7 @@ local plugins = {
     requires = {{'nvim-treesitter/nvim-treesitter-textobjects', after = 'nvim-treesitter' }}
   },
 
-  -- LSP
+  -- LSP lsp.lua
   {
     'neovim/nvim-lspconfig',
     config   = configs.nvim_lsp,
@@ -65,7 +65,7 @@ local plugins = {
     }
   },
 
-  -- Completion
+  -- Completion [completions.lua]
   {
     'L3MON4D3/LuaSnip',
     event  = 'InsertCharPre',
@@ -89,7 +89,7 @@ local plugins = {
     }
   },
 
-  -- Movement improvements
+  -- Movement improvements [movements.lua]
   {'junegunn/vim-easy-align'},
   {
     'kylechui/nvim-surround',
