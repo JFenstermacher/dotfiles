@@ -20,7 +20,6 @@ local configs = get_configs()
 
 local plugins = {
   -- Aesthetics
-
   {
     'sainnhe/gruvbox-material',
     config = configs.gruvbox_material
@@ -35,10 +34,9 @@ local plugins = {
   },
 
   -- Fuzzy Finder
-
   {
     'nvim-telescope/telescope.nvim',
-    config = configs.telescope,
+    config   = configs.telescope,
     requires = {
       {'nvim-lua/popup.nvim'},
       {'nvim-lua/plenary.nvim'},
@@ -48,20 +46,18 @@ local plugins = {
   },
 
   -- Treesitter
-
   {
     'nvim-treesitter/nvim-treesitter',
-    event = 'BufRead',
-    run = ':TSUpdate',
-    config = configs.nvim_treesitter,
+    event    = 'BufRead',
+    run      = ':TSUpdate',
+    config   = configs.nvim_treesitter,
     requires = {{'nvim-treesitter/nvim-treesitter-textobjects', after = 'nvim-treesitter' }}
   },
 
   -- LSP
-
   {
     'neovim/nvim-lspconfig',
-    config = configs.nvim_lsp,
+    config   = configs.nvim_lsp,
     requires = {
       'williamboman/mason.nvim',
       'williamboman/mason-lspconfig.nvim',
@@ -70,10 +66,9 @@ local plugins = {
   },
 
   -- Completion
-
   {
     'L3MON4D3/LuaSnip',
-    event = 'InsertCharPre',
+    event  = 'InsertCharPre',
     config = configs.lua_snip
   },
   {
@@ -82,20 +77,19 @@ local plugins = {
   },
   {
     'hrsh7th/nvim-cmp',
-    config = configs.nvim_cmp,
-    after = {'nvim-autopairs'},
+    config   = configs.nvim_cmp,
+    after    = {'nvim-autopairs'},
     requires = {
       { 'windwp/nvim-autopairs' },
-      { 'hrsh7th/cmp-nvim-lsp', after = 'nvim-lspconfig' },
+      { 'hrsh7th/cmp-nvim-lsp',     after = 'nvim-lspconfig' },
       { 'saadparwaiz1/cmp_luasnip', after = 'LuaSnip' },
-      { 'hrsh7th/cmp-buffer', after = 'nvim-cmp' },
-      { 'hrsh7th/cmp-path', after = 'nvim-cmp' },
-      { 'hrsh7th/cmp-cmdline', after = 'nvim-cmp' }
+      { 'hrsh7th/cmp-buffer',       after = 'nvim-cmp' },
+      { 'hrsh7th/cmp-path',         after = 'nvim-cmp' },
+      { 'hrsh7th/cmp-cmdline',      after = 'nvim-cmp' }
     }
   },
 
   -- Movement improvements
-
   {'junegunn/vim-easy-align'},
   {
     'kylechui/nvim-surround',
@@ -103,13 +97,13 @@ local plugins = {
   },
   {
     'ggandor/leap.nvim',
-    as = 'leap',
-    config = configs.leap,
+    as       = 'leap',
+    config   = configs.leap,
     requires = {'tpope/vim-repeat'}
   },
   {
     'ggandor/flit.nvim',
-    config = configs.flit,
+    config   = configs.flit,
     requires = {'leap'}
   },
   
