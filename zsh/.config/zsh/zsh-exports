@@ -8,7 +8,7 @@ export VISUAL=nvim
 
 export LANG="en_US.UTF-8"
 
-export PATH="$PATH:$HOME/.local/bin"
+export PATH="$PATH:$HOME/.config/bin"
 
 # ZSH
 export ZDOTDIR=$XDG_CONFIG_HOME/zsh
@@ -25,3 +25,4 @@ export FZF_DEFAULT_COMMAND='fd --type f --hidden --exclude .git'
 
 # GOLANG
 export GOPATH=$HOME/workspace/go
+export PATH="$PATH:$GOPATH"
