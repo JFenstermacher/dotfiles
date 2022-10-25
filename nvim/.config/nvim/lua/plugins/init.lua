@@ -115,6 +115,13 @@ local plugins = {
     'tpope/vim-fugitive',
     cmd = {'Git', 'Gdiff'}
   },
+
+  -- Comment
+  {
+    'numToStr/Comment.nvim',
+    event = 'BufEnter',
+    config = configs.comment
+  }
 }
 
 for _, plugin in ipairs(plugins) do
