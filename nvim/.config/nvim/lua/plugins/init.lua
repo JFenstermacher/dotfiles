@@ -55,9 +55,11 @@ local plugins = {
   },
 
   -- LSP lsp.lua
+  {'hrsh7th/cmp-nvim-lsp'},
   {
     'neovim/nvim-lspconfig',
-    config   = configs.nvim_lsp,
+    config   = configs.nvim_lspconfig,
+    after    = 'cmp-nvim-lsp',
     requires = {
       'williamboman/mason.nvim',
       'williamboman/mason-lspconfig.nvim',
@@ -81,7 +83,7 @@ local plugins = {
     after    = {'nvim-autopairs'},
     requires = {
       { 'windwp/nvim-autopairs' },
-      { 'hrsh7th/cmp-nvim-lsp',     after = 'nvim-lspconfig' },
+      { 'hrsh7th/cmp-nvim-lsp' },
       { 'saadparwaiz1/cmp_luasnip', after = 'LuaSnip' },
       { 'hrsh7th/cmp-buffer',       after = 'nvim-cmp' },
       { 'hrsh7th/cmp-path',         after = 'nvim-cmp' },
