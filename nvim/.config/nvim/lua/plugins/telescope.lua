@@ -35,6 +35,7 @@ function config.telescope()
     },
     extensions = {
       file_browser = {
+        hide_parent_dir = true,
         initial_mode = 'normal',
         theme = "ivy",
         mappings = {

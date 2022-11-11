@@ -48,7 +48,6 @@ local plugins = {
   -- Treesitter [nvim-treesitter.lua]
   {
     'nvim-treesitter/nvim-treesitter',
-    event    = 'BufRead',
     run      = ':TSUpdate',
     config   = configs.nvim_treesitter,
     requires = {{'nvim-treesitter/nvim-treesitter-textobjects', after = 'nvim-treesitter' }}
