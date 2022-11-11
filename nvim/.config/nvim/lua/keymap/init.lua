@@ -11,6 +11,22 @@ nmap({
   { '<Leader>pi', cmd('PackerInstall'), opts(noremap, silent)},
   { '<Leader>pc', cmd('PackerCompile'), opts(noremap, silent)},
 
+  -- Lsp
+  { '<Leader>li', cmd('LspInfo') },
+  { '<Leader>ll', cmd('LspLog') },
+  { '<Leader>lr', cmd('LspRestart') },
+
+  -- Lspsaga
+  { '[e', cmd('Lspsaga diagnostic_jump_next') },
+  { ']e', cmd('Lspsaga diagnostic_jump_prve') },
+  { '[c', cmd('Lspsaga show_cursor_diagnostics') },
+  { 'K', cmd('Lspsaga hover_doc') },
+  { 'ga', cmd('Lspsaga code_action') },
+  { 'gd', cmd('Lspsaga peek_definition') },
+  { 'gs', cmd('Lspsaga signature_help') },
+  { 'gr', cmd('Lspsaga rename') },
+  { 'gh', cmd('Lspsaga lsp_finder') },
+
   -- Dashboard
   { '<Leader>n', cmd('DashboardNewFile'), opts(noremap, silent) },
 

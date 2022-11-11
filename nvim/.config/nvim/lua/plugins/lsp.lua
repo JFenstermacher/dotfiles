@@ -1,5 +1,15 @@
 local configs = {}
 
+function configs.lspsaga()
+  local saga = require('lspsaga')
+
+  saga.init_lsp_saga({
+    symbol_in_winbar = {
+      enable = true
+    }
+  })
+end
+
 function configs.nvim_lspconfig()
   local mason = require('mason')
   local mason_lsp = require('mason-lspconfig')

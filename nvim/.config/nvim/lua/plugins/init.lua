@@ -66,6 +66,11 @@ local plugins = {
       'nvim-treesitter',
     }
   },
+  {
+    'glepnir/lspsaga.nvim',
+    config = configs.lspsaga,
+    after  = 'nvim-lspconfig'
+  },
 
   -- Completion [completions.lua]
   {
