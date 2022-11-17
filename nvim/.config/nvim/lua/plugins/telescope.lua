@@ -36,6 +36,8 @@ function config.telescope()
     extensions = {
       file_browser = {
         hide_parent_dir = true,
+        respect_gitignore = false,
+        hidden = true,
         initial_mode = 'normal',
         theme = "ivy",
         mappings = {
