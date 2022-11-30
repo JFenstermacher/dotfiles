@@ -1,60 +1,40 @@
-local config = {}
-
-function config.telescope()
-  local telescope = require('telescope')
-  local actions = require('telescope.actions')
-  local sorters = require('telescope.sorters')
-  local previewers = require('telescope.previewers')
-
-  local fb_actions = require('telescope').extensions.file_browser.actions
-  telescope.setup {
-    defaults = {
-      file_sorter = sorters.get_fzy_sorter,
-      color_devicons = true,
-      file_previewer   = previewers.vim_buffer_cat.new,
-      grep_previewer   = previewers.vim_buffer_vimgrep.new,
-      qflist_previewer = previewers.vim_buffer_qflist.new,
-
-      mappings = {
-        i = {
-          ['<C-q>'] = actions.send_to_qflist
-        }
-      }
-    },
-    pickers = {
-      buffers = {
-        sort_lastused = true,
-        mappings = {
-          i = { ['<c-d>'] = require('telescope.actions').delete_buffer },
-          n = { ['<c-d>'] = require('telescope.actions').delete_buffer }
-        }
-      },
-      find_files = {
-        find_command = {"fd", "--type", "f", "--hidden", "--exclude", ".git"}
-      }
-    },
-    extensions = {
-      file_browser = {
-        hide_parent_dir = true,
-        respect_gitignore = false,
-        hidden = true,
-        initial_mode = 'normal',
-        theme = "ivy",
-        mappings = {
-          ["n"] = {
-            ["-"] = fb_actions.goto_parent_dir
-          }
-        }
-      },
-      fzy_native = {
-        override_generic_sorter = false,
-        override_file_sorter = true,
-      }
-    }
-  }
-
-  telescope.load_extension('fzy_native')
-  telescope.load_extension('file_browser')
+-- :fennel:1669830422
+do
+  local ok_3f, telescope = pcall(require, "telescope")
+  local actions = require("telescope.actions")
+  if ok_3f then
+    telescope.setup({default = {mappings = {i = {["<C-q>"] = actions.send_to_qflist}}}})
+    telescope.load_extension("fzf")
+  else
+  end
 end
-
-return config
+local _2_
+do
+  vim.cmd(":Telescope buffers")
+  _2_ = true
+end
+vim.keymap.set({"n"}, "<leader>b", _2_, {silent = true})
+local _3_
+do
+  vim.cmd("Telescope live_grep")
+  _3_ = true
+end
+vim.keymap.set({"n"}, "<leader>fw", _3_, {silent = true})
+local _4_
+do
+  vim.cmd("Telescope find_files")
+  _4_ = true
+end
+vim.keymap.set({"n"}, "<leader>ff", _4_, {silent = true})
+local _5_
+do
+  vim.cmd("Telescope quickfix")
+  _5_ = true
+end
+vim.keymap.set({"n"}, "<leader>fq", _5_, {silent = true})
+local _6_
+do
+  vim.cmd("Telescope file_browser path=%:p:h")
+  _6_ = true
+end
+return vim.keymap.set({"n"}, "-", _6_, {silent = true})
