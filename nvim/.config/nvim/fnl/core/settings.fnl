@@ -1,31 +1,7 @@
 (require-macros :hibiscus.vim)
 
 (local fmt string.format)
-(local M {})
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Config Paths
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(set M.home vim.env.HOME)
-
-(set M.config_path
-  (fmt "%s/nvim" 
-    (or 
-      (os.getenv "XDG_CONFIG_DIR")
-      (fmt "%s/.config" M.home))))
-
-(set M.data_path
-  (fmt "%s/nvim"
-    (or 
-      (os.getenv "XDG_DATA_DIR")
-      (fmt "%s/.local/share" M.home))))
-
-(set M.cache_path
-  (fmt "%s/nvim"
-    (or 
-      (os.getenv "XDG_CACHE_DIR")
-      (fmt "%s/.cache" M.home))))
+(local {: cache-path : is-macos?} (require "core.common"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Options
@@ -47,7 +23,7 @@
 (set! showmode false)                                         ;; Shows current mode in message
 (set! scrolloff 2)                                            ;; Minimum rows to keep at bottom of screen
 (set! cmdheight 0)                                            ;; How many lines to give to the commandline
-(set! colorcolumn "120")                                        ;; Color column highlight
+(set! colorcolumn "120")                                      ;; Color column highlight
 (set! ruler false)                                            ;; Column and cursor position
 (set! pumheight 15)                                           ;; Max items to display in popup menu
 (set! list true)                                              ;; Show tabs and trailing spaces as other characters
@@ -63,10 +39,10 @@
 ;; Directories
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(set! directory (fmt "%s/swap/" M.cache_path))                ;; Swapfile directories
-(set! undodir (fmt "%s/undo/" M.cache_path))                  ;; Undofile directories
-(set! viewdir (fmt "%s/view/" M.cache_path))                  ;; :mkview file directories
-(set! spellfile (fmt "%s/spell/en.utf-8.add" M.cache_path))   ;; zg and zw commands added here
+(set! directory (fmt "%s/swap/" cache-path))                ;; Swapfile directories
+(set! undodir (fmt "%s/undo/" cache-path))                  ;; Undofile directories
+(set! viewdir (fmt "%s/view/" cache-path))                  ;; :mkview file directories
+(set! spellfile (fmt "%s/spell/en.utf-8.add" cache-path))   ;; zg and zw commands added here
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Disable Distribution Plugins
@@ -91,13 +67,6 @@
 (g! loaded_netrwSettings 1)
 (g! loaded_netrwFileHandlers 1)
 
-(require-macros :hibiscus.vim)
-(lambda is-macos? []
-  (let [uname (vim.loop.os_uname)]
-    (= uname.sysname "Darwin")))
-
-(print (is-macos?))
-  
 (when (is-macos?)
     (g! clipboard {:name "macOS-clipboard"
                    :copy {"+" "pbcopy"
@@ -105,5 +74,3 @@
                    :paste {"+" "pbpaste"
                            "*" "pbpaste"}
                    :cache_enabled 0}))
-
-:return M

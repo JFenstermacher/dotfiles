@@ -19,6 +19,6 @@ bootstrap "https://github.com/udayvir-singh/hibiscus.nvim"
 
 require [[tangerine]].setup{
   compiler = {
-    hooks = {"oninit"}
+    hooks = {"oninit", "onsave"}
   }
 }
