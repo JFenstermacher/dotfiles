@@ -75,7 +75,7 @@ time([[try_loadstring definition]], false)
 time([[Defining packer_plugins]], true)
 _G.packer_plugins = {
   ["Comment.nvim"] = {
-    config = { "\27LJ\2\n+\0\0\3\0\2\0\0036\0\0\0'\2\1\0D\0\2\0\20plugins/comment\frequire\0" },
+    config = { "\27LJ\2\n5\0\0\4\0\3\0\0066\0\0\0'\2\1\0B\0\2\0029\1\2\0004\3\0\0D\1\2\0\nsetup\fComment\frequire\0" },
     loaded = false,
     needs_bufread = false,
     only_cond = false,
@@ -114,21 +114,14 @@ _G.packer_plugins = {
     path = "/home/jfenstermacher/.local/share/nvim/site/pack/packer/start/cmp_luasnip",
     url = "https://github.com/saadparwaiz1/cmp_luasnip"
   },
-  conjure = {
-    loaded = false,
-    needs_bufread = false,
-    only_cond = false,
-    path = "/home/jfenstermacher/.local/share/nvim/site/pack/packer/opt/conjure",
-    url = "https://github.com/olical/conjure"
-  },
   ["flit.nvim"] = {
-    config = { "\27LJ\2\n(\0\0\3\0\2\0\0036\0\0\0'\2\1\0D\0\2\0\17plugins/flit\frequire\0" },
+    config = { "\27LJ\2\n2\0\0\4\0\3\0\0066\0\0\0'\2\1\0B\0\2\0029\1\2\0004\3\0\0D\1\2\0\nsetup\tflit\frequire\0" },
     loaded = true,
     path = "/home/jfenstermacher/.local/share/nvim/site/pack/packer/start/flit.nvim",
     url = "https://github.com/ggandor/flit.nvim"
   },
   ["gruvbox-material"] = {
-    config = { "\27LJ\2\n4\0\0\3\0\2\0\0036\0\0\0'\2\1\0D\0\2\0\29plugins/gruvbox-material\frequire\0" },
+    config = { "\27LJ\2\nD\0\0\3\0\3\0\0066\0\0\0009\0\1\0'\2\2\0B\0\2\1+\0\2\0L\0\2\0!colorscheme gruvbox-material\bcmd\bvim\0" },
     loaded = true,
     path = "/home/jfenstermacher/.local/share/nvim/site/pack/packer/start/gruvbox-material",
     url = "https://github.com/sainnhe/gruvbox-material"
@@ -152,7 +145,7 @@ _G.packer_plugins = {
   },
   mason = {
     after = { "mason-lspconfig" },
-    config = { "\27LJ\2\n)\0\0\3\0\2\0\0036\0\0\0'\2\1\0D\0\2\0\18plugins/mason\frequire\0" },
+    config = { "\27LJ\2\n3\0\0\4\0\3\0\0066\0\0\0'\2\1\0B\0\2\0029\1\2\0004\3\0\0D\1\2\0\nsetup\nmason\frequire\0" },
     loaded = true,
     only_config = true,
     path = "/home/jfenstermacher/.local/share/nvim/site/pack/packer/start/mason",
@@ -160,7 +153,7 @@ _G.packer_plugins = {
   },
   ["mason-lspconfig"] = {
     after = { "nvim-lspconfig" },
-    config = { "\27LJ\2\n3\0\0\3\0\2\0\0036\0\0\0'\2\1\0D\0\2\0\28plugins/mason-lspconfig\frequire\0" },
+    config = { "\27LJ\2\n=\0\0\4\0\3\0\0066\0\0\0'\2\1\0B\0\2\0029\1\2\0004\3\0\0D\1\2\0\nsetup\20mason-lspconfig\frequire\0" },
     load_after = {},
     loaded = true,
     needs_bufread = false,
@@ -262,44 +255,44 @@ _G.packer_plugins = {
 }
 
 time([[Defining packer_plugins]], false)
--- Config for: mason
-time([[Config for mason]], true)
-try_loadstring("\27LJ\2\n)\0\0\3\0\2\0\0036\0\0\0'\2\1\0D\0\2\0\18plugins/mason\frequire\0", "config", "mason")
-time([[Config for mason]], false)
 -- Config for: nvim-treesitter
 time([[Config for nvim-treesitter]], true)
 try_loadstring("\27LJ\2\n.\0\0\3\0\2\0\0036\0\0\0'\2\1\0D\0\2\0\23plugins/treesitter\frequire\0", "config", "nvim-treesitter")
 time([[Config for nvim-treesitter]], false)
+-- Config for: mason
+time([[Config for mason]], true)
+try_loadstring("\27LJ\2\n3\0\0\4\0\3\0\0066\0\0\0'\2\1\0B\0\2\0029\1\2\0004\3\0\0D\1\2\0\nsetup\nmason\frequire\0", "config", "mason")
+time([[Config for mason]], false)
+-- Config for: nvim-autopairs
+time([[Config for nvim-autopairs]], true)
+try_loadstring("\27LJ\2\n2\0\0\3\0\2\0\0036\0\0\0'\2\1\0D\0\2\0\27plugins/nvim-autopairs\frequire\0", "config", "nvim-autopairs")
+time([[Config for nvim-autopairs]], false)
 -- Config for: gruvbox-material
 time([[Config for gruvbox-material]], true)
-try_loadstring("\27LJ\2\n4\0\0\3\0\2\0\0036\0\0\0'\2\1\0D\0\2\0\29plugins/gruvbox-material\frequire\0", "config", "gruvbox-material")
+try_loadstring("\27LJ\2\nD\0\0\3\0\3\0\0066\0\0\0009\0\1\0'\2\2\0B\0\2\1+\0\2\0L\0\2\0!colorscheme gruvbox-material\bcmd\bvim\0", "config", "gruvbox-material")
 time([[Config for gruvbox-material]], false)
 -- Config for: flit.nvim
 time([[Config for flit.nvim]], true)
-try_loadstring("\27LJ\2\n(\0\0\3\0\2\0\0036\0\0\0'\2\1\0D\0\2\0\17plugins/flit\frequire\0", "config", "flit.nvim")
+try_loadstring("\27LJ\2\n2\0\0\4\0\3\0\0066\0\0\0'\2\1\0B\0\2\0029\1\2\0004\3\0\0D\1\2\0\nsetup\tflit\frequire\0", "config", "flit.nvim")
 time([[Config for flit.nvim]], false)
 -- Config for: leap
 time([[Config for leap]], true)
 try_loadstring("\27LJ\2\n(\0\0\3\0\2\0\0036\0\0\0'\2\1\0D\0\2\0\17plugins/leap\frequire\0", "config", "leap")
 time([[Config for leap]], false)
--- Config for: telescope.nvim
-time([[Config for telescope.nvim]], true)
-try_loadstring("\27LJ\2\n-\0\0\3\0\2\0\0036\0\0\0'\2\1\0D\0\2\0\22plugins/telescope\frequire\0", "config", "telescope.nvim")
-time([[Config for telescope.nvim]], false)
 -- Config for: lualine.nvim
 time([[Config for lualine.nvim]], true)
 try_loadstring("\27LJ\2\n+\0\0\3\0\2\0\0036\0\0\0'\2\1\0D\0\2\0\20plugins/lualine\frequire\0", "config", "lualine.nvim")
 time([[Config for lualine.nvim]], false)
--- Config for: nvim-autopairs
-time([[Config for nvim-autopairs]], true)
-try_loadstring("\27LJ\2\n2\0\0\3\0\2\0\0036\0\0\0'\2\1\0D\0\2\0\27plugins/nvim-autopairs\frequire\0", "config", "nvim-autopairs")
-time([[Config for nvim-autopairs]], false)
+-- Config for: telescope.nvim
+time([[Config for telescope.nvim]], true)
+try_loadstring("\27LJ\2\n-\0\0\3\0\2\0\0036\0\0\0'\2\1\0D\0\2\0\22plugins/telescope\frequire\0", "config", "telescope.nvim")
+time([[Config for telescope.nvim]], false)
 -- Load plugins in order defined by `after`
 time([[Sequenced loading]], true)
 vim.cmd [[ packadd mason-lspconfig ]]
 
 -- Config for: mason-lspconfig
-try_loadstring("\27LJ\2\n3\0\0\3\0\2\0\0036\0\0\0'\2\1\0D\0\2\0\28plugins/mason-lspconfig\frequire\0", "config", "mason-lspconfig")
+try_loadstring("\27LJ\2\n=\0\0\4\0\3\0\0066\0\0\0'\2\1\0B\0\2\0029\1\2\0004\3\0\0D\1\2\0\nsetup\20mason-lspconfig\frequire\0", "config", "mason-lspconfig")
 
 vim.cmd [[ packadd nvim-lspconfig ]]
 
@@ -316,13 +309,13 @@ vim.cmd [[augroup packer_load_aucmds]]
 vim.cmd [[au!]]
   -- Filetype lazy-loads
 time([[Defining lazy-load filetype autocommands]], true)
-vim.cmd [[au FileType fennel ++once lua require("packer.load")({'conjure', 'parinfer-rust'}, { ft = "fennel" }, _G.packer_plugins)]]
-vim.cmd [[au FileType clojure ++once lua require("packer.load")({'conjure', 'parinfer-rust'}, { ft = "clojure" }, _G.packer_plugins)]]
+vim.cmd [[au FileType clojure ++once lua require("packer.load")({'parinfer-rust'}, { ft = "clojure" }, _G.packer_plugins)]]
+vim.cmd [[au FileType fennel ++once lua require("packer.load")({'parinfer-rust'}, { ft = "fennel" }, _G.packer_plugins)]]
 time([[Defining lazy-load filetype autocommands]], false)
   -- Event lazy-loads
 time([[Defining lazy-load event autocommands]], true)
-vim.cmd [[au BufEnter * ++once lua require("packer.load")({'Comment.nvim'}, { event = "BufEnter *" }, _G.packer_plugins)]]
 vim.cmd [[au InsertCharPre * ++once lua require("packer.load")({'LuaSnip'}, { event = "InsertCharPre *" }, _G.packer_plugins)]]
+vim.cmd [[au BufEnter * ++once lua require("packer.load")({'Comment.nvim'}, { event = "BufEnter *" }, _G.packer_plugins)]]
 time([[Defining lazy-load event autocommands]], false)
 vim.cmd("augroup END")
 

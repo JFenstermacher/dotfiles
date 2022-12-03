@@ -1,4 +1,4 @@
--- :fennel:1670089215
+-- :fennel:1670104495
 local _local_1_ = require("core.common")
 local cmdstr = _local_1_["cmdstr"]
 local data_path = _local_1_["data-path"]
@@ -18,14 +18,14 @@ do
   do end (require("packer")).init({git = {clone_timeout = 120}, display = {open_fn = (require("packer.util")).float, working_sym = "\239\176\173", error_sym = "\239\153\150", done_sym = "\239\152\177", removed_sym = "\239\161\180", moved_sym = "\239\176\179"}})
 end
 local function _4_(use)
-  _G.assert((nil ~= use), "Missing argument use on core/pack.fnl:15")
+  _G.assert((nil ~= use), "Missing argument use on core/pack.fnl:16")
   use("wbthomason/packer.nvim")
   do
     use({"udayvir-singh/tangerine.nvim"})
     use({requires = {"udayvir-singh/tangerine.nvim"}, "udayvir-singh/hibiscus.nvim"})
-    use({ft = {"clojure", "fennel"}, "olical/conjure"})
     local function _5_()
-      return require("plugins/gruvbox-material")
+      vim.cmd("colorscheme gruvbox-material")
+      return true
     end
     use({config = _5_, "sainnhe/gruvbox-material"})
     use({"p00f/nvim-ts-rainbow"})
@@ -34,11 +34,13 @@ local function _4_(use)
     end
     use({config = _6_, "nvim-lualine/lualine.nvim"})
     local function _7_()
-      return require("plugins/mason")
+      local mod_1_auto = require("mason")
+      return mod_1_auto.setup((nil or {}))
     end
     use({as = "mason", config = _7_, "williamboman/mason.nvim"})
     local function _8_()
-      return require("plugins/mason-lspconfig")
+      local mod_1_auto = require("mason-lspconfig")
+      return mod_1_auto.setup((nil or {}))
     end
     use({after = "mason", as = "mason-lspconfig", config = _8_, "williamboman/mason-lspconfig.nvim"})
     local function _9_()
@@ -50,7 +52,8 @@ local function _4_(use)
     end
     use({as = "leap", config = _10_, "ggandor/leap.nvim"})
     local function _11_()
-      return require("plugins/flit")
+      local mod_1_auto = require("flit")
+      return mod_1_auto.setup((nil or {}))
     end
     use({config = _11_, requires = "leap", "ggandor/flit.nvim"})
     use({"junegunn/vim-easy-align"})
@@ -64,7 +67,8 @@ local function _4_(use)
     end
     use({config = _13_, run = "TSUpdate", "nvim-treesitter/nvim-treesitter"})
     local function _14_()
-      return require("plugins/comment")
+      local mod_1_auto = require("Comment")
+      return mod_1_auto.setup((nil or {}))
     end
     use({config = _14_, event = "BufEnter", "numToStr/Comment.nvim"})
     local function _15_()
@@ -88,4 +92,5 @@ end
 do end (require("packer")).startup(_4_)
 vim.keymap.set({"n"}, "<leader>pu", cmdstr("PackerUpdate"), {silent = true})
 vim.keymap.set({"n"}, "<leader>pi", cmdstr("PackerInstall"), {silent = true})
-return vim.keymap.set({"n"}, "<leader>pc", cmdstr("PackerCompile"), {silent = true})
+vim.keymap.set({"n"}, "<leader>pc", cmdstr("PackerCompile"), {silent = true})
+return vim.keymap.set({"n"}, "<leader>ps", cmdstr("PackerSync"), {silent = true})

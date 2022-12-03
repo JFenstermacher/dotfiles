@@ -19,20 +19,12 @@
                                             "<c-e>" (cmp.mapping.abort)
                                             "<cr>" (cmp.mapping.confirm {:select true})})})
 
-    (cmp.setup.cmdline [["/" "?"] 
-                        {:mapping (cmp.mapping.preset.cmdline)
-                         :sources [{:name "buffer"}]}])
+    (cmp.setup.cmdline ["/" "?"]
+                       {:mapping (cmp.mapping.preset.cmdline)
+                        :sources [{:name "buffer"}]})
 
-    (cmp.setup.cmdline [":" 
+    (cmp.setup.cmdline ":" 
                         {:mapping (cmp.mapping.preset.cmdline)
                          :sources (cmp.config.sources [{:name "path"}]
-                                                      [{:name "cmdline"}])}])
+                                                      [{:name "cmdline"}])})
     (cmp.event:on "confirm_done" (autopairs.on_confirm_done))))
-    
-
-;; (let [(ok? cmp) (pcall require "cmp")]
-;;   (when ok?
-;;     (cmp.setup 
-;;       {:sources (cmp.config.sources 
-;;                   [{:name "nvim_lsp"} {:name "luasnip"}]
-;;                   [{:name "buffer"}])})))

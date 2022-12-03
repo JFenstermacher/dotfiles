@@ -36,7 +36,7 @@
   (fstring "<cmd>lua ${call}<cr>"))
 
 (lambda M.cmdstr [cmd]
-  (.. "<cmd>" cmd "<cr>"))
+  (fstring "<cmd>${cmd}<cr>"))
 
 (lambda M.is-macos? []
   (let [uname (vim.loop.os_uname)]

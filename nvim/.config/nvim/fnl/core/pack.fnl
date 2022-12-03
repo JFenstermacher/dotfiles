@@ -1,6 +1,7 @@
 (require-macros :hibiscus.packer)
-(import-macros {: map!} :hibiscus.vim)
+(import-macros {: map! : color!} :hibiscus.vim)
 (import-macros {: fstring} :hibiscus.core)
+(import-macros {: setup!} :core.macros)
 (local {: cmdstr : data-path} (require "core.common"))
 
 (packer-setup {:git
@@ -23,15 +24,12 @@
   (use! :udayvir-singh/hibiscus.nvim
         :requires ["udayvir-singh/tangerine.nvim"])
 
-  (use! :olical/conjure
-        :ft ["clojure" "fennel"])
-
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Aesthetics
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   (use! :sainnhe/gruvbox-material
-        :module "plugins/gruvbox-material")
+        :config #(color! "gruvbox-material"))
 
   (use! :p00f/nvim-ts-rainbow)
 
@@ -43,11 +41,11 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   (use! :williamboman/mason.nvim
-        :module "plugins/mason"
+        :config (setup! "mason")
         :as "mason")
 
   (use! :williamboman/mason-lspconfig.nvim
-        :module "plugins/mason-lspconfig"
+        :config (setup! "mason-lspconfig")
         :after "mason"
         :as "mason-lspconfig")
 
@@ -65,7 +63,7 @@
         :as "leap")
   
   (use! :ggandor/flit.nvim
-        :module "plugins/flit"
+        :config (setup! "flit")
         :requires "leap")
 
   (use! :junegunn/vim-easy-align)
@@ -88,7 +86,7 @@
         :run "TSUpdate")
 
   (use! :numToStr/Comment.nvim
-        :module "plugins/comment"
+        :config (setup! "Comment")
         :event "BufEnter")
 
   (use! :windwp/nvim-autopairs
@@ -112,7 +110,7 @@
   (use! :tpope/vim-surround))
  
 
-
 (map! [n] "<leader>pu" (cmdstr "PackerUpdate"))
 (map! [n] "<leader>pi" (cmdstr "PackerInstall"))
 (map! [n] "<leader>pc" (cmdstr "PackerCompile"))
+(map! [n] "<leader>ps" (cmdstr "PackerSync"))
