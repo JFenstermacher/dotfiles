@@ -7,31 +7,19 @@
           sorters (require "telescope.sorters")
           previewers (require "telescope.previewers")
           fb-actions (. (require "telescope") "extensions" "file_browser" "actions")]
-
       (setup
-        {:defaults
-         {:file_sorter sorters.get_fzy_sorter
-          :file_previewer previewers.vim_buffer_cat.new
-          :grep_previewer previewers.vim_buffer_vimgrep.new
-          :qflist_previewer previewers.vim_buffer_qflist.new
-          :color_devicons true}
-        
-         :pickers
-         {:find_files
-          {:find_command ["fd" "--type" "f" "--hidden" "--exclude" ".git"]}}
-
-         :extensions
-         {:file_browser
-          {:hide_parent_dir true
-           :respect_gitignore false
-           :theme "ivy"
-           :mappings
-           {:n {"-" fb-actions.goto_parent_dir}}}}
-
-          :fzy_native
-          {:override_generic_sorter false
-           :override_file_sorter true}})
-
+        {:defaults {:file_sorter sorters.get_fzy_sorter
+                    :file_previewer previewers.vim_buffer_cat.new
+                    :grep_previewer previewers.vim_buffer_vimgrep.new
+                    :qflist_previewer previewers.vim_buffer_qflist.new
+                    :color_devicons true}
+         :pickers {:find_files {:find_command ["fd" "--type" "f" "--hidden" "--exclude" ".git"]}}
+         :extensions {:file_browser {:hide_parent_dir true
+                                     :respect_gitignore false
+                                     :theme "ivy"
+                                     :mappings {:n {"-" fb-actions.goto_parent_dir}}}}
+         :fzy_native {:override_generic_sorter false
+                      :override_file_sorter true}})
       (load_extension "fzy_native")
       (load_extension "file_browser"))))
 

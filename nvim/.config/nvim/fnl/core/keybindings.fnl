@@ -1,13 +1,13 @@
 (import-macros {: map!} :hibiscus.vim)
 (import-macros {: g!} :hibiscus.vim)
-(local common (require "core.common"))
-(local luastr common.luastr)
+(local {: lua-str} (require "core.common"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Common
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (g! mapleader " ")
+(g! maplocalleader ",")
 
 (map! [nx] " " "")
 
@@ -22,10 +22,10 @@
 
 (map! [n] "<leader>wv" ":vsplit<cr>")
 (map! [n] "<leader>ws" ":split<cr>")
-(map! [n] "<c-h>" (luastr "nvim-tmux-navigation" "NvimTmuxNavigateLeft"))
-(map! [n] "<c-j>" (luastr "nvim-tmux-navigation" "NvimTmuxNavigateDown"))
-(map! [n] "<c-k>" (luastr "nvim-tmux-navigation" "NvimTmuxNavigateUp"))
-(map! [n] "<c-l>" (luastr "nvim-tmux-navigation" "NvimTmuxNavigateRight"))
+(map! [n] "<c-h>" (lua-str "require('nvim-tmux-navigation').NvimTmuxNavigateLeft()"))
+(map! [n] "<c-j>" (lua-str "require('nvim-tmux-navigation').NvimTmuxNavigateDown()"))
+(map! [n] "<c-k>" (lua-str "require('nvim-tmux-navigation').NvimTmuxNavigateUp()"))
+(map! [n] "<c-l>" (lua-str "require('nvim-tmux-navigation').NvimTmuxNavigateRight()"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Misc Plugin

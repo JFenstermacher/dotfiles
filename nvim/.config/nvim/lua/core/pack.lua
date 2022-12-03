@@ -1,6 +1,7 @@
--- :fennel:1669871450
+-- :fennel:1670089215
 local _local_1_ = require("core.common")
 local cmdstr = _local_1_["cmdstr"]
+local data_path = _local_1_["data-path"]
 do
   if (0 == vim.fn.isdirectory("/home/jfenstermacher/.local/share/nvim/site/pack/packer/start/packer.nvim")) then
     print("packer.nvim: installing in data dir...")
@@ -14,36 +15,36 @@ do
     print("packer.nvim: installed")
   else
   end
-  do end (require("packer")).init({})
+  do end (require("packer")).init({git = {clone_timeout = 120}, display = {open_fn = (require("packer.util")).float, working_sym = "\239\176\173", error_sym = "\239\153\150", done_sym = "\239\152\177", removed_sym = "\239\161\180", moved_sym = "\239\176\179"}})
 end
 local function _4_(use)
-  _G.assert((nil ~= use), "Missing argument use on core/pack.fnl:7")
+  _G.assert((nil ~= use), "Missing argument use on core/pack.fnl:15")
   use("wbthomason/packer.nvim")
   do
     use({"udayvir-singh/tangerine.nvim"})
     use({requires = {"udayvir-singh/tangerine.nvim"}, "udayvir-singh/hibiscus.nvim"})
-    use({"alexghergh/nvim-tmux-navigation"})
+    use({ft = {"clojure", "fennel"}, "olical/conjure"})
     local function _5_()
       return require("plugins/gruvbox-material")
     end
     use({config = _5_, "sainnhe/gruvbox-material"})
+    use({"p00f/nvim-ts-rainbow"})
     local function _6_()
-      return require("plugins/telescope")
+      return require("plugins/lualine")
     end
-    use({config = _6_, requires = {"nvim-lua/popup.nvim", "nvim-lua/plenary.nvim", "nvim-telescope/telescope-fzy-native.nvim", "nvim-telescope/telescope-file-browser.nvim"}, "nvim-telescope/telescope.nvim"})
+    use({config = _6_, "nvim-lualine/lualine.nvim"})
     local function _7_()
-      return require("plugins/treesitter")
+      return require("plugins/mason")
     end
-    use({config = _7_, run = "TSUpdate", "nvim-treesitter/nvim-treesitter"})
+    use({as = "mason", config = _7_, "williamboman/mason.nvim"})
     local function _8_()
-      return require("plugins/comment")
+      return require("plugins/mason-lspconfig")
     end
-    use({config = _8_, event = "BufEnter", "numToStr/Comment.nvim"})
+    use({after = "mason", as = "mason-lspconfig", config = _8_, "williamboman/mason-lspconfig.nvim"})
     local function _9_()
-      return require("plugins/nvim-autopairs")
+      return require("plugins/nvim-lspconfig")
     end
-    use({config = _9_, "windwp/nvim-autopairs"})
-    use({"junegunn/vim-easy-align"})
+    use({after = "mason-lspconfig", config = _9_, requires = {"hrsh7th/cmp-nvim-lsp"}, "neovim/nvim-lspconfig"})
     local function _10_()
       return require("plugins/leap")
     end
@@ -52,18 +53,31 @@ local function _4_(use)
       return require("plugins/flit")
     end
     use({config = _11_, requires = "leap", "ggandor/flit.nvim"})
+    use({"junegunn/vim-easy-align"})
+    use({"alexghergh/nvim-tmux-navigation"})
     local function _12_()
-      return require("plugins/mason")
+      return require("plugins/telescope")
     end
-    use({as = "mason", config = _12_, "williamboman/mason.nvim"})
+    use({config = _12_, requires = {"nvim-lua/popup.nvim", "nvim-lua/plenary.nvim", "nvim-telescope/telescope-fzy-native.nvim", "nvim-telescope/telescope-file-browser.nvim"}, "nvim-telescope/telescope.nvim"})
     local function _13_()
-      return require("plugins/mason-lspconfig")
+      return require("plugins/treesitter")
     end
-    use({after = "mason", as = "mason-lspconfig", config = _13_, "williamboman/mason-lspconfig.nvim"})
+    use({config = _13_, run = "TSUpdate", "nvim-treesitter/nvim-treesitter"})
     local function _14_()
-      return require("plugins/nvim-lspconfig")
+      return require("plugins/comment")
     end
-    use({after = "mason-lspconfig", config = _14_, "neovim/nvim-lspconfig"})
+    use({config = _14_, event = "BufEnter", "numToStr/Comment.nvim"})
+    local function _15_()
+      return require("plugins/nvim-autopairs")
+    end
+    use({config = _15_, "windwp/nvim-autopairs"})
+    use({event = "InsertCharPre", "L3MON4D3/LuaSnip"})
+    local function _16_()
+      return require("plugins/nvim-cmp")
+    end
+    use({after = "nvim-lspconfig", config = _16_, requires = {"saadparwaiz1/cmp_luasnip", "hrsh7th/cmp-buffer", "hrsh7th/cmp-path", "hrsh7th/cmp-cmdline"}, "hrsh7th/nvim-cmp"})
+    use({ft = {"clojure", "fennel"}, run = "cargo build --release", "eraserhd/parinfer-rust"})
+    use({"tpope/vim-surround"})
   end
   if (true == _G.packer_bootstrap) then
     return (require("packer")).sync()

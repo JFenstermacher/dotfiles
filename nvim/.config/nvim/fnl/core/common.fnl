@@ -1,4 +1,5 @@
 (require-macros :hibiscus.vim)
+(import-macros {: fstring} :hibiscus.core)
 
 (local fmt string.format)
 (local M {})
@@ -31,8 +32,8 @@
 ;; Utility Functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(lambda M.luastr [mod func]
-  (fmt "<cmd>lua require(\"%s\").%s()<cr>" mod func))
+(lambda M.lua-str [call]
+  (fstring "<cmd>lua ${call}<cr>"))
 
 (lambda M.cmdstr [cmd]
   (.. "<cmd>" cmd "<cr>"))
