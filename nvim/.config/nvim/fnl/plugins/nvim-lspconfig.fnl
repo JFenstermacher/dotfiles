@@ -27,7 +27,12 @@
                        :tsserver {:flags {:debounce_text_changes 150}
                                   :on_attach (fn [client bufnr]
                                                (tset client :server_capabilities :document_formatting false)
-                                               (on-attach client bufnr))}})
+                                               (on-attach client bufnr))}
+                       :sumneko_lua {:settings {:Lua {:diagnostics {:globals "vim"}
+                                                      :workspace {:library {(vim.fn.expand :$VIMRUNTIME/lua) true
+                                                                            (vim.fn.expand :$VIMRUNTIME/lua/vim/lsp) true}
+                                                                  :maxPreload 10000
+                                                                  :preloadFileSize 10000}}}}})
 
 (fn get-server-config [server-name]
   (let [{: defaults} server-configs]
