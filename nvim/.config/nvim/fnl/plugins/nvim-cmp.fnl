@@ -1,17 +1,17 @@
 (local snippet-expand 
        (lambda [args]
          (let [{: body} args
-               {: lsp_expand} (require "luasnip")]
+               {: lsp_expand} (require :luasnip)]
            (lsp_expand body))))
 
-(let [(cmp-ok? cmp) (pcall require "cmp")
-      (autopairs-ok? autopairs) (pcall require "nvim-autopairs.completion.cmp")]
+(let [(cmp-ok? cmp) (pcall require :cmp)
+      (autopairs-ok? autopairs) (pcall require :nvim-autopairs.completion.cmp)]
   (when (and cmp-ok? autopairs-ok?)
     (cmp.setup 
       {:snippet snippet-expand
        :window {:completion (cmp.config.window.bordered)
                 :documentation (cmp.config.window.bordered)}
-       :sources (cmp.config.sources [{:name "nvim_lsp"} {:name "luasnip"}]
+       :sources (cmp.config.sources [{:name "nvim_lsp"} {:name "luasnip"} {:name "conjure"}]
                                     [{:name "buffer"}])
        :mapping (cmp.mapping.preset.insert {"<c-b>" (cmp.mapping.scroll_docs 4)
                                             "<c-f>" (cmp.mapping.scroll_docs 4)

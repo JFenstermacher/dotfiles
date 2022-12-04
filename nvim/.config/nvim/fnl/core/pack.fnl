@@ -30,6 +30,8 @@
   (use! :udayvir-singh/hibiscus.nvim
         :requires ["udayvir-singh/tangerine.nvim"])
 
+  (use! :Olical/conjure)
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Aesthetics
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -47,18 +49,18 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   (use! :williamboman/mason.nvim
-        :config (setup! "mason")
+        :config (setup! :mason)
         :as "mason")
 
   (use! :williamboman/mason-lspconfig.nvim
-        :config (setup! "mason-lspconfig")
+        :config (setup! :mason-lspconfig)
         :after "mason"
         :as "mason-lspconfig")
 
   (use! :neovim/nvim-lspconfig
         :module "plugins/nvim-lspconfig"
         :after "mason-lspconfig"
-        :requires ["hrsh7th/cmp-nvim-lsp"])
+        :requires [:hrsh7th/cmp-nvim-lsp])
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Movements
@@ -96,14 +98,15 @@
 
   (use! :nvim-treesitter/nvim-treesitter
         :module "plugins/treesitter"
-        :run "TSUpdate")
+        :run "TSUpdate"
+        :requires [:nvim-treesitter/nvim-treesitter-textobjects])
 
   (use! :numToStr/Comment.nvim
-        :config (setup! "Comment")
+        :config (setup! :Comment)
         :event "BufEnter")
 
   (use! :windwp/nvim-autopairs
-        :config (setup! "nvim-autopairs" {:disable_filetype [:TelescopePrompt :clojure :fennel]}))
+        :config (setup! :nvim-autopairs {:disable_filetype [:TelescopePrompt :clojure :fennel]}))
 
   (use! "L3MON4D3/LuaSnip"
         :event "InsertCharPre")
@@ -111,20 +114,21 @@
   (use! :hrsh7th/nvim-cmp
         :module "plugins/nvim-cmp"
         :after "nvim-lspconfig"
-        :requires ["saadparwaiz1/cmp_luasnip"
-                   "hrsh7th/cmp-buffer"
-                   "hrsh7th/cmp-path"
-                   "hrsh7th/cmp-cmdline"])
+        :requires [:saadparwaiz1/cmp_luasnip
+                   :hrsh7th/cmp-buffer
+                   :hrsh7th/cmp-path
+                   :hrsh7th/cmp-cmdline
+                   :PaterJason/cmp-conjure])
 
   (use! :eraserhd/parinfer-rust
         :run "cargo build --release"
-        :ft ["clojure" "fennel"])
+        :ft [:clojure :fennel])
 
   (use! :kylechui/nvim-surround
-        :config (setup! "nvim-surround")))
+        :config (setup! :nvim-surround)))
  
 
-(map! [n] "<leader>pu" (cmdstr "PackerUpdate"))
-(map! [n] "<leader>pi" (cmdstr "PackerInstall"))
-(map! [n] "<leader>pc" (cmdstr "PackerCompile"))
-(map! [n] "<leader>ps" (cmdstr "PackerSync"))
+(map! [n] "<leader>pu" (cmdstr :PackerUpdate))
+(map! [n] "<leader>pi" (cmdstr :PackerInstall))
+(map! [n] "<leader>pc" (cmdstr :PackerCompile))
+(map! [n] "<leader>ps" (cmdstr :PackerSync))

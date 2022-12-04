@@ -18,6 +18,31 @@ tbegin() {
   tmux send -X begin-selection
 }
 
+tjumpback() {
+  tmux send -X jump-backward $1
+}
+
+tjumpforward() {
+  tmux send -X jump-forward $1
+}
+
+tjumptoback() {
+  tmux send -X jump-to-backward $1
+}
+
+tjumptoforward() {
+  tmux send -X jump-to-forward $1
+}
+
+yankinside() {
+  local bc=$1
+  local fc=$( [ -z $2 ] && echo $1 || echo $2 )
+  tjumptobackward $bc
+  tbegin
+  tjumptoforward $fc
+  tcopy
+}
+
 tend() {
   [ "$1" == "e" ] && tmux send -X next-word-end || tmux send -X next-space-end
 }
@@ -26,12 +51,19 @@ tback() {
   [ "$1" == "b" ] && tmux send -X previous-word || tmux send -X previous-space
 }
 
+tswitch() {
+  tmux switch-client -T copy-mode-vi
+}
+
 COPY_CMD=$( get_copy_cmd )
 tcopy() {
   tmux send -X copy-pipe-and-cancel "$copy_cmd"
 }
 
 case $1 in
+  v)
+    tbegin
+    ;;
   yy)
     tmux send -X start-of-line
     tbegin
@@ -63,6 +95,18 @@ case $1 in
     tback "B"
     tcopy
     ;;
+  yidq)
+    yankinside '"'
+    ;;
+  yisq)
+    yankinside "'"
+    ;;
+  yisb)
+    yankinside '[' ']'
+    ;;
+  yip)
+    yankinside '(' ')'
+    ;;
   yiW)
     tback "B"
     tbegin
@@ -79,3 +123,5 @@ case $1 in
     tmux send -X cancel;
     ;;
 esac
+
+tswitch

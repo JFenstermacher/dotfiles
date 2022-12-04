@@ -7,6 +7,7 @@
 ;; Options
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(set! mouse "")                                                ;; Shuts off mouse support
 (set! clipboard [:unnamedplus])                                ;; Uses correct register
 (set! swapfile false)                                          ;; Swapfiles are annoying
 (set! termguicolors true)                                      ;; Better colors
