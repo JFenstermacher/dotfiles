@@ -37,7 +37,7 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   (use! :sainnhe/gruvbox-material
-        :config #(color! "gruvbox-material"))
+        :config #(color! :gruvbox-material))
 
   (use! :p00f/nvim-ts-rainbow)
 

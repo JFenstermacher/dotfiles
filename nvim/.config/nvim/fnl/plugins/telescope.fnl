@@ -29,9 +29,11 @@
                       :override_file_sorter true}})
       (load-extension :fzy_native)
       (load-extension :file_browser)
-      (load-extension :harpoon))))
+      (load-extension :harpoon)
+      (load-extension :dotfiles))))
 
 (map! [n] "<leader>fb" (cmd-str "Telescope buffers"))
+(map! [n] "<leader>fd" (cmd-str "Telescope dotfiles"))
 (map! [n] "<leader>fw" (cmd-str "Telescope live_grep"))
 (map! [n] "<leader>pf" (cmd-str "Telescope find_files"))
 (map! [n] "<leader>fq" (cmd-str "Telescope quickfix"))
