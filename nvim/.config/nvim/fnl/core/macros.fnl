@@ -1,7 +1,8 @@
 (local M {})
 
 (fn M.setup! [name opts?]
-  `#(let [mod# (require ,name)]
-      (mod#.setup (or ,opts? {}))))
+  `#(let [(ok?# mod#) (pcall require ,name)]
+      (when ok?#
+        (mod#.setup (or ,opts? {})))))
 
 :return M

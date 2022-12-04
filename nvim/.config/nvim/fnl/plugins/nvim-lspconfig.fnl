@@ -1,5 +1,6 @@
+(import-macros {: merge-tbl} :hibiscus.core)
 (import-macros {: map!} :hibiscus.vim)
-(local {: lua-str} (require "core.common"))
+(local {: lua-str} (require :core.common))
 
 (lambda on-attach [client bufnr]
   (map! [n] "gD" (lua-str "vim.lsp.buf.declaration()"))
@@ -16,14 +17,26 @@
   (map! [n] "glq" (lua-str "vim.diagnostic.setloclist()"))
   (map! [n] "qlQ" (lua-str "vim.diagnostic.setqflist()")))
 
-(lambda lsp-setup-server [server-name]
-  (let [{: setup} (. (require "lspconfig") server-name)
-        (cmp-nvim-lsp-ok? {: default_capabilities}) (pcall require "cmp_nvim_lsp")
+(local default-config
+  (let [(cmp-nvim-lsp-ok? {: default_capabilities}) (pcall require :cmp_nvim_lsp)
         server-config {:on_attach on-attach}]
     (when cmp-nvim-lsp-ok?
-      (tset server-config :capabilities (default_capabilities)))
-    (setup server-config)))
+      (tset server-config :capabilities (default_capabilities))) server-config))
 
-(let [(ok? {: setup_handlers}) (pcall require "mason-lspconfig")]
+(local server-configs {:defaults default-config
+                       :tsserver {:flags {:debounce_text_changes 150}
+                                  :on_attach (fn [client bufnr]
+                                               (tset client :server_capabilities :document_formatting false)
+                                               (on-attach client bufnr))}})
+(fn get-server-config [server-name]
+  (let [{: defaults} server-configs]
+    (-> server-configs
+      (. server-name)
+      (or {})
+      (merge-tbl defaults))))
+
+(let [(ok? {: setup_handlers}) (pcall require :mason-lspconfig)]
   (when ok?
-    (setup_handlers [lsp-setup-server])))
+    (setup_handlers [(fn [server-name]
+                       (let [{: setup} (. (require :lspconfig) server-name)]
+                         (setup (get-server-config server-name))))])))

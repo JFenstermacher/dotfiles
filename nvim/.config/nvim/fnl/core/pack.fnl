@@ -34,7 +34,7 @@
   (use! :p00f/nvim-ts-rainbow)
 
   (use! :nvim-lualine/lualine.nvim
-        :module "plugins/lualine")
+        :config (setup! "lualine" {:theme :gruvbox}))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; LSP Configurations
@@ -63,7 +63,7 @@
         :as "leap")
   
   (use! :ggandor/flit.nvim
-        :config (setup! "flit")
+        :config (setup! :flit)
         :requires "leap")
 
   (use! :junegunn/vim-easy-align)
@@ -71,15 +71,22 @@
   (use! :alexghergh/nvim-tmux-navigation)
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; Git
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  (use! :tpope/vim-fugitive
+        :cmd [:Git :Gdiff])
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Editor
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   (use! :nvim-telescope/telescope.nvim
         :module "plugins/telescope"
-        :requires ["nvim-lua/popup.nvim"
-                   "nvim-lua/plenary.nvim"
-                   "nvim-telescope/telescope-fzy-native.nvim"
-                   "nvim-telescope/telescope-file-browser.nvim"])
+        :requires [:nvim-lua/popup.nvim
+                   :nvim-lua/plenary.nvim
+                   :nvim-telescope/telescope-fzy-native.nvim
+                   :nvim-telescope/telescope-file-browser.nvim])
 
   (use! :nvim-treesitter/nvim-treesitter
         :module "plugins/treesitter"
@@ -90,7 +97,7 @@
         :event "BufEnter")
 
   (use! :windwp/nvim-autopairs
-        :module "plugins/nvim-autopairs")
+        :config (setup! "nvim-autopairs" {:disable_filetype [:TelescopePrompt :clojure :fennel]}))
 
   (use! "L3MON4D3/LuaSnip"
         :event "InsertCharPre")
@@ -107,7 +114,8 @@
         :run "cargo build --release"
         :ft ["clojure" "fennel"])
 
-  (use! :tpope/vim-surround))
+  (use! :kylechui/nvim-surround
+        :config (setup! "nvim-surround")))
  
 
 (map! [n] "<leader>pu" (cmdstr "PackerUpdate"))

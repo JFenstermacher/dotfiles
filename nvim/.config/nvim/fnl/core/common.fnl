@@ -1,5 +1,5 @@
 (require-macros :hibiscus.vim)
-(import-macros {: fstring} :hibiscus.core)
+(import-macros {: fstring : string?} :hibiscus.core)
 
 (local fmt string.format)
 (local M {})
@@ -36,6 +36,9 @@
   (fstring "<cmd>lua ${call}<cr>"))
 
 (lambda M.cmdstr [cmd]
+  (fstring "<cmd>${cmd}<cr>"))
+
+(lambda M.cmd-str [cmd]
   (fstring "<cmd>${cmd}<cr>"))
 
 (lambda M.is-macos? []

@@ -1,12 +1,12 @@
 (import-macros {: map! : exec} :hibiscus.vim)
 (local {: cmdstr} (require "core.common"))
 
-(let [(ok? {: setup : load_extension}) (pcall require "telescope")]
+(let [(ok? {: setup : load_extension}) (pcall require :telescope)]
   (when ok?
     (let [actions (require "telescope.actions")
           sorters (require "telescope.sorters")
           previewers (require "telescope.previewers")
-          fb-actions (. (require "telescope") "extensions" "file_browser" "actions")]
+          fb-actions (. (require "telescope") :extensions :file_browser :actions)]
       (setup
         {:defaults {:file_sorter sorters.get_fzy_sorter
                     :file_previewer previewers.vim_buffer_cat.new
