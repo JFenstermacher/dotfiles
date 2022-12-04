@@ -31,6 +31,9 @@
 (map! [n] "<c-k>" (lua-str "require('nvim-tmux-navigation').NvimTmuxNavigateUp()"))
 (map! [n] "<c-l>" (lua-str "require('nvim-tmux-navigation').NvimTmuxNavigateRight()"))
 
+(map! [n] "<leader>w=" "<c-w>=")
+(map! [n] "<leader>w-" "<c-w>_<c-w>|")
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Misc Plugin
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
