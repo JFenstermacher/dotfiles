@@ -1,11 +1,14 @@
+(import-macros {: fstring} :hibiscus.core)
 (import-macros {: map!} :hibiscus.vim)
 (local {: cmd-str} (require "core.common"))
 
 (fn load-extension [ext] 
-  (let [load-ext (. (require :telescope) :load_extensions)]
-    (pcall load-ext ext)))
+  (let [{: load_extension} (require :telescope)]
+    (let [(loaded? err) (pcall load_extension ext)]
+      (when (not loaded?)
+        (print (fstring "Telescope extension ${ext} failed to load: ${err}"))))))
 
-(let [(ok? {: setup : load_extension}) (pcall require :telescope)]
+(let [(ok? {: setup}) (pcall require :telescope)]
   (when ok?
     (let [actions (require "telescope.actions")
           sorters (require "telescope.sorters")

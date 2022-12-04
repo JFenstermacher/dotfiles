@@ -1,6 +1,6 @@
-(require-macros :hibiscus.vim)
+(import-macros {: fstring} :hibiscus.core)
+(import-macros {: g! : set!} :hibiscus.vim)
 
-(local fmt string.format)
 (local {: cache-path : is-macos?} (require "core.common"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -40,10 +40,10 @@
 ;; Directories
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(set! directory (fmt "%s/swap/" cache-path))                ;; Swapfile directories
-(set! undodir (fmt "%s/undo/" cache-path))                  ;; Undofile directories
-(set! viewdir (fmt "%s/view/" cache-path))                  ;; :mkview file directories
-(set! spellfile (fmt "%s/spell/en.utf-8.add" cache-path))   ;; zg and zw commands added here
+(set! directory (fstring "${cache-path}/swap/"))                ;; Swapfile directories
+(set! undodir (fstring "${cache-path}/undo/"))                  ;; Undofile directories
+(set! viewdir (fstring "${cache-path}/view/"))                  ;; :mkview file directories
+(set! spellfile (fstring "${cache-path}/spell/en.utf-8.add"))   ;; zg and zw commands added here
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Disable Distribution Plugins

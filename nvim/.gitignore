@@ -1,2 +1,2 @@
-.config/nvim/lua
-.config/nvim/plugin/packer_compiled.lua
+*.lua
+!0-bootstrap.lua

@@ -21,7 +21,11 @@ bootstrap "https://github.com/udayvir-singh/hibiscus.nvim"
 require [[impatient]]
 
 require [[tangerine]].setup{
+  rtpdirs = {
+    "after"
+  },
   compiler = {
-    hooks = {"oninit"}
+    verbose = false,
+    hooks = {"oninit", "onsave"}
   }
 }
