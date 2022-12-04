@@ -1,3 +1,5 @@
+(import-macros {: setup!} :core.macros)
+
 (let [(ok? {: setup}) (pcall require "nvim-treesitter.configs")]
   (when ok?
     (setup {:ensure_installed "all"

@@ -28,12 +28,13 @@
                                   :on_attach (fn [client bufnr]
                                                (tset client :server_capabilities :document_formatting false)
                                                (on-attach client bufnr))}})
+
 (fn get-server-config [server-name]
   (let [{: defaults} server-configs]
-    (-> server-configs
-      (. server-name)
-      (or {})
-      (merge-tbl defaults))))
+    (merge-tbl defaults
+      (-> server-configs
+        (. server-name)
+        (or {})))))
 
 (let [(ok? {: setup_handlers}) (pcall require :mason-lspconfig)]
   (when ok?

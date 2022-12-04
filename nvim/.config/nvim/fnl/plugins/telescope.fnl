@@ -1,5 +1,9 @@
-(import-macros {: map! : exec} :hibiscus.vim)
-(local {: cmdstr} (require "core.common"))
+(import-macros {: map!} :hibiscus.vim)
+(local {: cmd-str} (require "core.common"))
+
+(fn load-extension [ext] 
+  (let [load-ext (. (require :telescope) :load_extensions)]
+    (pcall load-ext ext)))
 
 (let [(ok? {: setup : load_extension}) (pcall require :telescope)]
   (when ok?
@@ -20,11 +24,14 @@
                                      :mappings {:n {"-" fb-actions.goto_parent_dir}}}}
          :fzy_native {:override_generic_sorter false
                       :override_file_sorter true}})
-      (load_extension "fzy_native")
-      (load_extension "file_browser"))))
+      (load-extension :fzy_native)
+      (load-extension :file_browser)
+      (load-extension :harpoon))))
 
-(map! [n] "<leader>fb" (cmdstr "Telescope buffers"))
-(map! [n] "<leader>fw" (cmdstr "Telescope live_grep"))
-(map! [n] "<leader>pf" (cmdstr "Telescope find_files"))
-(map! [n] "<leader>fq" (cmdstr "Telescope quickfix"))
-(map! [n] "-" (cmdstr "Telescope file_browser path=%:p:h"))
+(map! [n] "<leader>fb" (cmd-str "Telescope buffers"))
+(map! [n] "<leader>fw" (cmd-str "Telescope live_grep"))
+(map! [n] "<leader>pf" (cmd-str "Telescope find_files"))
+(map! [n] "<leader>fq" (cmd-str "Telescope quickfix"))
+(map! [n] "<leader>fk" (cmd-str "Telescope keymaps"))
+(map! [n] "<leader>fh" (cmd-str "Telescope harpoon marks"))
+(map! [n] "-"          (cmd-str "Telescope file_browser path=%:p:h"))

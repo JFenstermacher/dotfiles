@@ -42,7 +42,7 @@
   (use! :p00f/nvim-ts-rainbow)
 
   (use! :nvim-lualine/lualine.nvim
-        :config (setup! "lualine" {:theme :gruvbox}))
+        :config (setup! :lualine {:theme :gruvbox}))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; LSP Configurations
@@ -89,7 +89,12 @@
   ;; Editor
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+  (use! :ThePrimeagen/harpoon
+        :module "plugins/harpoon"
+        :requires [:nvim-lua/plenary.nvim])
+
   (use! :nvim-telescope/telescope.nvim
+        :after "harpoon"
         :module "plugins/telescope"
         :requires [:nvim-lua/popup.nvim
                    :nvim-lua/plenary.nvim
@@ -127,8 +132,7 @@
   (use! :kylechui/nvim-surround
         :config (setup! :nvim-surround)))
  
-
-(map! [n] "<leader>pu" (cmdstr :PackerUpdate))
-(map! [n] "<leader>pi" (cmdstr :PackerInstall))
-(map! [n] "<leader>pc" (cmdstr :PackerCompile))
-(map! [n] "<leader>ps" (cmdstr :PackerSync))
+(map! [n :verbose] "<leader>pu" (cmdstr :PackerUpdate))
+(map! [n :verbose] "<leader>pi" (cmdstr :PackerInstall))
+(map! [n :verbose] "<leader>pc" (cmdstr :PackerCompile))
+(map! [n :verbose] "<leader>ps" (cmdstr :PackerSync))
