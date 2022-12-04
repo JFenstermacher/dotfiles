@@ -39,6 +39,10 @@
   (use! :sainnhe/gruvbox-material
         :config #(color! :gruvbox-material))
 
+  (use! :glepnir/dashboard-nvim
+        :module "plugins/dashboard-nvim")
+
+
   (use! :p00f/nvim-ts-rainbow)
 
   (use! :nvim-lualine/lualine.nvim
