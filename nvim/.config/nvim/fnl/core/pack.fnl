@@ -40,10 +40,8 @@
         :config #(color! :gruvbox-material))
 
   (use! :glepnir/dashboard-nvim
-        :module "plugins/dashboard-nvim")
+        :require "plugins/dashboard-nvim")
 
-
-  (use! :p00f/nvim-ts-rainbow)
 
   (use! :nvim-lualine/lualine.nvim
         :config (setup! :lualine {:theme :gruvbox}))
@@ -62,7 +60,7 @@
         :as "mason-lspconfig")
 
   (use! :neovim/nvim-lspconfig
-        :module "plugins/nvim-lspconfig"
+        :require "plugins/nvim-lspconfig"
         :after "mason-lspconfig"
         :requires [:hrsh7th/cmp-nvim-lsp])
 
@@ -71,7 +69,7 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   (use! :ggandor/leap.nvim
-        :module "plugins/leap"
+        :require "plugins/leap"
         :as "leap")
   
   (use! :ggandor/flit.nvim
@@ -94,21 +92,22 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   (use! :ThePrimeagen/harpoon
-        :module "plugins/harpoon"
+        :require "plugins/harpoon"
         :requires [:nvim-lua/plenary.nvim])
 
   (use! :nvim-telescope/telescope.nvim
         :after "harpoon"
-        :module "plugins/telescope"
+        :require "plugins/telescope"
         :requires [:nvim-lua/popup.nvim
                    :nvim-lua/plenary.nvim
                    :nvim-telescope/telescope-fzy-native.nvim
                    :nvim-telescope/telescope-file-browser.nvim])
 
   (use! :nvim-treesitter/nvim-treesitter
-        :module "plugins/treesitter"
+        :require "plugins/treesitter"
         :run "TSUpdate"
-        :requires [:nvim-treesitter/nvim-treesitter-textobjects])
+        :requires [:nvim-treesitter/nvim-treesitter-textobjects
+                   :p00f/nvim-ts-rainbow])
 
   (use! :numToStr/Comment.nvim
         :config (setup! :Comment)
@@ -121,7 +120,7 @@
         :event "InsertCharPre")
 
   (use! :hrsh7th/nvim-cmp
-        :module "plugins/nvim-cmp"
+        :require "plugins/nvim-cmp"
         :after "nvim-lspconfig"
         :requires [:saadparwaiz1/cmp_luasnip
                    :hrsh7th/cmp-buffer
