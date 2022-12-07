@@ -19,10 +19,11 @@ export SAVEHIST=10000
 
 # AWS
 export AWS_REGION=us-east-1
+export AWS_SDK_CONFIG_LOAD=1
 
 # FZF
 export FZF_DEFAULT_COMMAND='fd --type f --hidden --exclude .git'
 
 # GOLANG
 export GOPATH=$HOME/workspace/go
-export PATH="$PATH:$GOPATH"
+export PATH="$PATH:$GOPATH/bin"

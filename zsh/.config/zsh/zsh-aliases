@@ -3,4 +3,4 @@ alias nf='VAL=$(fzf); [ ! -z $VAL ] && nvim $VAL'
 alias nz='nvim $ZDOTDIR/.zshrc'
 alias sz='source $ZDOTDIR/.zshrc'
 
-alias awsps='export AWS_PROFILE=$( aws configure list-profiles | fzf )'
+alias awsps="export AWS_PROFILE=\$( perl -n -e'/\[profile (.*)\]/ && print \"\$1\n\"' $HOME/.aws/config | fzf )"
