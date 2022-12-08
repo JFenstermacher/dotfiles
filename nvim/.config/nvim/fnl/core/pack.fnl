@@ -117,7 +117,9 @@
         :config (setup! :nvim-autopairs {:disable_filetype [:TelescopePrompt :clojure :fennel]}))
 
   (use! "L3MON4D3/LuaSnip"
-        :event "InsertCharPre")
+        :event "InsertCharPre"
+        :require "plugins/luasnip"
+        :requires [:rafamadriz/friendly-snippets])
 
   (use! :hrsh7th/nvim-cmp
         :require "plugins/nvim-cmp"
