@@ -26,7 +26,7 @@ tjumpforward() {
   tmux send -X jump-forward $1
 }
 
-tjumptoback() {
+tjumptobackward() {
   tmux send -X jump-to-backward $1
 }
 
