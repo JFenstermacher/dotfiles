@@ -49,3 +49,22 @@ function zvm_config() {
 function get_aws_profiles() {
   perl -n -e'/\[profile (.*)\]/ && print "$1\n"' ~/.aws/config
 }
+
+function terraform() {
+  function load_env_file() {
+    local envfile=".env"
+    if [[ "$1" =~ -chdir= ]]; then
+      dir="${1#-chdir=}/${envfile}"
+    fi
+
+    if [ -f $envfile ]; then
+      set -a
+      source $envfile
+      set +a
+    fi
+  }
+
+  load_env_file $1
+
+  command terraform $@
+}
