@@ -7,7 +7,7 @@
   (map! [n] "gk" (lua-str "vim.lsp.buf.signature_help()"))
   (map! [n] "gR" (lua-str "vim.lsp.buf.rename()"))
   (map! [n] "gT" (lua-str "vim.lsp.buf.type_definition()"))
-  (map! [nx] "ga" (lua-str "vim.lsp.buf.code_action()"))
+  (map! [nx] "gca" (lua-str "vim.lsp.buf.code_action()"))
   (map! [n] "gd" (lua-str "vim.lsp.buf.definition()"))
   (map! [n] "gi" (lua-str "vim.lsp.buf.implementation()"))
   (map! [n] "K" (lua-str "vim.lsp.buf.hover()"))

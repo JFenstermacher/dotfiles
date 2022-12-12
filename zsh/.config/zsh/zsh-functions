@@ -54,7 +54,7 @@ function terraform() {
   function load_env_file() {
     local envfile=".env"
     if [[ "$1" =~ -chdir= ]]; then
-      dir="${1#-chdir=}/${envfile}"
+      envfile="${1#-chdir=}/${envfile}"
     fi
 
     if [ -f $envfile ]; then
