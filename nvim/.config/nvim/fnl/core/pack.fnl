@@ -30,7 +30,8 @@
   (use! :udayvir-singh/hibiscus.nvim
         :requires ["udayvir-singh/tangerine.nvim"])
 
-  (use! :Olical/conjure)
+  (use! :Olical/conjure
+        :ft [:clojure :fennel])
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; Aesthetics
@@ -127,8 +128,7 @@
         :requires [:saadparwaiz1/cmp_luasnip
                    :hrsh7th/cmp-buffer
                    :hrsh7th/cmp-path
-                   :hrsh7th/cmp-cmdline
-                   :PaterJason/cmp-conjure])
+                   :hrsh7th/cmp-cmdline])
 
   (use! :eraserhd/parinfer-rust
         :run "cargo build --release"

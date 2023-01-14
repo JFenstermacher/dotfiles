@@ -24,7 +24,7 @@
 (set! showmode false)                                          ;; Shows current mode in message
 (set! scrolloff 2)                                             ;; Minimum rows to keep at bottom of screen
 (set! cmdheight 0)                                             ;; How many lines to give to the commandline
-(set! colorcolumn "120")                                       ;; Color column highlight
+(set! colorcolumn :120)                                        ;; Color column highlight
 (set! ruler false)                                             ;; Column and cursor position
 (set! pumheight 15)                                            ;; Max items to display in popup menu
 (set! list true)                                               ;; Show tabs and trailing spaces as other characters

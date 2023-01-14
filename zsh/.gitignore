@@ -3,3 +3,4 @@
 .config/zsh/personal
 .config/zsh/.zshistory
 .config/zsh/.zcompdump
+.config/zsh/.zfunc

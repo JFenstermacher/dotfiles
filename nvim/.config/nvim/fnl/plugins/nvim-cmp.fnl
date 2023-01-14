@@ -8,7 +8,7 @@
                             (lsp_expand body)))}
        :window {:completion (cmp.config.window.bordered)
                 :documentation (cmp.config.window.bordered)}
-       :sources (cmp.config.sources [{:name "nvim_lsp"} {:name "luasnip"} {:name "conjure"}]
+       :sources (cmp.config.sources [{:name "nvim_lsp"} {:name "luasnip"}]
                                     [{:name "buffer"}])
        :mapping (cmp.mapping.preset.insert {"<c-b>" (cmp.mapping.scroll_docs 4)
                                             "<c-f>" (cmp.mapping.scroll_docs 4)
