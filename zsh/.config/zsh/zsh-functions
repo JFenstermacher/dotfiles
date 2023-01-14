@@ -46,7 +46,7 @@ function zvm_config() {
   ZVM_VI_INSERT_ESCAPE_BINDKEY=jk
 }
 
-function get_aws_profiles() {
+function awslp() {
   perl -n -e'/\[profile (.*)\]/ && print "$1\n"' ~/.aws/config
 }
 
@@ -67,4 +67,41 @@ function terraform() {
   load_env_file $1
 
   command terraform $@
+}
+
+function installed() {
+  command -v $1 > /dev/null && return 0 || return 1
+}
+
+function asdf_setup() {
+  installed "asdf" || return
+
+  case $OSTYPE in
+    darwin*)
+      source /opt/homebrew/opt/asdf/libexec/asdf.sh
+      ;;
+    *)
+      source /opt/asdf-vm/asdf.sh
+      ;;
+  esac
+}
+
+function pdm_setup() {
+  installed "pdm" || return
+
+  local pdm_comp=$ZDOTDIR/.zfunc/_pdm
+  [ -f $pdm_comp ] || pdm completion zsh > $pdm_comp
+}
+
+function load_aws_completions() {
+  installed "aws_completer" || return
+
+  case $OSTYPE in
+    darwin*)
+      complete -C "/opt/homebrew/bin/aws_completer" aws
+      ;;
+    *)
+      complete -C "/usr/local/bin/aws_completer" aws
+      ;;
+  esac
 }

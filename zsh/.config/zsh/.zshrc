@@ -1,9 +1,6 @@
 #!/bin/sh
 
-# For whatever reason sometimes the root .zshrc doesn't get read
-# Setting ZDOTDIR once more here
 # PERSONAL_DIR contains computer specific configurations
-export ZDOTDIR=$HOME/.config/zsh
 PERSONAL_DIR=$ZDOTDIR/personal
 
 # Load useful functions
@@ -22,23 +19,37 @@ fi
 zsh_add_file "zsh-exports"
 zsh_add_file "zsh-aliases"
 
-# Useful Options
+##################################################################
+# OPTIONS
+##################################################################
+
 setopt autocd extendedglob nomatch
 setopt interactive_comments
 setopt appendhistory
 
-# Be silent
 unsetopt BEEP
 
-# Completions
+##################################################################
+# COMPLETIONS
+##################################################################
+
+CUSTOM_ZFUNC_DIR="$ZDOTDIR/.zfunc"
+mkdir -p $CUSTOM_ZFUNC_DIR
+fpath=( "$CUSTOM_ZFUNC_DIR" "${fpath[@]}" )
+
+autoload bashcompinit && bashcompinit
 autoload -Uz compinit && compinit
-zstyle ':completion:*' menu select
 zmodload zsh/complist
 _comp_options+=(globdots)
 
+load_aws_completions
+
 zsh_load_directory $PERSONAL_DIR
 
-# Load some plugins
+##################################################################
+# PLUGINS
+##################################################################
+
 PLUGINS=(
   "zsh-users/zsh-autosuggestions"
   "zsh-users/zsh-syntax-highlighting"
@@ -51,20 +62,18 @@ zsh_add_plugins "${PLUGINS[@]}"
 # Load favorite theme
 zsh_load_theme "romkatv/powerlevel10k"
 
+##################################################################
+# TOOL SETUPS
+##################################################################
+
 # Powerlevel10k customizations
-[[ ! -f $ZDOTDIR/.p10k.zsh ]] || source $ZDOTDIR/.p10k.zsh
+[ -f $ZDOTDIR/.p10k.zsh ] && source $ZDOTDIR/.p10k.zsh
 
 # FZF
 [ -f "$ZDOTDIR/.fzf.zsh" ] && source "$ZDOTDIR/.fzf.zsh"
 
-# NVM
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
 # ASDF
-if [[ $OSTYPE == "darwin"* ]]; then
-  source /opt/homebrew/opt/asdf/libexec/asdf.sh
-else
-  source /opt/asdf-vm/asdf.sh
-fi
+asdf_setup 
+
+# PDM
+pdm_setup  
