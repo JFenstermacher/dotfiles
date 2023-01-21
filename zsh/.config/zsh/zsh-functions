@@ -74,16 +74,17 @@ function installed() {
 }
 
 function asdf_setup() {
-  installed "asdf" || return
-
+  local setup_file=
   case $OSTYPE in
     darwin*)
-      source /opt/homebrew/opt/asdf/libexec/asdf.sh
+      setup_file=/opt/homebrew/opt/asdf/libexec/asdf.sh
       ;;
     *)
-      source /opt/asdf-vm/asdf.sh
+      setup_file=/opt/asdf-vm/asdf.sh
       ;;
   esac
+
+  [ -f "$setup_file" ] && source "$setup_file"
 }
 
 function pdm_setup() {
