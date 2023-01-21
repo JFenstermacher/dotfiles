@@ -14,13 +14,14 @@ function zsh_load_directory() {
 }
 
 function zsh_add_plugin() {
-  PLUGIN_NAME=$(echo $1 | cut -d "/" -f 2)
+  local plugin_name=$(echo $1 | cut -d "/" -f 2)
+  local plugin_dir="$ZDOTDIR/plugins/$plugin_name"
 
-  if [ ! -d $ZDOTDIR/plugins/$PLUGIN_NAME ]; then
-    git clone "https://github.com/$1.git" --depth=1 $ZDOTDIR/plugins/$PLUGIN_NAME
+  if [ ! -d $plugin_dir ]; then
+    git clone "https://github.com/$1.git" --depth=1 $plugin_dir
   fi
 
-  zsh_add_file plugins/$PLUGIN_NAME/$PLUGIN_NAME.plugin.zsh || zsh_add_file plugins/$PLUGIN_NAME/$PLUGIN_NAME.zsh
+  zsh_add_file $plugin_dir/$plugin_name.plugin.zsh || zsh_add_file $plugin_dir/$plugin_name.zsh
 }
 
 function zsh_load_theme() {
@@ -34,10 +35,17 @@ function zsh_load_theme() {
 }
 
 function zsh_add_plugins() {
-  local PLUGINS=($@)
+  local plugins=($@)
 
-  for plugin in "${PLUGINS[@]}"; do
+  for plugin in "${plugins[@]}"; do
     zsh_add_plugin $plugin
+  done
+}
+
+function zsh_refresh_plugins() {
+  for f in $ZDOTDIR/plugins/*; do
+    echo "[INFO] Refreshing: $( basename $f )"
+    $( cd $f && git pull -q )
   done
 }
 
