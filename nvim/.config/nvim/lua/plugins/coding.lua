@@ -36,4 +36,12 @@ return {
       { "ga", "<Plug>(EasyAlign)", mode = { "n", "v" }, desc = "Align elements" },
     },
   },
+  {
+    "clojure-vim/vim-jack-in",
+    dependencies = {
+      "tpope/vim-dispatch",
+      "radenling/vim-dispatch-neovim",
+    },
+    cmd = { "Boot", "Clj", "Lein" },
+  },
 }

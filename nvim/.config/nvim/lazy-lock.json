@@ -50,8 +50,11 @@
   "todo-comments.nvim": { "branch": "main", "commit": "077c59586d9d0726b0696dc5680eb863f4e04bc5" },
   "tokyonight.nvim": { "branch": "main", "commit": "4071f7fa984859c5de7a1fd27069b99c3a0d802a" },
   "trouble.nvim": { "branch": "main", "commit": "b2a0afac2c319a481f0f0318963a74d672ba5766" },
+  "vim-dispatch": { "branch": "master", "commit": "00e77d90452e3c710014b26dc61ea919bc895e92" },
+  "vim-dispatch-neovim": { "branch": "master", "commit": "c8c4e21a95c25032a041002f9bf6e45a75a73021" },
   "vim-easy-align": { "branch": "master", "commit": "12dd6316974f71ce333e360c0260b4e1f81169c3" },
   "vim-illuminate": { "branch": "master", "commit": "da80f3877896adcf77f59fb0bf74e9601615d372" },
+  "vim-jack-in": { "branch": "master", "commit": "5467e00e26f15680b0a7998f8aa20d5a7dd44cd5" },
   "vim-repeat": { "branch": "master", "commit": "24afe922e6a05891756ecf331f39a1f6743d3d5a" },
   "vim-startuptime": { "branch": "master", "commit": "cb4c112b9e0f224236ee4eab6bf5153406b3f88b" },
   "which-key.nvim": { "branch": "main", "commit": "e4fa445065a2bb0bbc3cca85346b67817f28e83e" }
