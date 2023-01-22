@@ -15,10 +15,10 @@ function zsh_load_directory() {
 
 function zsh_add_plugin() {
   local plugin_name=$(echo $1 | cut -d "/" -f 2)
-  local plugin_dir="$ZDOTDIR/plugins/$plugin_name"
+  local plugin_dir="plugins/$plugin_name"
 
-  if [ ! -d $plugin_dir ]; then
-    git clone "https://github.com/$1.git" --depth=1 $plugin_dir
+  if [ ! -d $ZDOTDIR/$plugin_dir ]; then
+    git clone "https://github.com/$1.git" --depth=1 $ZDOTDIR/$plugin_dir
   fi
 
   zsh_add_file $plugin_dir/$plugin_name.plugin.zsh || zsh_add_file $plugin_dir/$plugin_name.zsh
@@ -36,7 +36,7 @@ function zsh_load_theme() {
 
 function zsh_add_plugins() {
   local plugins=($@)
-
+  
   for plugin in "${plugins[@]}"; do
     zsh_add_plugin $plugin
   done
