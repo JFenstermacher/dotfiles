@@ -72,6 +72,9 @@ zsh_load_theme "romkatv/powerlevel10k"
 # FZF
 [ -f "$ZDOTDIR/.fzf.zsh" ] && source "$ZDOTDIR/.fzf.zsh"
 
+# BREW
+brew_setup
+
 # ASDF
 asdf_setup 
 
