@@ -5,6 +5,18 @@ return {
     config = function(_, opts)
       local cmp = require("cmp")
 
+      vim.tbl_deep_extend("force", opts, {
+        performance = {
+          fetching_timeout = 80,
+        },
+        sources = cmp.config.sources({
+          { name = "nvim_lsp", keyword_length = 6, group_index = 1, max_item_count = 30 },
+          { name = "luasnip" },
+          { name = "buffer" },
+          { name = "path" },
+        }),
+      })
+
       cmp.setup(opts)
 
       cmp.setup.cmdline({ "/", "?" }, {

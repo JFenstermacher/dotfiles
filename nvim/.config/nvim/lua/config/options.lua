@@ -3,3 +3,9 @@
 -- Add any additional options here
 vim.g.maplocalleader = ","
 vim.opt.swapfile = false
+
+vim.filetype.add({
+  pattern = {
+    [".*.tf"] = "terraform",
+  },
+})
