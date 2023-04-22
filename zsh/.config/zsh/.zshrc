@@ -80,3 +80,5 @@ asdf_setup
 
 # PDM
 pdm_setup  
+
+zsh_load_directory $PERSONAL_DIR/after

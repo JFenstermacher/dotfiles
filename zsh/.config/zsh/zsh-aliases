@@ -4,3 +4,7 @@ alias nz='nvim $ZDOTDIR/.zshrc'
 alias sz='source $ZDOTDIR/.zshrc'
 
 alias awsps="export AWS_PROFILE=\$( perl -n -e'/\[profile (.*)\]/ && print \"\$1\n\"' $HOME/.aws/config | fzf )"
+
+alias tf="terraform"
+alias grd="cd $(git rev-parse --show-toplevel 2>&1 || echo ".")"
+alias gs="git branch -l | fzf | xargs git co"
