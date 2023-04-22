@@ -56,4 +56,23 @@ return {
     },
     cmd = { "Boot", "Clj", "Lein" },
   },
+  {
+    "jose-elias-alvarez/null-ls.nvim",
+    event = "BufReadPre",
+    dependencies = { "mason.nvim" },
+    opts = function(_, opts)
+      local nls = require("null-ls")
+      table.insert(opts.sources, nls.builtins.formatting.stylua)
+      table.insert(opts.sources, nls.builtins.formatting.prettierd)
+    end,
+  },
+  {
+    "williamboman/mason.nvim",
+    opts = function(_, opts)
+      table.insert(opts.ensure_installed, "prettierd")
+    end,
+  },
+  {
+    "edgedb/edgedb-vim",
+  },
 }
