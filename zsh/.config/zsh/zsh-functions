@@ -215,3 +215,9 @@ function qwer() {
     *) command asdf "$COMMAND" "$@" ;;
   esac
 }
+
+function plz_setup() {
+  if installed "plz"; then
+    source <(plz --completion_script)
+  fi
+}
