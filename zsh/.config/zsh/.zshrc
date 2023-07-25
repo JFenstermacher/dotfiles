@@ -83,3 +83,5 @@ pdm_setup
 
 # PLZ Build
 plz_setup
+
+zsh_load_directory $PERSONAL_DIR/after

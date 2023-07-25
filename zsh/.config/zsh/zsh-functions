@@ -1,4 +1,5 @@
 # Function to source files if they exist
+
 function zsh_add_file() {
   [ -f $ZDOTDIR/$1 ] && source $ZDOTDIR/$1
 }
@@ -59,11 +60,19 @@ function awslp() {
 }
 
 function terraform() {
-  function load_env_file() {
-    local envfile=".env"
+  function get_dir() {
+    local tf_dir="${PWD}"
+
     if [[ "$1" =~ -chdir= ]]; then
-      envfile="${1#-chdir=}/${envfile}"
+      tf_dir="${tf_dir}/${1#-chdir=}"
     fi
+
+    echo "${tf_dir}"
+  }
+
+  function load_env_file() {
+    local dir="$1"
+    local envfile="$1/.env"
 
     if [ -f $envfile ]; then
       set -a
@@ -72,9 +81,10 @@ function terraform() {
     fi
   }
 
-  load_env_file $1
+  dir=$(get_dir "$@")
+  load_env_file "$dir"
 
-  command terraform $@
+  command terraform "$@"
 }
 
 function installed() {
