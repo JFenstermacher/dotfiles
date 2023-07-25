@@ -59,16 +59,5 @@ return {
       end
     end,
   },
-  {
-    "ggandor/leap.nvim",
-    event = "VeryLazy",
-    keys = {
-      { "s", "<Plug>(leap-forward-to)", mode = { "n", "x", "o" }, silent = true },
-      { "S", "<Plug>(leap-backward-to)", mode = { "n", "x", "o" }, silent = true },
-      { "gs", "<Plug>(leap-cross-window)", mode = { "n", "x", "o" }, silent = true },
-    },
-    dependencies = { { "ggandor/flit.nvim", opts = { labeled_modes = "nv" } } },
-    config = true,
-  },
   { "folke/persistence.nvim", enabled = false },
 }
