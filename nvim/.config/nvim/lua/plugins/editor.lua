@@ -2,7 +2,7 @@ return {
   {
     "alexghergh/nvim-tmux-navigation",
     config = true,
-    event = "VimEnter",
+    event = "BufReadPre",
     keys = {
       { "<c-h", ":NvimTmuxNavigateLeft<cr>", desc = "Navigate left window", silent = true },
       { "<c-j>", ":NvimTmuxNavigateDown<cr>", desc = "Navigate down window", silent = true },
