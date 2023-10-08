@@ -39,4 +39,10 @@ return {
       { "ga", "<Plug>(EasyAlign)", mode = { "n", "v" }, desc = "Align elements" },
     },
   },
+  {
+    "neovim/nvim-lspconfig",
+    opts = {
+      autoformat = true,
+    },
+  },
 }
