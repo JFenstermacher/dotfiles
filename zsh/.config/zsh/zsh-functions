@@ -103,6 +103,8 @@ function asdf_setup() {
   esac
 
   [ -f "$setup_file" ] && source "$setup_file"
+
+  alias asdf=asdfzf
 }
 
 function pdm_setup() {
@@ -133,7 +135,7 @@ function brew_setup() {
   fi
 }
 
-function qwer() {
+function asdfzf() {
   COMMAND="$1"
   [ "$#" -gt 0 ] && shift
 
