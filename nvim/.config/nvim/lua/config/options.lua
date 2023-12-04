@@ -6,6 +6,6 @@ vim.opt.swapfile = false
 
 vim.filetype.add({
   pattern = {
-    ["*.tf"] = "terraform",
+    ["*.tf"] = "hcl",
   },
 })
