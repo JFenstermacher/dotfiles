@@ -92,7 +92,11 @@ function installed() {
 }
 
 function asdf_setup() {
-  installed "asdf" && return
+  installed "asdf" || return
+
+  if alias | grep asdf > /dev/null; then
+    unalias asdf
+  fi
 
   local setup_file=
   case $OSTYPE in
@@ -110,14 +114,14 @@ function asdf_setup() {
 }
 
 function pdm_setup() {
-  installed "pdm" && return
+  installed "pdm" || return
 
   local pdm_comp=$ZDOTDIR/.zfunc/_pdm
   [ -f $pdm_comp ] || pdm completion zsh > $pdm_comp
 }
 
 function load_aws_completions() {
-  installed "aws_completer" && return
+  installed "aws_completer" || return
 
   case $OSTYPE in
     darwin*)
@@ -231,7 +235,7 @@ function asdfzf() {
 }
 
 function plz_setup() {
-  installed "plz" && return
+  installed "plz" || return
 
   source <(plz --completion_script)
 }
