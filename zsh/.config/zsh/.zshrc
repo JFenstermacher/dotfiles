@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # PERSONAL_DIR contains computer specific configurations
-PERSONAL_DIR=$ZDOTDIR/personal
+PERSONAL_DIR=$HOME/.personal/zsh
 
 # Load useful functions
 source $ZDOTDIR/zsh-functions
