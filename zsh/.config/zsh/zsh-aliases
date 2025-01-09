@@ -20,3 +20,10 @@ alias gfs="git ls-files -m -o --exclude-standard | fzf --print0 -m | xargs -0 -t
 # CD aliases
 alias cda="cd $HOME/.aws"
 alias cdw="cd $HOME/workspace"
+
+# Terramate
+alias tm="terramate"
+
+# Kubernetes
+alias k="kubectl"
+alias kcs="cat $HOME/.kube/config | yq '.contexts[].name' | fzf | xargs -I {} yq e '.current-context = \"{}\"' -i $HOME/.kube/config"
