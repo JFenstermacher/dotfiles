@@ -3,7 +3,9 @@ return {
   opts = {
     servers = {
       pyright = {},
-      gopls = {},
+      gopls = {
+        cmd_env = { GOFLAGS = "-tags=mage" },
+      },
     },
   },
 }
