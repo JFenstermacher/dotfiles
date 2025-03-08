@@ -23,6 +23,8 @@ alias cdw="cd $HOME/workspace"
 
 # Terramate
 alias tm="terramate"
+alias tmg="terramate generate"
+alias tmsr="terramate script run"
 
 # Kubernetes
 alias k="kubectl"
