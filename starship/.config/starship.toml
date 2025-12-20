@@ -1,92 +1,71 @@
-[buf]
-format = "via [$symbol]($style)"
+format = """
+$os$directory$git_branch$git_status$fill$cmd_duration$status
+$character"""
 
-[cmake]
-format = "via [$symbol]($style)"
+add_newline = false
 
-[cobol]
-format = "via [$symbol]($style)"
+[fill]
+symbol = " "
 
-[crystal]
-format = "via [$symbol]($style)"
+[os]
+disabled = false
+format = "[$symbol]($style) "
 
-[dart]
-format = "via [$symbol]($style)"
+[directory]
+style = "blue"
+truncation_length = 3
+truncation_symbol = "…/"
 
-[deno]
-format = "via [$symbol]($style)"
+[git_branch]
+symbol = " "
+style = "green"
+format = "[$symbol$branch]($style) "
 
-[dotnet]
-format = "[$symbol(🎯 $tfm )]($style)"
+[git_status]
+style = "green"
+format = "([$all_status$ahead_behind]($style) )"
+conflicted = "[~$count](red) "
+ahead = "[⇡$count](green) "
+behind = "[⇣$count](green) "
+untracked = "[?$count](blue) "
+modified = "[!$count](yellow) "
+staged = "[+$count](yellow) "
 
-[elixir]
-format = 'via [$symbol]($style)'
+[character]
+success_symbol = "[❯](green)"
+error_symbol = "[❯](red)"
+vicmd_symbol = "[❮](green)"
 
-[elm]
-format = 'via [$symbol]($style)'
+[cmd_duration]
+min_time = 3000
+format = "took [$duration](yellow) "
 
-[erlang]
-format = 'via [$symbol]($style)'
+[status]
+disabled = false
+format = "[$symbol]($style) "
+symbol = "✘ "
+style = "red"
 
-[golang]
-format = 'via [$symbol]($style)'
-
-[helm]
-format = 'via [$symbol]($style)'
-
-[julia]
-format = 'via [$symbol]($style)'
-
-[kotlin]
-format = 'via [$symbol]($style)'
-
-[lua]
-format = 'via [$symbol]($style)'
-
-[nim]
-format = 'via [$symbol]($style)'
+[aws]
+format = "on [$symbol($profile )(\\($region\\) )]($style)"
+style = "yellow"
 
 [nodejs]
-format = 'via [$symbol]($style)'
-
-[ocaml]
-format = 'via [$symbol(\($switch_indicator$switch_name\) )]($style)'
-
-[perl]
-format = 'via [$symbol]($style)'
-
-[php]
-format = 'via [$symbol]($style)'
-
-[pulumi]
-format = 'via [$symbol$stack]($style)'
-
-[purescript]
-format = 'via [$symbol]($style)'
+format = "via [$symbol($version )]($style)"
+style = "green"
 
 [python]
-format = 'via [$symbol]($style)'
+format = "via [$symbol($version )(\\($virtualenv\\) )]($style)"
+style = "cyan"
 
-[red]
-format = 'via [$symbol]($style)'
-
-[rlang]
-format = 'via [$symbol]($style)'
-
-[ruby]
-format = 'via [$symbol]($style)'
+[golang]
+format = "via [$symbol($version )]($style)"
+style = "cyan"
 
 [rust]
-format = 'via [$symbol]($style)'
+format = "via [$symbol($version )]($style)"
+style = "red"
 
-[swift]
-format = 'via [$symbol]($style)'
-
-[vagrant]
-format = 'via [$symbol]($style)'
-
-[vlang]
-format = 'via [$symbol]($style)'
-
-[zig]
-format = 'via [$symbol]($style)'
+[terraform]
+format = "via [$symbol($workspace )]($style)"
+style = "purple"

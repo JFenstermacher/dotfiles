@@ -11,13 +11,7 @@ zsh_load_directory $PERSONAL_DIR/before
 
 # Mise
 mise_setup
-
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
+eval "$(starship init zsh)"
 
 zsh_add_file "zsh-exports"
 zsh_add_file "zsh-aliases"
@@ -26,11 +20,35 @@ zsh_add_file "zsh-aliases"
 # OPTIONS
 ##################################################################
 
-setopt autocd extendedglob nomatch
-setopt interactive_comments
-setopt appendhistory
+# === History Configuration ===
+# Your Existing Options:
+setopt extended_history  # Write history in the ':start:elapsed;command' format (with timestamps).
+setopt append_history    # Append new history to the file rather than replacing it.
+setopt share_history     # Immediately synchronize history among all active shell sessions.
 
-unsetopt BEEP
+# === General Usability & Navigation ===
+# Your Existing Options:
+setopt autocd            # Allows typing just a directory name to 'cd' into it.
+setopt interactive_comments # Allows using '#' for comments in an interactive session.
+
+# === Completion and Correction ===
+# Your Existing Option (for Globbing):
+setopt extendedglob      # Enables powerful pattern matching (globbing) features.
+setopt nomatch           # Output an error if a glob pattern finds no matches (safer than passing unexpanded pattern).
+
+# Recommended Additions:
+setopt auto_menu         # Automatically start the menu selection when completing (e.g., on second Tab).
+setopt auto_param_keys   # Automatic completion for command parameters/options (e.g., ls -<Tab>).
+setopt complete_in_word  # Allow completion anywhere within a word, not just at the end.
+setopt correct           # Offer to correct typos in command names (e.g., 'dco' -> 'doc').
+
+# === Performance and Cleanup ===
+# Recommended Additions:
+setopt hash_list_all     # Hash the contents of all $path directories to speed up command lookups.
+
+# === Disabling Shell Features (unsetopt) ===
+# Your Existing Option:
+unsetopt beep            # Shut off the annoying terminal bell.
 
 ##################################################################
 # COMPLETIONS
@@ -62,15 +80,9 @@ PLUGINS=(
 
 zsh_add_plugins "${PLUGINS[@]}"
 
-# Load favorite theme
-zsh_load_theme "romkatv/powerlevel10k"
-
 ##################################################################
 # TOOL SETUPS
 ##################################################################
-
-# Powerlevel10k customizations
-[ -f $ZDOTDIR/.p10k.zsh ] && source $ZDOTDIR/.p10k.zsh
 
 # FZF
 [ -f "$ZDOTDIR/.fzf.zsh" ] && source "$ZDOTDIR/.fzf.zsh"

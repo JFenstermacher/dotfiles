@@ -12,13 +12,6 @@ else
   log_info "Mise is already installed"
 fi
 
-# Get current script directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# Run mise install in current directory
-log_info "Running mise install in $SCRIPT_DIR"
-mise --cd="$SCRIPT_DIR" install
-
 # Install TPM (Tmux Plugin Manager)
 if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
   log_info "Installing Tmux Plugin Manager..."
@@ -28,3 +21,10 @@ if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
 else
   log_info "Tmux Plugin Manager is already installed"
 fi
+
+# Run mise install in current directory
+log_info "Linking all dotfiles"
+mise stow
+
+log_info "Installing all tools"
+mise install

@@ -1,35 +1,79 @@
-#!/bin/bash
-#MISE description="Unstow dotfiles"
-#USAGE [dirs]...
+#!/usr/bin/env luajit
+--MISE description="Unlink dotfiles"
+--MISE tools={luajit="latest", go="1.24", "go:go.bbkane.com/fling"="1d695d156a38f25486f735ebc4dc3510a3b0f479"}
+--MISE USAGE arg "[modules]" var=#true
 
-source scripts/utils.sh
+local jit = require("jit")
+local raw_os = jit.os:lower()
+local os_name = raw_os == "osx" and "darwin" or raw_os
 
-DOTFILES_DIR="."
-STOW_ARGS="-d $DOTFILES_DIR -t $HOME -D"
-TO_STOW=()
+local function logInfo(msg) print(string.format("[\27[32mINFO\27[0m] %s", msg)) end
+local function logWarn(msg) print(string.format("[\27[33mWARN\27[0m] %s", msg)) end
+local function logError(msg) print(string.format("[\27[31mERROR\27[0m] %s", msg)) end
 
-if [ "$#" -gt 0 ]; then
-  # Use provided arguments
-  for dir in "$@"; do
-    if [ ! -d "$DOTFILES_DIR/$dir" ]; then
-      log_warn "'$dir' doesn't exist. Skipping."
+local platformFilters = ({
+  darwin = {xmodmap = true, xmonad = true, xorg = true},
+  linux = {},
+})[os_name] or {}
+
+local usage_modules = os.getenv("usage_modules") or ""
+local toUnlink = {}
+
+-- Parse arguments
+local args = {}
+for word in usage_modules:gmatch("[%w%-_%.]+") do
+  table.insert(args, word)
+end
+
+local function is_directory(path)
+  local res = os.execute(string.format("test -d %q", path))
+  return res == 0 or res == true
+end
+
+if #args > 0 then
+  -- Use provided arguments
+  for _, dir in ipairs(args) do
+    if is_directory(dir) then
+      if platformFilters[dir] then
+        logWarn(string.format("'%s' doesn't work for this platform: %s", dir, os_name))
+      else
+        table.insert(toUnlink, dir)
+      end
     else
-      TO_STOW+=("$dir")
-    fi
-  done
+      -- Check if it exists at all
+      local exists = os.execute(string.format("test -e %q", dir))
+      if exists == 0 or exists == true then
+        logWarn(string.format("'%s' is not a directory. Skipping.", dir))
+      else
+        logWarn(string.format("'%s' module doesn't exist. Skipping.", dir))
+      end
+    end
+  end
 else
-  # Default to all non-hidden directories except 'scripts'
-  for dir in */; do
-    dir=${dir%/} # remove trailing slash
-    # Check if it starts with a dot or is 'scripts'
-    if [[ "$dir" != "scripts" && "$dir" != .* ]]; then
-        TO_STOW+=("$dir")
-    fi
-  done
-fi
+  -- Default to all non-hidden directories except 'scripts' and '.mise-tasks'
+  local p = io.popen("ls -d */ 2>/dev/null")
+  if p then
+    for line in p:lines() do
+      local dir = line:gsub("/", "")
+      if not dir:match("^%.") and dir ~= "scripts" and dir ~= ".mise-tasks" and not platformFilters[dir] then
+        table.insert(toUnlink, dir)
+      end
+    end
+    p:close()
+  end
+end
 
-log_info "Action = unstow"
-for dir in "${TO_STOW[@]}"; do
-  log_info "  - ${dir}"
-  stow $STOW_ARGS "$dir"
-done
+if #toUnlink == 0 then
+  logInfo("No modules to unlink")
+  os.exit(0)
+end
+
+logInfo("Action = unlink (fling)")
+for _, dir in ipairs(toUnlink) do
+  logInfo(string.format("  - %s", dir))
+  local cmd = string.format("fling unlink --src-dir %q", dir)
+  local success = os.execute(cmd)
+  if not (success == 0 or success == true) then
+    logError(string.format("Failed to unlink %s", dir))
+  end
+end
