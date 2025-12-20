@@ -29,3 +29,7 @@ alias tmsr="terramate script run"
 # Kubernetes
 alias k="kubectl"
 alias kcs="cat $HOME/.kube/config | yq '.contexts[].name' | fzf | xargs -I {} yq e '.current-context = \"{}\"' -i $HOME/.kube/config"
+
+# Mise
+alias m="mise"
+alias mr="mise run"
