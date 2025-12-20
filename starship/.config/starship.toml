@@ -3,6 +3,19 @@ $os$directory$git_branch$git_status$fill$cmd_duration$status
 $character"""
 
 add_newline = false
+palette = "tokyonight"
+
+[palettes.tokyonight]
+bg = "#1a1b26"
+fg = "#c0caf5"
+red = "#f7768e"
+green = "#9ece6a"
+yellow = "#e0af68"
+blue = "#7aa2f7"
+magenta = "#bb9af7"
+cyan = "#7dcfff"
+white = "#a9b1d6"
+orange = "#ff9e64"
 
 [fill]
 symbol = " "
@@ -10,6 +23,7 @@ symbol = " "
 [os]
 disabled = false
 format = "[$symbol]($style) "
+style = "blue"
 
 [directory]
 style = "blue"
@@ -18,23 +32,23 @@ truncation_symbol = "…/"
 
 [git_branch]
 symbol = " "
-style = "green"
+style = "magenta"
 format = "[$symbol$branch]($style) "
 
 [git_status]
-style = "green"
+style = "red"
 format = "([$all_status$ahead_behind]($style) )"
 conflicted = "[~$count](red) "
 ahead = "[⇡$count](green) "
-behind = "[⇣$count](green) "
-untracked = "[?$count](blue) "
+behind = "[⇣$count](red) "
+untracked = "[?$count](orange) "
 modified = "[!$count](yellow) "
-staged = "[+$count](yellow) "
+staged = "[+$count](green) "
 
 [character]
 success_symbol = "[❯](green)"
 error_symbol = "[❯](red)"
-vicmd_symbol = "[❮](green)"
+vicmd_symbol = "[❮](blue)"
 
 [cmd_duration]
 min_time = 3000
@@ -48,7 +62,7 @@ style = "red"
 
 [aws]
 format = "on [$symbol($profile )(\\($region\\) )]($style)"
-style = "yellow"
+style = "orange"
 
 [nodejs]
 format = "via [$symbol($version )]($style)"
@@ -56,7 +70,7 @@ style = "green"
 
 [python]
 format = "via [$symbol($version )(\\($virtualenv\\) )]($style)"
-style = "cyan"
+style = "blue"
 
 [golang]
 format = "via [$symbol($version )]($style)"
@@ -64,8 +78,13 @@ style = "cyan"
 
 [rust]
 format = "via [$symbol($version )]($style)"
-style = "red"
+style = "orange"
 
 [terraform]
 format = "via [$symbol($workspace )]($style)"
-style = "purple"
+style = "magenta"
+
+[kubernetes]
+format = "on [$symbol$context( \\($namespace\\))]($style) "
+style = "blue"
+disabled = false
