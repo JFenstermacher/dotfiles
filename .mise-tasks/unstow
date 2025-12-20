@@ -1,0 +1,35 @@
+#!/bin/bash
+#MISE description="Unstow dotfiles"
+#USAGE [dirs]...
+
+source scripts/utils.sh
+
+DOTFILES_DIR="."
+STOW_ARGS="-d $DOTFILES_DIR -t $HOME -D"
+TO_STOW=()
+
+if [ "$#" -gt 0 ]; then
+  # Use provided arguments
+  for dir in "$@"; do
+    if [ ! -d "$DOTFILES_DIR/$dir" ]; then
+      log_warn "'$dir' doesn't exist. Skipping."
+    else
+      TO_STOW+=("$dir")
+    fi
+  done
+else
+  # Default to all non-hidden directories except 'scripts'
+  for dir in */; do
+    dir=${dir%/} # remove trailing slash
+    # Check if it starts with a dot or is 'scripts'
+    if [[ "$dir" != "scripts" && "$dir" != .* ]]; then
+        TO_STOW+=("$dir")
+    fi
+  done
+fi
+
+log_info "Action = unstow"
+for dir in "${TO_STOW[@]}"; do
+  log_info "  - ${dir}"
+  stow $STOW_ARGS "$dir"
+done

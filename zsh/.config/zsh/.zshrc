@@ -78,7 +78,7 @@ zsh_load_theme "romkatv/powerlevel10k"
 # BREW
 brew_setup
 
-# PDM
-pdm_setup  
+# UV
+uv_setup
 
 zsh_load_directory $PERSONAL_DIR/after

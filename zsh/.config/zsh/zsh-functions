@@ -59,34 +59,6 @@ function awslp() {
   perl -n -e'/\[profile (.*)\]/ && print "$1\n"' ~/.aws/config
 }
 
-function terraform() {
-  function get_dir() {
-    local tf_dir="${PWD}"
-
-    if [[ "$1" =~ -chdir= ]]; then
-      tf_dir="${tf_dir}/${1#-chdir=}"
-    fi
-
-    echo "${tf_dir}"
-  }
-
-  function load_env_file() {
-    local dir="$1"
-    local envfile="$1/.env"
-
-    if [ -f $envfile ]; then
-      set -a
-      source $envfile
-      set +a
-    fi
-  }
-
-  dir=$(get_dir "$@")
-  load_env_file "$dir"
-
-  command terraform "$@"
-}
-
 function installed() {
   command -v $1 > /dev/null && return 0 || return 1
 }
@@ -113,11 +85,11 @@ function asdf_setup() {
   alias asdf=asdfzf
 }
 
-function pdm_setup() {
-  installed "pdm" || return
+function uv_setup() {
+  installed "uv" || return
 
-  local pdm_comp=$ZDOTDIR/.zfunc/_pdm
-  [ -f $pdm_comp ] || pdm completion zsh > $pdm_comp
+  local uv_comp=$ZDOTDIR/.zfunc/_uv
+  [ -f $uv_comp ] || uv generate-shell-completion zsh > $uv_comp
 }
 
 function load_aws_completions() {
