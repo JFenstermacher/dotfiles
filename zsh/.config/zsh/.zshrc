@@ -1,20 +1,15 @@
-#!/bin/sh
+#!/usr/bin/env zsh
 
 # PERSONAL_DIR contains computer specific configurations
 PERSONAL_DIR=$HOME/.personal/zsh
 
-# Load useful functions
+# Load all the zsh goodness
+source $ZDOTDIR/zsh-exports
+source $ZDOTDIR/zsh-aliases
 source $ZDOTDIR/zsh-functions
 
 # Files to be loaded prior to Instant Prompt
 zsh_load_directory $PERSONAL_DIR/before
-
-# Mise
-mise_setup
-eval "$(starship init zsh)"
-
-zsh_add_file "zsh-exports"
-zsh_add_file "zsh-aliases"
 
 ##################################################################
 # OPTIONS
@@ -28,7 +23,7 @@ setopt share_history     # Immediately synchronize history among all active shel
 
 # === General Usability & Navigation ===
 # Your Existing Options:
-setopt autocd            # Allows typing just a directory name to 'cd' into it.
+setopt autocd               # Allows typing just a directory name to 'cd' into it.
 setopt interactive_comments # Allows using '#' for comments in an interactive session.
 
 # === Completion and Correction ===
@@ -36,15 +31,10 @@ setopt interactive_comments # Allows using '#' for comments in an interactive se
 setopt extendedglob      # Enables powerful pattern matching (globbing) features.
 setopt nomatch           # Output an error if a glob pattern finds no matches (safer than passing unexpanded pattern).
 
-# Recommended Additions:
 setopt auto_menu         # Automatically start the menu selection when completing (e.g., on second Tab).
 setopt auto_param_keys   # Automatic completion for command parameters/options (e.g., ls -<Tab>).
 setopt complete_in_word  # Allow completion anywhere within a word, not just at the end.
 setopt correct           # Offer to correct typos in command names (e.g., 'dco' -> 'doc').
-
-# === Performance and Cleanup ===
-# Recommended Additions:
-setopt hash_list_all     # Hash the contents of all $path directories to speed up command lookups.
 
 # === Disabling Shell Features (unsetopt) ===
 # Your Existing Option:
@@ -54,16 +44,29 @@ unsetopt beep            # Shut off the annoying terminal bell.
 # COMPLETIONS
 ##################################################################
 
-CUSTOM_ZFUNC_DIR="$ZDOTDIR/.zfunc"
-mkdir -p $CUSTOM_ZFUNC_DIR
+# 1. Define custom paths BEFORE using them
+CUSTOM_ZFUNC_DIR="$ZDATADIR/.zfunc"
+# Recommended location for the completion dump file (cache)
+export ZCOMPDUMP_FILE="$HOME/.cache/zsh/zcompdump-$ZSH_VERSION"
+
+# 2. Setup paths and autoload functions
+mkdir -p "$CUSTOM_ZFUNC_DIR"
+mkdir -p "$(dirname $ZCOMPDUMP_FILE)" # Ensure the cache directory exists
+
+# Set the function path (add your custom path first)
 fpath=( "$CUSTOM_ZFUNC_DIR" "${fpath[@]}" )
 
+# Autoload required functions
 autoload bashcompinit && bashcompinit
-autoload -Uz compinit && compinit
+autoload -Uz compinit
+
+# 3. Load completions and modules
 zmodload zsh/complist
 _comp_options+=(globdots)
 
-load_aws_completions
+# 4. Final, SINGLE compinit call using the -d option
+# This is the ONLY time compinit should be called!
+compinit -d "$ZCOMPDUMP_FILE"
 
 zsh_load_directory $PERSONAL_DIR
 
@@ -84,8 +87,10 @@ zsh_add_plugins "${PLUGINS[@]}"
 # TOOL SETUPS
 ##################################################################
 
-# FZF
-[ -f "$ZDOTDIR/.fzf.zsh" ] && source "$ZDOTDIR/.fzf.zsh"
+# Mise
+mise_setup
+
+eval "$(starship init zsh)"
 
 # BREW
 brew_setup

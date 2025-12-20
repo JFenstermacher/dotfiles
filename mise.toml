@@ -1,0 +1,5 @@
+[tools]
+python = "latest"
+go     = "1.24"
+usage  = "latest"
+"go:go.bbkane.com/fling"="1d695d156a38f25486f735ebc4dc3510a3b0f479"

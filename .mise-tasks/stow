@@ -1,79 +1,69 @@
-#!/usr/bin/env luajit
---MISE description="Symlink dotfiles"
---MISE tools={luajit="latest", go="1.24", "go:go.bbkane.com/fling"="1d695d156a38f25486f735ebc4dc3510a3b0f479"}
---MISE USAGE arg "[modules]" var=#true
+#!/usr/bin/env python3
+#MISE description="Symlink dotfiles"
+#USAGE arg "[modules]" var=#true
 
-local jit = require("jit")
-local raw_os = jit.os:lower()
-local os_name = raw_os == "osx" and "darwin" or raw_os
+import os
+import sys
+import subprocess
+import pathlib
 
-local function logInfo(msg) print(string.format("[\27[32mINFO\27[0m] %s", msg)) end
-local function logWarn(msg) print(string.format("[\27[33mWARN\27[0m] %s", msg)) end
-local function logError(msg) print(string.format("[\27[31mERROR\27[0m] %s", msg)) end
+def log_info(msg):
+    print(f"[\033[32mINFO\033[0m] {msg}")
 
-local platformFilters = ({
-  darwin = {xmodmap = true, xmonad = true, xorg = true},
-  linux = {},
-})[os_name] or {}
+def log_warn(msg):
+    print(f"[\033[33mWARN\033[0m] {msg}")
 
-local usage_modules = os.getenv("usage_modules") or ""
-local toLink = {}
+def log_error(msg):
+    print(f"[\033[31mERROR\033[0m] {msg}")
 
--- Parse arguments
-local args = {}
-for word in usage_modules:gmatch("[%w%-_%.]+") do
-  table.insert(args, word)
-end
+os_name = "darwin" if sys.platform == "darwin" else "linux"
 
-local function is_directory(path)
-  local res = os.execute(string.format("test -d %q", path))
-  return res == 0 or res == true
-end
+platform_filters = {
+    "darwin": {"xmodmap", "xmonad", "xorg"},
+    "linux": set(),
+}.get(os_name, set())
 
-if #args > 0 then
-  -- Use provided arguments
-  for _, dir in ipairs(args) do
-    if is_directory(dir) then
-      if platformFilters[dir] then
-        logWarn(string.format("'%s' doesn't work for this platform: %s", dir, os_name))
-      else
-        table.insert(toLink, dir)
-      end
-    else
-      -- Check if it exists at all
-      local exists = os.execute(string.format("test -e %q", dir))
-      if exists == 0 or exists == true then
-        logWarn(string.format("'%s' is not a directory. Skipping.", dir))
-      else
-        logWarn(string.format("'%s' module doesn't exist. Skipping.", dir))
-      end
-    end
-  end
-else
-  -- Default to all non-hidden directories except 'scripts' and '.mise-tasks'
-  local p = io.popen("ls -d */ 2>/dev/null")
-  if p then
-    for line in p:lines() do
-      local dir = line:gsub("/", "")
-      if not dir:match("^%.") and dir ~= "scripts" and dir ~= ".mise-tasks" and not platformFilters[dir] then
-        table.insert(toLink, dir)
-      end
-    end
-    p:close()
-  end
-end
+usage_modules = os.environ.get("usage_modules", "")
+to_link = []
 
-if #toLink == 0 then
-  logInfo("No modules to link")
-  os.exit(0)
-end
+# Parse arguments
+args = usage_modules.split()
 
-logInfo("Action = link (fling)")
-for _, dir in ipairs(toLink) do
-  logInfo(string.format("  - %s", dir))
-  local cmd = string.format("fling link --src-dir %q", dir)
-  local success = os.execute(cmd)
-  if not (success == 0 or success == true) then
-    logError(string.format("Failed to link %s", dir))
-  end
-end
+if args:
+    # Use provided arguments
+    for dir_name in args:
+        path = pathlib.Path(dir_name)
+        if path.is_dir():
+            if dir_name in platform_filters:
+                log_warn(f"'{dir_name}' doesn't work for this platform: {os_name}")
+            else:
+                to_link.append(dir_name)
+        else:
+            # Check if it exists at all
+            if path.exists():
+                log_warn(f"'{dir_name}' is not a directory. Skipping.")
+            else:
+                log_warn(f"'{dir_name}' module doesn't exist. Skipping.")
+else:
+    # Default to all non-hidden directories except 'scripts' and '.mise-tasks'
+    # Sort for deterministic behavior
+    for path in sorted(pathlib.Path(".").iterdir()):
+        if path.is_dir():
+            dir_name = path.name
+            if not dir_name.startswith(".") and dir_name not in {"scripts", ".mise-tasks"} and dir_name not in platform_filters:
+                to_link.append(dir_name)
+
+if not to_link:
+    log_info("No modules to link")
+    sys.exit(0)
+
+log_info("Action = link (fling)")
+for dir_name in to_link:
+    log_info(f"  - {dir_name}")
+    cmd = ["fling", "link", "--src-dir", dir_name, "--ask", "false"]
+    try:
+        subprocess.run(cmd, check=True)
+    except subprocess.CalledProcessError:
+        log_error(f"Failed to link {dir_name}")
+
+# vim: ft=python

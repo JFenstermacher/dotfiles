@@ -16,10 +16,10 @@ function zsh_load_directory() {
 
 function zsh_add_plugin() {
   local plugin_name=$(echo $1 | cut -d "/" -f 2)
-  local plugin_dir="plugins/$plugin_name"
+  local plugin_dir="$ZDATADIR/plugins/$plugin_name"
 
-  if [ ! -d $ZDOTDIR/$plugin_dir ]; then
-    git clone "https://github.com/$1.git" --depth=1 $ZDOTDIR/$plugin_dir
+  if [ ! -d $plugin_dir ]; then
+    git clone "https://github.com/$1.git" --depth=1 $plugin_dir
   fi
 
   zsh_add_file $plugin_dir/$plugin_name.plugin.zsh || zsh_add_file $plugin_dir/$plugin_name.zsh
@@ -88,21 +88,8 @@ function asdf_setup() {
 function uv_setup() {
   installed "uv" || return
 
-  local uv_comp=$ZDOTDIR/.zfunc/_uv
+  local uv_comp=$CUSTOM_ZFUNC_DIR/_uv
   [ -f $uv_comp ] || uv generate-shell-completion zsh > $uv_comp
-}
-
-function load_aws_completions() {
-  installed "aws_completer" || return
-
-  case $OSTYPE in
-    darwin*)
-      complete -C "/opt/homebrew/bin/aws_completer" aws
-      ;;
-    *)
-      complete -C "/usr/local/bin/aws_completer" aws
-      ;;
-  esac
 }
 
 function brew_setup() {

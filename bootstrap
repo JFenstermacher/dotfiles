@@ -22,9 +22,13 @@ else
   log_info "Tmux Plugin Manager is already installed"
 fi
 
+# Install dotfile dependencies
+mise install
+
 # Run mise install in current directory
 log_info "Linking all dotfiles"
 mise stow
 
+# Global mise tools now installed
 log_info "Installing all tools"
 mise install
