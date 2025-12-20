@@ -18,3 +18,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Run mise install in current directory
 log_info "Running mise install in $SCRIPT_DIR"
 mise --cd="$SCRIPT_DIR" install
+
+# Install TPM (Tmux Plugin Manager)
+if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
+  log_info "Installing Tmux Plugin Manager..."
+  git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
+  log_info "Installing tmux plugins..."
+  "$HOME/.tmux/plugins/tpm/bin/install_plugins"
+else
+  log_info "Tmux Plugin Manager is already installed"
+fi

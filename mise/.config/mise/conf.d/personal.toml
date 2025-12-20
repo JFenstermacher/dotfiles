@@ -1,3 +1,9 @@
+[settings]
+experimental = true
+
+[settings.npm]
+bun = true
+
 [tools]
 awscli = "latest"
 fd = "latest"
@@ -16,3 +22,8 @@ yq = "latest"
 usage = "latest"
 luajit = "latest"
 "conda:mosh" = "latest"
+tmux = "latest"
+gh = "latest"
+opencode = "latest"
+lazygit = "latest"
+bun = "latest"
