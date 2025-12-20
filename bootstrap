@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+# Source utils
+source "$(dirname "$0")/scripts/utils.sh"
+
+# Installs Mise if not installed
+if ! command -v mise &>/dev/null; then
+  log_info "Installing Mise..."
+  curl https://mise.run | sh
+  export PATH="$HOME/.local/bin:$PATH"
+else
+  log_info "Mise is already installed"
+fi
+
+# Get current script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Run mise install in current directory
+log_info "Running mise install in $SCRIPT_DIR"
+mise --cd="$SCRIPT_DIR" install
