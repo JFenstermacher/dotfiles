@@ -1,9 +1,5 @@
 # Function to source files if they exist
 
-function zsh_add_file() {
-  [ -f $ZDOTDIR/$1 ] && source $ZDOTDIR/$1
-}
-
 function zsh_load_directory() {
   if [ -d $1 ]; then
     for filename in $1/*; do
@@ -22,7 +18,7 @@ function zsh_add_plugin() {
     git clone "https://github.com/$1.git" --depth=1 $plugin_dir
   fi
 
-  zsh_add_file $plugin_dir/$plugin_name.plugin.zsh || zsh_add_file $plugin_dir/$plugin_name.zsh
+  source $plugin_dir/$plugin_name.plugin.zsh || source $plugin_dir/$plugin_name.zsh
 }
 
 function zsh_load_theme() {
