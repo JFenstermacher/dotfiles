@@ -1,0 +1,54 @@
+#!/usr/bin/env luajit
+
+-- Set directory
+local ROOT_DIR = arg[1] or os.getenv("HOME") .. "/workspace"
+local results = {}
+
+-- Function to execute a command and return output lines as a table
+local function execute_and_collect(command)
+	local lines = {}
+	local handle = io.popen(command, "r")
+
+	if handle then
+		for line in handle:lines() do
+			lines[#lines + 1] = line
+		end
+		handle:close()
+	end
+
+	return lines
+end
+
+--- 1. Find and process standard (non-bare) repositories ---
+local find_dirs_cmd = string.format("fd --type d -d 2 --base-directory %s", ROOT_DIR)
+
+results = {}
+local results_map = {}
+for _, dir in ipairs(execute_and_collect(find_dirs_cmd)) do
+	dir = dir:gsub("/$", "")
+	local parent, child = dir:match("^([^/]+)/([^/]+)$")
+	if not parent then
+		parent = dir
+		child = nil
+	end
+
+	local meta_dir = ROOT_DIR .. "/" .. parent .. "/" .. parent .. ".git"
+	local is_bare = os.execute(string.format('test -d "%s"', meta_dir)) == 0
+
+	if is_bare then
+		if child and child ~= parent .. ".git" then
+			results_map[string.format("%s (%s)", parent, child)] = true
+		end
+	else
+		results_map[parent] = true
+	end
+end
+
+for res in pairs(results_map) do
+	table.insert(results, res)
+end
+table.sort(results)
+
+for _, res in ipairs(results) do
+	print(res)
+end

@@ -15,6 +15,86 @@ local function exec(cmd)
 	return status
 end
 
+local function list_git_directories()
+	-- Set your base directory
+	local ROOT_DIR = os.getenv("HOME") .. "/workspace"
+	local results = {}
+
+	-- Function to execute a command and return output lines as a table
+	local function execute_and_collect(command)
+		local lines = {}
+		local handle = io.popen(command, "r")
+		if handle then
+			for line in handle:lines() do
+				lines[#lines + 1] = line
+			end
+			handle:close()
+		end
+		return lines
+	end
+
+	--- 1. Find and process standard (non-bare) repositories ---
+	local find_dirs_cmd = string.format("fd --type d --hidden --no-ignore-vcs --base-directory %s", ROOT_DIR)
+
+	for _, dir in ipairs(execute_and_collect(find_dirs_cmd)) do
+		if not dir:match("/%.git$") then
+			local is_std_repo_cmd = string.format('[[ -d "%s/.git" ]] && ! [[ -f "%s/.git" ]] && echo "Y"', dir, dir)
+			if execute_and_collect(is_std_repo_cmd)[1] == "Y" then
+				-- Standard repos are listed as just their path
+				results[#results + 1] = dir
+			end
+		end
+	end
+
+	--- 2. Find and process bare repositories and their worktrees ---
+	local find_bare_repos_cmd =
+		string.format('fd --type d --hidden --no-ignore-vcs --base-directory %s | grep "/\\.git$"', ROOT_DIR)
+
+	for _, bare_repo in ipairs(execute_and_collect(find_bare_repos_cmd)) do
+		local is_bare_cmd =
+			string.format('git -C "%s" rev-parse --is-bare-repository > /dev/null 2>&1 && echo "Y"', bare_repo)
+
+		if execute_and_collect(is_bare_cmd)[1] == "Y" then
+			-- Print the bare repository path itself (unformatted)
+			results[#results + 1] = bare_repo
+
+			-- Get the detailed porcelain output for worktrees
+			local worktree_porcelain_cmd = string.format('git -C "%s" worktree list --porcelain 2>/dev/null', bare_repo)
+			local worktree_output = execute_and_collect(worktree_porcelain_cmd)
+
+			local current_path = nil
+			local current_branch = nil
+
+			-- Process the porcelain output block by block
+			for _, line in ipairs(worktree_output) do
+				if line:match("^worktree ") then
+					-- Found a new worktree path
+					current_path = line:match("^worktree (.*)$")
+					current_branch = nil -- Reset branch for the new block
+				elseif line:match("^branch ") and current_path then
+					-- Found the branch for the current worktree
+					-- Extracts the branch name, e.g., refs/heads/main -> main
+					current_branch = line:match("refs/heads/(.*)$")
+				elseif line == "" and current_path then
+					-- End of a worktree block, process and format the result
+					local formatted_path = current_path
+					if current_branch then
+						-- Format as (<branch>) <path>
+						formatted_path = string.format("(%s) %s", current_branch, current_path)
+					end
+					results[#results + 1] = formatted_path
+
+					-- Reset for the next block
+					current_path = nil
+					current_branch = nil
+				end
+			end
+		end
+	end
+
+	return results
+end
+
 -- Check if in tmux
 local function not_in_tmux()
 	return os.getenv("TMUX") == nil
@@ -50,11 +130,8 @@ if dir == "--start" then
 else
 	-- ask user
 	-- Use < /dev/tty to ensure fzf gets user input
-	local cmd = string.format(
-		'cd %s && ls -d */ | sed "s|/||g" | fzf --reverse --header="Select project from $(basename %s) >"',
-		dir,
-		dir
-	)
+	local cmd =
+		string.format('list-workspaces | fzf --reverse --header="Select project from $(basename %s) >"', dir, dir)
 	local _session_name = exec_capture(cmd):gsub("\n", "")
 
 	-- session_name=${_session_name//./_}

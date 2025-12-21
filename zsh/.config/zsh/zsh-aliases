@@ -10,12 +10,16 @@ alias tf="terraform"
 
 alias nslookup='dig +short'
 
-# GIT Aliases
+# Git Aliases
 
 alias g="git"
 alias grd="cd $(git rev-parse --show-toplevel 2>&1 || echo ".")"
 alias gs="git branch -l | fzf | xargs git co"
 alias gfs="git ls-files -m -o --exclude-standard | fzf --print0 -m | xargs -0 -t -o git add"
+
+# GitHub aliases
+
+alias gcb="git-clone-bare"
 
 # CD aliases
 alias cda="cd $HOME/.aws"
