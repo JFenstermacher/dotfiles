@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+
+set -e
+
+# Function to find the bare repository (.git directory)
+find_git_dir() {
+  local current_dir="$1"
+  while [[ "$current_dir" != "/" ]]; do
+    # Check if current directory is a .git directory (bare)
+    if [[ "$current_dir" == *.git ]] && [[ -d "$current_dir" ]]; then
+      echo "$current_dir"
+      return 0
+    fi
+    # Check if there is a .git directory inside
+    local found=$(find "$current_dir" -maxdepth 2 -name "*.git" -type d | head -n 1)
+    if [[ -n "$found" ]]; then
+      echo "$found"
+      return 0
+    fi
+    current_dir=$(dirname "$current_dir")
+  done
+  return 1
+}
+
+GIT_DIR=$(find_git_dir "$(pwd)")
+
+if [[ -z "$GIT_DIR" ]]; then
+  echo "Error: Could not find a .git directory."
+  exit 1
+fi
+
+PARENT_DIR=$(dirname "$GIT_DIR")
+REPO_NAME=$(basename "$PARENT_DIR")
+
+# Get the default branch
+DEFAULT_BRANCH=$(git -C "$GIT_DIR" symbolic-ref --short HEAD 2>/dev/null || git -C "$GIT_DIR" rev-parse --abbrev-ref HEAD)
+
+# Get current worktree path
+CURRENT_WORKTREE=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
+
+# List worktrees, excluding the current one and the default branch
+# Format: path [branch]
+WORKTREES=$(git -C "$GIT_DIR" worktree list --porcelain | grep "^worktree " | cut -d' ' -f2-)
+
+TO_REMOVE=""
+for wt in $WORKTREES; do
+  # Skip if it's the current worktree
+  if [[ "$wt" == "$CURRENT_WORKTREE" ]]; then
+    continue
+  fi
+
+  # Skip if it's the bare repository itself
+  if [[ "$wt" == *.git ]]; then
+    continue
+  fi
+
+  # Get branch name for this worktree
+  wt_branch=$(git -C "$GIT_DIR" worktree list | grep "^$wt " | awk '{print $3}' | tr -d '[]')
+
+  # Skip if it's the default branch
+  if [[ "$wt_branch" == "$DEFAULT_BRANCH" ]]; then
+    continue
+  fi
+
+  TO_REMOVE+="$(basename "$wt")"$'\n'
+done
+
+if [[ -z "$TO_REMOVE" ]]; then
+  echo "No worktrees available to remove (excluding current and default branch)."
+  exit 0
+fi
+
+# Use fzf to select worktrees to remove
+# Use sed to remove any empty lines
+SELECTED=$(echo -n "$TO_REMOVE" | sed '/^$/d' | fzf --multi --reverse --header="Select worktrees to remove (Tab to multi-select) >")
+
+if [[ -z "$SELECTED" ]]; then
+  echo "No worktrees selected."
+  exit 0
+fi
+
+echo "$SELECTED" | while read -r rel_path; do
+  path="$PARENT_DIR/$rel_path"
+
+  # Get branch name for this path to kill tmux session
+  # git worktree list output: /path/to/worktree hash [branch]
+  branch=$(git -C "$GIT_DIR" worktree list | grep "^$path " | sed 's/.*\[\(.*\)\].*/\1/')
+
+  # If sed didn't find brackets, it might be detached or something else
+  if [[ "$branch" == "$path"* ]]; then
+    branch=""
+  fi
+
+  echo "Processing $rel_path (branch: $branch) at $path..."
+
+  # Remove tmux session if it exists
+  if [[ -n "$TMUX" ]] && [[ -n "$branch" ]]; then
+    SESSION_NAME=$(echo "${REPO_NAME}-${branch}" | tr ' .' '__')
+    if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+      echo "Killing tmux session '$SESSION_NAME'..."
+      tmux kill-session -t "$SESSION_NAME"
+    fi
+  fi
+
+  # Remove the worktree
+  echo "Removing worktree $rel_path..."
+  git -C "$GIT_DIR" worktree remove "$path"
+done
+
+echo "Done."

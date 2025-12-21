@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+
+set -e
+
+# Function to find the bare repository (.git directory)
+find_git_dir() {
+  local current_dir="$1"
+  while [[ "$current_dir" != "/" ]]; do
+    # Check if current directory is a .git directory (bare)
+    if [[ "$current_dir" == *.git ]] && [[ -d "$current_dir" ]]; then
+      echo "$current_dir"
+      return 0
+    fi
+    # Check if there is a .git directory inside
+    local found=$(find "$current_dir" -maxdepth 2 -name "*.git" -type d | head -n 1)
+    if [[ -n "$found" ]]; then
+      echo "$found"
+      return 0
+    fi
+    current_dir=$(dirname "$current_dir")
+  done
+  return 1
+}
+
+BRANCH_NAME="$1"
+
+if [[ -z "$BRANCH_NAME" ]]; then
+  read -p "Worktree Name: " BRANCH_NAME
+fi
+
+if [[ -z "$BRANCH_NAME" ]]; then
+  echo "Error: Branch name is required."
+  exit 1
+fi
+
+GIT_DIR=$(find_git_dir "$(pwd)")
+
+if [[ -z "$GIT_DIR" ]]; then
+  echo "Error: Could not find a .git directory."
+  exit 1
+fi
+
+PARENT_DIR=$(dirname "$GIT_DIR")
+REPO_NAME=$(basename "$PARENT_DIR")
+WORKTREE_PATH="$PARENT_DIR/$BRANCH_NAME"
+
+if [[ -d "$WORKTREE_PATH" ]]; then
+  echo "Error: Worktree path $WORKTREE_PATH already exists."
+  exit 1
+fi
+
+echo "Creating worktree for branch '$BRANCH_NAME' in $WORKTREE_PATH..."
+
+# Check if branch exists locally
+if git -C "$GIT_DIR" rev-parse --verify "$BRANCH_NAME" >/dev/null 2>&1; then
+  echo "Branch '$BRANCH_NAME' exists locally."
+  git -C "$GIT_DIR" worktree add "$WORKTREE_PATH" "$BRANCH_NAME"
+else
+  # Check if branch exists on remote
+  REMOTE_BRANCH=$(git -C "$GIT_DIR" branch -r | grep "/$BRANCH_NAME$" | head -n 1 | sed 's/^[[:space:]]*//')
+  if [[ -n "$REMOTE_BRANCH" ]]; then
+    echo "Branch '$BRANCH_NAME' exists on remote as $REMOTE_BRANCH."
+    git -C "$GIT_DIR" worktree add -b "$BRANCH_NAME" "$WORKTREE_PATH" "$REMOTE_BRANCH"
+  else
+    echo "Branch '$BRANCH_NAME' does not exist. Creating new branch."
+    git -C "$GIT_DIR" worktree add -b "$BRANCH_NAME" "$WORKTREE_PATH"
+  fi
+fi
+
+# Tmux integration
+if [[ -n "$TMUX" ]]; then
+  SESSION_NAME=$(echo "${REPO_NAME}-${BRANCH_NAME}" | tr ' .' '__')
+  echo "Creating tmux session '$SESSION_NAME'..."
+
+  if ! tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+    TMUX="" tmux new-session -d -s "$SESSION_NAME" -c "$WORKTREE_PATH"
+    tmux send-keys -t "$SESSION_NAME" "nvim" Enter
+  fi
+
+  tmux switch-client -t "$SESSION_NAME"
+fi
+
+echo "Done."
