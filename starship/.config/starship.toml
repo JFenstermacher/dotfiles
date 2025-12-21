@@ -1,5 +1,5 @@
 format = """
-$os$directory$git_branch$git_status$fill$cmd_duration$status
+$directory$git_branch$git_status$fill$cmd_duration$status
 $character"""
 
 add_newline = false
@@ -27,8 +27,6 @@ style = "blue"
 
 [directory]
 style = "blue"
-truncation_length = 3
-truncation_symbol = "…/"
 
 [git_branch]
 symbol = " "

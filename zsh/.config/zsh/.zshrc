@@ -4,9 +4,13 @@
 PERSONAL_DIR=$HOME/.personal/zsh
 
 # Load all the zsh goodness
-source $ZDOTDIR/zsh-exports
-source $ZDOTDIR/zsh-aliases
 source $ZDOTDIR/zsh-functions
+source $ZDOTDIR/zsh-exports
+
+# Mise
+mise_setup
+
+source $ZDOTDIR/zsh-aliases
 
 # Files to be loaded prior to Instant Prompt
 zsh_load_directory $PERSONAL_DIR/before
@@ -86,9 +90,6 @@ zsh_add_plugins "${PLUGINS[@]}"
 ##################################################################
 # TOOL SETUPS
 ##################################################################
-
-# Mise
-mise_setup
 
 eval "$(starship init zsh)"
 

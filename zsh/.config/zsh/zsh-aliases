@@ -3,6 +3,10 @@ alias nf='VAL=$(fzf); [ ! -z $VAL ] && nvim $VAL'
 alias nz='nvim $ZDOTDIR/.zshrc'
 alias sz='source $ZDOTDIR/.zshrc'
 
+if command -v bat &>/dev/null; then
+  alias cat="bat -pp"
+fi
+
 alias awsps="export AWS_PROFILE=\$( perl -n -e'/\[profile (.*)\]/ && print \"\$1\n\"' $HOME/.aws/config | fzf )"
 alias awswhoami='aws sts get-caller-identity'
 
@@ -17,11 +21,10 @@ alias grd="cd $(git rev-parse --show-toplevel 2>&1 || echo ".")"
 alias gs="git branch -l | fzf | xargs git co"
 alias gfs="git ls-files -m -o --exclude-standard | fzf --print0 -m | xargs -0 -t -o git add"
 
-alias gwta="git-worktree-add"
-
-# GitHub aliases
-
+# Git Worktree stuffs
 alias gcb="git-clone-bare"
+alias gwta="git-worktree-add"
+alias gtwd="git-worktree-remove"
 
 # CD aliases
 alias cda="cd $HOME/.aws"
