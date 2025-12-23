@@ -76,7 +76,9 @@ fi
 
 # Tmux integration
 if [[ -n "$TMUX" ]]; then
-  SESSION_NAME=$(echo "${REPO_NAME}/${BRANCH_NAME}" | tr ' .' '__')
+  ORG_DIR=$(dirname $PARENT_DIR)
+  ORG_NAME=$(basename $ORG_DIR)
+  SESSION_NAME=$(echo "${ORG_NAME}/${REPO_NAME}@${BRANCH_NAME}" | tr ' .' '__')
   echo "Creating tmux session '$SESSION_NAME'..."
 
   if ! tmux has-session -t "$SESSION_NAME" 2>/dev/null; then

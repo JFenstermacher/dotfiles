@@ -24,7 +24,7 @@ alias gfs="git ls-files -m -o --exclude-standard | fzf --print0 -m | xargs -0 -t
 
 # Git Worktree stuffs
 alias gwta="git-worktree-add"
-alias gtwd="git-worktree-remove"
+alias gwtr="git-worktree-remove"
 
 # CD aliases
 alias cda="cd $HOME/.aws"

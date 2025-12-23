@@ -63,7 +63,7 @@ else
 	local directory, branch = selected:match("^(.+) %((.+)%)$")
 	if directory and branch then
 		path_name = dir .. "/" .. directory .. "/" .. branch
-		session_name = (directory .. "/" .. branch):gsub("%.", "_"):gsub(" ", "_")
+		session_name = (directory .. "@" .. branch):gsub("%.", "_"):gsub(" ", "_")
 	else
 		path_name = dir .. "/" .. selected
 		session_name = selected:gsub("%.", "_"):gsub(" ", "_")

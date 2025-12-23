@@ -29,6 +29,12 @@ if [[ -z "$GIT_DIR" ]]; then
   exit 1
 fi
 
+# Check if it's a bare repository by looking for worktrees directory
+if [[ ! -d "$GIT_DIR/worktrees" ]]; then
+  echo "Error: This does not appear to be a bare repository with worktrees."
+  exit 1
+fi
+
 PARENT_DIR=$(dirname "$GIT_DIR")
 REPO_NAME=$(basename "$PARENT_DIR")
 
@@ -55,7 +61,16 @@ for wt in $WORKTREES; do
   fi
 
   # Get branch name for this worktree
-  wt_branch=$(git -C "$GIT_DIR" worktree list | grep "^$wt " | awk '{print $3}' | tr -d '[]')
+  wt_branch=$(git -C "$GIT_DIR" worktree list | grep "^$wt " | sed 's/.*\[\([^]]*\)\].*/\1/')
+
+  if [[ "$wt_branch" == *"bare"* ]]; then
+    continue
+  fi
+
+  # If sed didn't find brackets, try awk as fallback
+  if [[ -z "$wt_branch" ]] || [[ "$wt_branch" == "$wt"* ]]; then
+    wt_branch=$(git -C "$GIT_DIR" worktree list | grep "^$wt " | awk '{for(i=3;i<=NF;i++) printf "%s%s", $i, (i<NF?" ":"");}' | tr -d '[]')
+  fi
 
   # Skip if it's the default branch
   if [[ "$wt_branch" == "$DEFAULT_BRANCH" ]]; then
@@ -71,7 +86,6 @@ if [[ -z "$TO_REMOVE" ]]; then
 fi
 
 # Use fzf to select worktrees to remove
-# Use sed to remove any empty lines
 SELECTED=$(echo -n "$TO_REMOVE" | sed '/^$/d' | fzf --multi --reverse --header="Select worktrees to remove (Tab to multi-select) >")
 
 if [[ -z "$SELECTED" ]]; then
@@ -95,7 +109,9 @@ echo "$SELECTED" | while read -r rel_path; do
 
   # Remove tmux session if it exists
   if [[ -n "$TMUX" ]] && [[ -n "$branch" ]]; then
-    SESSION_NAME=$(echo "${REPO_NAME}/${branch}" | tr ' .' '__')
+    ORG_DIR=$(dirname $PARENT_DIR)
+    ORG_NAME=$(basename $ORG_DIR)
+    SESSION_NAME=$(echo "${ORG_NAME}/${REPO_NAME}@${branch}" | tr ' .' '__')
     if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
       echo "Killing tmux session '$SESSION_NAME'..."
       tmux kill-session -t "$SESSION_NAME"
@@ -108,3 +124,4 @@ echo "$SELECTED" | while read -r rel_path; do
 done
 
 echo "Done."
+
