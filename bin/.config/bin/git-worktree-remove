@@ -95,7 +95,7 @@ echo "$SELECTED" | while read -r rel_path; do
 
   # Remove tmux session if it exists
   if [[ -n "$TMUX" ]] && [[ -n "$branch" ]]; then
-    SESSION_NAME=$(echo "${REPO_NAME}-${branch}" | tr ' .' '__')
+    SESSION_NAME=$(echo "${REPO_NAME}/${branch}" | tr ' .' '__')
     if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
       echo "Killing tmux session '$SESSION_NAME'..."
       tmux kill-session -t "$SESSION_NAME"
