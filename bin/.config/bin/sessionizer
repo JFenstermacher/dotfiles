@@ -1,5 +1,7 @@
 #!/usr/bin/env luajit
 
+print("hello")
+
 -- Helper to run command and capture output
 local function exec_capture(cmd)
 	local handle = io.popen(cmd)
@@ -49,11 +51,8 @@ if dir == "--start" then
 else
 	-- ask user
 	-- Use < /dev/tty to ensure fzf gets user input
-	local cmd = string.format(
-		'list-workspaces %s | fzf --reverse --header="Select project from $(basename %s) >"',
-		dir,
-		dir
-	)
+	local cmd =
+		string.format('list-workspaces %s | fzf --reverse --header="Select project from $(basename %s) >"', dir, dir)
 	local selected = exec_capture(cmd):gsub("\n", "")
 
 	if selected == "" then

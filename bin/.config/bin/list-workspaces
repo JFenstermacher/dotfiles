@@ -1,8 +1,7 @@
 #!/usr/bin/env luajit
 
 -- Set directory
-local ROOT_DIR = arg[1] or os.getenv("HOME") .. "/workspace"
-local results = {}
+local ROOT_DIR = arg[1] or os.getenv("HOME") .. "/workspaces"
 
 -- Function to execute a command and return output lines as a table
 local function execute_and_collect(command)
@@ -19,36 +18,61 @@ local function execute_and_collect(command)
 	return lines
 end
 
---- 1. Find and process standard (non-bare) repositories ---
-local find_dirs_cmd = string.format("fd --type d -d 2 --base-directory %s", ROOT_DIR)
-
-results = {}
-local results_map = {}
-for _, dir in ipairs(execute_and_collect(find_dirs_cmd)) do
-	dir = dir:gsub("/$", "")
-	local parent, child = dir:match("^([^/]+)/([^/]+)$")
-	if not parent then
-		parent = dir
-		child = nil
+-- String split function for Lua
+local function str_split(str, delimiter)
+	local result = {}
+	local pattern = string.format("([^%s]+)", delimiter)
+	for match in string.gmatch(str, pattern) do
+		table.insert(result, match)
 	end
+	return result
+end
 
-	local meta_dir = ROOT_DIR .. "/" .. parent .. "/" .. parent .. ".git"
-	local is_bare = os.execute(string.format('test -d "%s"', meta_dir)) == 0
+-- Find .git directories and worktrees directories in a single pass
+-- Depth 3: org/repo/.git
+-- Depth 4: org/repo/.git/worktrees
+local find_cmd = string.format("fd --hidden --type d --max-depth 5 . %s", ROOT_DIR)
 
-	if is_bare then
-		if child and child ~= parent .. ".git" then
-			results_map[string.format("%s (%s)", parent, child)] = true
+-- Execute find command and process results
+local found_paths = execute_and_collect(find_cmd)
+
+local repos = {}
+for _, path in ipairs(found_paths) do
+	local no_prefix = path:gsub("^" .. ROOT_DIR .. "/", "")
+	local no_suffix = no_prefix:gsub("/$", "")
+	local parts = str_split(no_suffix, "/")
+
+	local num_parts = #parts
+	if num_parts == 2 then
+		-- Example: JFenstermacher/dotfiles
+		local repo_org = parts[1] .. "/" .. parts[2]
+		if not repos[repo_org] then
+			repos[repo_org] = {}
 		end
+	elseif num_parts == 5 then
+		-- Example: JFenstermacher/dotfiles/.git/worktrees/main
+		local is_bare_repository = parts[4] == "worktrees"
+		if not is_bare_repository then
+			goto continue
+		end
+
+		local repo_org = parts[1] .. "/" .. parts[2]
+
+		local worktrees = repos[repo_org]
+		worktrees[#worktrees + 1] = parts[5]
 	else
-		results_map[parent] = true
+		goto continue
 	end
+
+	::continue::
 end
 
-for res in pairs(results_map) do
-	table.insert(results, res)
-end
-table.sort(results)
-
-for _, res in ipairs(results) do
-	print(res)
+for repo_org, worktrees in pairs(repos) do
+	if #worktrees == 0 then
+		print(repo_org)
+	else
+		for _, worktree in ipairs(worktrees) do
+			print(string.format("%s (%s)", repo_org, worktree))
+		end
+	end
 end

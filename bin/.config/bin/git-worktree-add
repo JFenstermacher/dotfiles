@@ -33,6 +33,13 @@ if [[ -z "$BRANCH_NAME" ]]; then
   exit 1
 fi
 
+# Validate branch name contains only allowed characters
+if [[ ! "$BRANCH_NAME" =~ ^[A-Za-z0-9_-]+$ ]]; then
+  echo "Error: Branch name '$BRANCH_NAME' contains invalid characters."
+  echo "Branch names can only contain: letters, numbers, hyphens, and underscores."
+  exit 1
+fi
+
 GIT_DIR=$(find_git_dir "$(pwd)")
 
 if [[ -z "$GIT_DIR" ]]; then

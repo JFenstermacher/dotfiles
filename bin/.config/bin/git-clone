@@ -1,0 +1,65 @@
+#!/bin/sh
+
+set -e
+
+ROOT_DIR="${HOME}/workspaces"
+
+# Parse arguments
+BARE=false
+if [ "$1" = "--bare" ]; then
+  BARE=true
+  shift
+fi
+
+repo="$1"
+
+if [ -z "$repo" ]; then
+  echo "Error: A repository to clone must be provided" >&2
+  exit 1
+fi
+
+# Automatically assume github.com if only <org>/<repo> is provided
+case "$repo" in
+*://* | *@*)
+  org_repo=$(echo "$repo" | sed 's/\/$//' | sed -E 's/.*[:\/]([^\/]+\/[^\/]+)$/\1/' | sed 's/\.git$//')
+  ;;
+*/*)
+  org_repo="$repo"
+  echo "Assuming GitHub repository: https://github.com/${org_repo}.git"
+  repo="https://github.com/${org_repo}.git"
+  ;;
+*)
+  echo "Error: Repository must be in <org>/<repo> format or a full URL" >&2
+  exit 1
+  ;;
+esac
+
+target_dir="${ROOT_DIR}/${org_repo}"
+
+if [ "$BARE" = true ]; then
+  target_git_dir="${target_dir}/.git"
+
+  if [ -d "$target_dir" ]; then
+    echo "Error: Target directory $target_dir already exists" >&2
+    exit 1
+  fi
+
+  mkdir -p "$target_dir"
+
+  echo "Cloning bare $repo into $target_git_dir..."
+  git clone --bare "$repo" "$target_git_dir"
+
+  # Determine the default branch
+  default_branch=$(git -C "$target_git_dir" symbolic-ref --short HEAD || git -C "$target_git_dir" rev-parse --abbrev-ref HEAD)
+
+  echo "Default branch is: $default_branch"
+
+  worktree_path="${target_dir}/${default_branch}"
+  echo "Adding worktree for $default_branch at $worktree_path..."
+  git -C "$target_git_dir" worktree add "$worktree_path" "$default_branch"
+else
+  echo "Cloning $repo into $target_dir..."
+  git clone "$repo" "$target_dir"
+fi
+
+echo "Successfully set up repository at $target_dir"

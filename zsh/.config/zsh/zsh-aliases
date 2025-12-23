@@ -17,18 +17,18 @@ alias nslookup='dig +short'
 # Git Aliases
 
 alias g="git"
+alias gc="git-clone"
 alias grd="cd $(git rev-parse --show-toplevel 2>&1 || echo ".")"
 alias gs="git branch -l | fzf | xargs git co"
 alias gfs="git ls-files -m -o --exclude-standard | fzf --print0 -m | xargs -0 -t -o git add"
 
 # Git Worktree stuffs
-alias gcb="git-clone-bare"
 alias gwta="git-worktree-add"
 alias gtwd="git-worktree-remove"
 
 # CD aliases
 alias cda="cd $HOME/.aws"
-alias cdw="cd $HOME/workspace"
+alias cdw="cd $HOME/workspaces"
 
 # Terramate
 alias tm="terramate"
