@@ -1,0 +1,56 @@
+#!/bin/bash
+# project-scaffold
+# Bootstraps new projects.
+# Usage: ./project-scaffold <type> <name>
+
+TYPE=$1
+NAME=$2
+
+if [ -z "$NAME" ]; then
+    echo "Usage: ./project-scaffold <type> <name>"
+    exit 1
+fi
+
+echo "Scaffolding $TYPE project: $NAME"
+mkdir -p "$NAME"
+cd "$NAME" || exit
+
+# Initialize Git
+git init
+
+# Initialize mise
+echo "Initializing mise configuration..."
+cat <<EOF > mise.toml
+[tools]
+EOF
+
+if [ "$TYPE" == "go" ]; then
+    echo "go = \"latest\"" >> mise.toml
+    echo "Initializing Go module..."
+    go mod init "$NAME"
+    # Basic Go .gitignore
+    echo "/bin/" >> .gitignore
+    echo "/dist/" >> .gitignore
+    echo "vendor/" >> .gitignore
+elif [ "$TYPE" == "bun" ]; then
+    echo "bun = \"latest\"" >> mise.toml
+    echo "Initializing Bun project..."
+    bun init -y
+    # Basic Node/Bun .gitignore
+    echo "node_modules/" >> .gitignore
+    echo "dist/" >> .gitignore
+    echo ".env" >> .gitignore
+elif [ "$TYPE" == "aws" ]; then
+    echo "opentofu = \"latest\"" >> mise.toml
+    echo "awscli = \"latest\"" >> mise.toml
+    echo "Initializing OpenTofu structure..."
+    touch main.tf variables.tf outputs.tf
+    # Terraform/Tofu .gitignore
+    echo ".terraform/" >> .gitignore
+    echo ".terraform.lock.hcl" >> .gitignore
+    echo "*.tfstate" >> .gitignore
+    echo "*.tfstate.backup" >> .gitignore
+fi
+
+echo "Created mise.toml, .gitignore, and initialized project."
+

@@ -1,0 +1,14 @@
+#!/bin/bash
+# pr-create
+# Creates a GitHub PR.
+
+TITLE="$1"
+BODY="$2"
+
+if [ -z "$TITLE" ]; then
+    echo "Usage: ./pr-create <title> <body>"
+    exit 1
+fi
+
+echo "Creating PR with title: $TITLE"
+gh pr create --title "$TITLE" --body "$BODY"

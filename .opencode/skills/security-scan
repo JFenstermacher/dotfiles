@@ -1,0 +1,33 @@
+#!/bin/bash
+# security-scan
+# Runs security checks.
+
+echo "Running Security Scan..."
+
+# Check for Terraform/OpenTofu
+if ls *.tf >/dev/null 2>&1; then
+    if command -v tfsec &> /dev/null; then
+        echo "Scanning Terraform/OpenTofu files..."
+        tfsec .
+    else
+        echo "tfsec not found, skipping scan."
+    fi
+fi
+
+# Check for Go
+if [ -f "go.mod" ]; then
+    if command -v govulncheck &> /dev/null; then
+        govulncheck ./...
+    else
+        echo "govulncheck not found, skipping Go scan."
+    fi
+fi
+
+# Check for JS/Bun
+if [ -f "package.json" ]; then
+    if command -v bun &> /dev/null; then
+        bun pm audit
+    else
+        npm audit
+    fi
+fi

@@ -1,0 +1,23 @@
+#!/bin/bash
+# manage-docs-cache
+# Usage: ./manage-docs-cache <library> <url>
+
+LIBRARY=$1
+URL=$2
+KNOWLEDGE_DIR=".opencode/knowledge"
+FILE_PATH="$KNOWLEDGE_DIR/$LIBRARY.md"
+
+mkdir -p "$KNOWLEDGE_DIR"
+
+if [ -f "$FILE_PATH" ]; then
+    # Check if file is older than 7 days (604800 seconds)
+    if [[ $(find "$FILE_PATH" -mtime +7 -print) ]]; then
+        echo "Cache expired for $LIBRARY. Please update from $URL"
+    else
+        echo "Cache valid for $LIBRARY."
+    fi
+else
+    echo "Cache missing for $LIBRARY. Please create $FILE_PATH with content from $URL"
+fi
+
+echo "$FILE_PATH"

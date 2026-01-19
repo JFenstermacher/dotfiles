@@ -1,0 +1,10 @@
+#!/bin/bash
+# git-commit
+# Generates a conventional commit message.
+# In a real scenario, this might invoke an LLM via CLI or use a template.
+
+echo "Running git diff --staged..."
+git diff --staged
+
+echo ""
+echo "Please generate a conventional commit message based on the diff above."
