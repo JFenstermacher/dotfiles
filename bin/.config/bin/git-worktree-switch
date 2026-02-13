@@ -38,17 +38,13 @@ fi
 PARENT_DIR=$(dirname "$GIT_DIR")
 REPO_NAME=$(basename "$PARENT_DIR")
 
-# Get the default branch
-DEFAULT_BRANCH=$(git -C "$GIT_DIR" symbolic-ref --short HEAD 2>/dev/null || git -C "$GIT_DIR" rev-parse --abbrev-ref HEAD)
-
 # Get current worktree path
 CURRENT_WORKTREE=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
 
-# List worktrees, excluding the current one and the default branch
-# Format: path [branch]
+# List worktrees, excluding the current one
 WORKTREES=$(git -C "$GIT_DIR" worktree list --porcelain | grep "^worktree " | cut -d' ' -f2-)
 
-TO_REMOVE=""
+AVAILABLE=""
 for wt in $WORKTREES; do
   # Skip if it's the current worktree
   if [[ "$wt" == "$CURRENT_WORKTREE" ]]; then
@@ -72,58 +68,41 @@ for wt in $WORKTREES; do
     wt_branch=$(git -C "$GIT_DIR" worktree list | grep "^$wt " | awk '{for(i=3;i<=NF;i++) printf "%s%s", $i, (i<NF?" ":"");}' | tr -d '[]')
   fi
 
-  # Skip if it's the default branch
-  if [[ "$wt_branch" == "$DEFAULT_BRANCH" ]]; then
-    continue
-  fi
-
-  TO_REMOVE+="$(basename "$wt")"$'\n'
+  AVAILABLE+="$(basename "$wt")"$'\n'
 done
 
-if [[ -z "$TO_REMOVE" ]]; then
-  echo "No worktrees available to remove (excluding current and default branch)."
+if [[ -z "$AVAILABLE" ]]; then
+  echo "No other worktrees available to switch to."
   exit 0
 fi
 
-# Use fzf to select worktrees to remove
-SELECTED=$(echo -n "$TO_REMOVE" | sed '/^$/d' | fzf --multi --reverse --header="Select worktrees to remove (Tab to multi-select) >")
+# Use fzf to select worktree to switch to
+SELECTED=$(echo -n "$AVAILABLE" | sed '/^$/d' | fzf --reverse --header="Select worktree to switch to >")
 
 if [[ -z "$SELECTED" ]]; then
-  echo "No worktrees selected."
+  echo "No worktree selected."
   exit 0
 fi
 
-while read -r rel_path; do
-  [[ -z "$rel_path" ]] && continue
+WORKTREE_PATH="$PARENT_DIR/$SELECTED"
 
-  path="$PARENT_DIR/$rel_path"
+# Tmux integration - switch to or create session for the worktree
+if [[ -n "$TMUX" ]]; then
+  ORG_DIR=$(dirname $PARENT_DIR)
+  ORG_NAME=$(basename $ORG_DIR)
+  SESSION_NAME=$(echo "${ORG_NAME}/${REPO_NAME}@${SELECTED}" | tr ' .' '__')
 
-  # Get branch name for this path to kill tmux session
-  # git worktree list output: /path/to/worktree hash [branch]
-  branch=$(git -C "$GIT_DIR" worktree list | grep "^$path " | sed 's/.*\[\(.*\)\].*/\1/')
-
-  # If sed didn't find brackets, it might be detached or something else
-  if [[ "$branch" == "$path"* ]]; then
-    branch=""
+  if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+    echo "Switching to existing session '$SESSION_NAME'..."
+    tmux switch-client -t "$SESSION_NAME"
+  else
+    echo "Creating new session '$SESSION_NAME'..."
+    TMUX="" tmux new-session -d -s "$SESSION_NAME" -c "$WORKTREE_PATH"
+    tmux send-keys -t "$SESSION_NAME" "nvim" Enter
+    tmux switch-client -t "$SESSION_NAME"
   fi
-
-  echo "Processing $rel_path (branch: $branch) at $path..."
-
-  # Remove tmux session if it exists
-  if [[ -n "$TMUX" ]] && [[ -n "$branch" ]]; then
-    ORG_DIR=$(dirname $PARENT_DIR)
-    ORG_NAME=$(basename $ORG_DIR)
-    SESSION_NAME=$(echo "${ORG_NAME}/${REPO_NAME}@${branch}" | tr ' .' '__')
-    if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
-      echo "Killing tmux session '$SESSION_NAME'..."
-      tmux kill-session -t "$SESSION_NAME"
-    fi
-  fi
-
-  # Remove the worktree
-  echo "Removing worktree $rel_path..."
-  git -C "$GIT_DIR" worktree remove --force "$path"
-done <<< "$SELECTED"
-
-echo "Done."
-
+else
+  echo "Not in tmux, changing directory to $WORKTREE_PATH"
+  cd "$WORKTREE_PATH"
+  exec $SHELL
+fi

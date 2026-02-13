@@ -74,6 +74,33 @@ else
   fi
 fi
 
+# Trust mise configuration if available
+if [ -f "$WORKTREE_PATH/mise.toml" ] && [ -f "$WORKTREE_PATH/.mise.toml" ]; then
+  echo "Both mise.toml and .mise.toml found, checking project-local configuration..."
+  # Prioritize .mise.toml if both exist
+  if command -v mise &>/dev/null; then
+    mise trust -q "$WORKTREE_PATH/.mise.toml" 2>/dev/null || echo "Note: .mise.toml found but not trusted (run 'mise trust' manually if needed)"
+  fi
+elif [ -f "$WORKTREE_PATH/.mise.toml" ]; then
+  if command -v mise &>/dev/null; then
+    mise trust -q "$WORKTREE_PATH/.mise.toml" 2>/dev/null || echo "Note: .mise.toml found but not trusted (run 'mise trust' manually if needed)"
+    if [ $? -eq 0 ]; then
+      echo "Trusted .mise.toml configuration"
+    fi
+  else
+    echo "Note: .mise.toml found but mise is not installed"
+  fi
+elif [ -f "$WORKTREE_PATH/mise.toml" ]; then
+  if command -v mise &>/dev/null; then
+    mise trust -q "$WORKTREE_PATH/mise.toml" 2>/dev/null || echo "Note: mise.toml found but not trusted (run 'mise trust' manually if needed)"
+    if [ $? -eq 0 ]; then
+      echo "Trusted mise.toml configuration"
+    fi
+  else
+    echo "Note: mise.toml found but mise is not installed"
+  fi
+fi
+
 # Tmux integration
 if [[ -n "$TMUX" ]]; then
   ORG_DIR=$(dirname $PARENT_DIR)
