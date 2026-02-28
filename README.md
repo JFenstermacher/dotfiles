@@ -38,15 +38,24 @@ This repository includes several custom utility scripts located in `bin/.config/
 
 - `sessionizer`: A smart project/session switcher for tmux.
 - `list-workspaces`: Lists standard and bare Git repositories for the session switcher.
-- `git-clone-bare`: Clones a repository as a bare repo and sets up a default worktree.
+- `git-clone`: Clones a repository as a bare repo and sets up a default worktree.
 - `git-worktree-add`: Creates a new git worktree and associated tmux session.
 - `git-worktree-remove`: Interactively removes worktrees and their associated tmux sessions.
+- `git-worktree-switch`: Interactively switches between worktrees and their associated tmux sessions.
+- `git-worktree-purge`: Automatically removes worktrees and tmux sessions for branches that have been merged into the default branch.
+- `home-session`: Creates or jumps to a default "home" tmux session.
 
 ## Tmux Keybindings
 
+Note: The prefix key is configured as `Ctrl-a`.
+
 - `Prefix + r`: Reload tmux configuration.
 - `Prefix + p`: Open project switcher (`sessionizer`).
-- `Prefix + w`: Create a new git worktree and session.
-- `Prefix + W`: Remove existing git worktrees and sessions.
 - `Prefix + j`: Jump to an existing tmux session.
 - `Prefix + k`: Kill an existing tmux session.
+- `Prefix + H`: Open home session.
+- `Prefix + w`: Enter worktree mode. From here, you can use:
+  - `c`: Create a new git worktree and session (`git-worktree-add`).
+  - `d` / `k`: Remove existing git worktrees and sessions (`git-worktree-remove`).
+  - `s` / `j`: Switch between git worktrees (`git-worktree-switch`).
+  - `p`: Purge merged worktrees and their sessions (`git-worktree-purge`).
