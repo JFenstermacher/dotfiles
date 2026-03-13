@@ -74,7 +74,7 @@ _comp_options+=(globdots)
 
 # 4. Final, SINGLE compinit call using the -d option
 # This is the ONLY time compinit should be called!
-compinit -d "$ZCOMPDUMP_FILE"
+compinit -u -d "$ZCOMPDUMP_FILE"
 
 zsh_load_directory $PERSONAL_DIR
 
