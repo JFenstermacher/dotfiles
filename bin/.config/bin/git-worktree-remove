@@ -1,129 +1,65 @@
-#!/usr/bin/env bash
+#!/usr/bin/env luajit
 
-set -e
+-- Add script directory to package path
+local script_dir = arg[0]:match("^(.+)/[^/]+$") or "."
+package.path = script_dir .. "/?.lua;" .. package.path
 
-# Function to find the bare repository (.git directory)
-find_git_dir() {
-  local current_dir="$1"
-  while [[ "$current_dir" != "/" ]]; do
-    # Check if current directory is a .git directory (bare)
-    if [[ "$current_dir" == *.git ]] && [[ -d "$current_dir" ]]; then
-      echo "$current_dir"
-      return 0
-    fi
-    # Check if there is a .git directory inside
-    local found=$(find "$current_dir" -maxdepth 2 -name "*.git" -type d | head -n 1)
-    if [[ -n "$found" ]]; then
-      echo "$found"
-      return 0
-    fi
-    current_dir=$(dirname "$current_dir")
-  done
-  return 1
-}
+local wt = require("utils")
 
-GIT_DIR=$(find_git_dir "$(pwd)")
+local git_dir = wt.require_bare_repo()
+local ctx = wt.repo_context(git_dir)
+local default_branch = wt.default_branch(git_dir)
+local current_worktree = wt.exec_capture("git rev-parse --show-toplevel 2>/dev/null"):gsub("%s+$", "")
 
-if [[ -z "$GIT_DIR" ]]; then
-  echo "Error: Could not find a .git directory."
-  exit 1
-fi
+local worktrees = wt.get_worktree_branches(git_dir)
 
-# Check if it's a bare repository by looking for worktrees directory
-if [[ ! -d "$GIT_DIR/worktrees" ]]; then
-  echo "Error: This does not appear to be a bare repository with worktrees."
-  exit 1
-fi
+-- Build list of removable worktrees (exclude current, bare repo, default branch)
+local removable = {}
+for _, entry in ipairs(worktrees) do
+	if entry.path ~= current_worktree
+		and not entry.path:match("%.git$")
+		and entry.branch ~= default_branch then
+		removable[#removable + 1] = entry
+	end
+end
 
-PARENT_DIR=$(dirname "$GIT_DIR")
-REPO_NAME=$(basename "$PARENT_DIR")
+if #removable == 0 then
+	print("No worktrees available to remove (excluding current and default branch).")
+	os.exit(0)
+end
 
-# Get the default branch
-DEFAULT_BRANCH=$(git -C "$GIT_DIR" symbolic-ref --short HEAD 2>/dev/null || git -C "$GIT_DIR" rev-parse --abbrev-ref HEAD)
+local fzf_lines = {}
+for _, entry in ipairs(removable) do
+	fzf_lines[#fzf_lines + 1] = entry.path:match("^.+/([^/]+)$")
+end
 
-# Get current worktree path
-CURRENT_WORKTREE=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
+local selected = wt.fzf(fzf_lines, '--multi --reverse --header="Select worktrees to remove (Tab to multi-select) >"')
+if selected == "" then
+	os.exit(0)
+end
 
-# List worktrees, excluding the current one and the default branch
-# Format: path [branch]
-WORKTREES=$(git -C "$GIT_DIR" worktree list --porcelain | grep "^worktree " | cut -d' ' -f2-)
+for line in selected:gmatch("[^\n]+") do
+	local rel_path = line
+	local path = ctx.parent_dir .. "/" .. rel_path
 
-TO_REMOVE=""
-for wt in $WORKTREES; do
-  # Skip if it's the current worktree
-  if [[ "$wt" == "$CURRENT_WORKTREE" ]]; then
-    continue
-  fi
+	-- Find the branch for this worktree
+	local branch = nil
+	for _, entry in ipairs(removable) do
+		if entry.path == path then
+			branch = entry.branch
+			break
+		end
+	end
 
-  # Skip if it's the bare repository itself
-  if [[ "$wt" == *.git ]]; then
-    continue
-  fi
+	print("Processing " .. rel_path .. " (branch: " .. (branch or "unknown") .. ") at " .. path .. "...")
 
-  # Get branch name for this worktree
-  wt_branch=$(git -C "$GIT_DIR" worktree list | grep "^$wt " | sed 's/.*\[\([^]]*\)\].*/\1/')
+	if branch then
+		local sname = wt.session_name(ctx.org_name, ctx.repo_name, branch)
+		wt.tmux_kill_session(sname)
+	end
 
-  if [[ "$wt_branch" == *"bare"* ]]; then
-    continue
-  fi
+	print("Removing worktree " .. rel_path .. "...")
+	wt.exec(string.format('git -C "%s" worktree remove --force "%s"', git_dir, path))
+end
 
-  # If sed didn't find brackets, try awk as fallback
-  if [[ -z "$wt_branch" ]] || [[ "$wt_branch" == "$wt"* ]]; then
-    wt_branch=$(git -C "$GIT_DIR" worktree list | grep "^$wt " | awk '{for(i=3;i<=NF;i++) printf "%s%s", $i, (i<NF?" ":"");}' | tr -d '[]')
-  fi
-
-  # Skip if it's the default branch
-  if [[ "$wt_branch" == "$DEFAULT_BRANCH" ]]; then
-    continue
-  fi
-
-  TO_REMOVE+="$(basename "$wt")"$'\n'
-done
-
-if [[ -z "$TO_REMOVE" ]]; then
-  echo "No worktrees available to remove (excluding current and default branch)."
-  exit 0
-fi
-
-# Use fzf to select worktrees to remove
-SELECTED=$(echo -n "$TO_REMOVE" | sed '/^$/d' | fzf --multi --reverse --header="Select worktrees to remove (Tab to multi-select) >")
-
-if [[ -z "$SELECTED" ]]; then
-  echo "No worktrees selected."
-  exit 0
-fi
-
-while read -r rel_path; do
-  [[ -z "$rel_path" ]] && continue
-
-  path="$PARENT_DIR/$rel_path"
-
-  # Get branch name for this path to kill tmux session
-  # git worktree list output: /path/to/worktree hash [branch]
-  branch=$(git -C "$GIT_DIR" worktree list | grep "^$path " | sed 's/.*\[\(.*\)\].*/\1/')
-
-  # If sed didn't find brackets, it might be detached or something else
-  if [[ "$branch" == "$path"* ]]; then
-    branch=""
-  fi
-
-  echo "Processing $rel_path (branch: $branch) at $path..."
-
-  # Remove tmux session if it exists
-  if [[ -n "$TMUX" ]] && [[ -n "$branch" ]]; then
-    ORG_DIR=$(dirname $PARENT_DIR)
-    ORG_NAME=$(basename $ORG_DIR)
-    SESSION_NAME=$(echo "${ORG_NAME}/${REPO_NAME}@${branch}" | tr ' .' '__')
-    if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
-      echo "Killing tmux session '$SESSION_NAME'..."
-      tmux kill-session -t "$SESSION_NAME"
-    fi
-  fi
-
-  # Remove the worktree
-  echo "Removing worktree $rel_path..."
-  git -C "$GIT_DIR" worktree remove --force "$path"
-done <<< "$SELECTED"
-
-echo "Done."
-
+print("Done.")

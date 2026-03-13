@@ -1,56 +1,29 @@
 #!/usr/bin/env luajit
 
--- Set directory
+-- Add script directory to package path
+local script_dir = arg[0]:match("^(.+)/[^/]+$") or "."
+package.path = script_dir .. "/?.lua;" .. package.path
+
+local u = require("utils")
+
 local ROOT_DIR = arg[1] or os.getenv("HOME") .. "/workspaces"
 
--- Function to execute a command and return output lines as a table
-local function execute_and_collect(command)
-	local lines = {}
-	local handle = io.popen(command, "r")
-
-	if handle then
-		for line in handle:lines() do
-			lines[#lines + 1] = line
-		end
-		handle:close()
-	end
-
-	return lines
-end
-
--- String split function for Lua
-local function str_split(str, delimiter)
-	local result = {}
-	local pattern = string.format("([^%s]+)", delimiter)
-	for match in string.gmatch(str, pattern) do
-		table.insert(result, match)
-	end
-	return result
-end
-
--- Find .git directories and worktrees directories in a single pass
--- Depth 3: org/repo/.git
--- Depth 4: org/repo/.git/worktrees
 local find_cmd = string.format("fd --hidden --type d --max-depth 5 . %s", ROOT_DIR)
-
--- Execute find command and process results
-local found_paths = execute_and_collect(find_cmd)
+local found_paths = u.exec_lines(find_cmd)
 
 local repos = {}
 for _, path in ipairs(found_paths) do
 	local no_prefix = path:gsub("^" .. ROOT_DIR .. "/", "")
 	local no_suffix = no_prefix:gsub("/$", "")
-	local parts = str_split(no_suffix, "/")
+	local parts = u.str_split(no_suffix, "/")
 
 	local num_parts = #parts
 	if num_parts == 2 then
-		-- Example: JFenstermacher/dotfiles
 		local repo_org = parts[1] .. "/" .. parts[2]
 		if not repos[repo_org] then
 			repos[repo_org] = {}
 		end
 	elseif num_parts == 5 then
-		-- Example: JFenstermacher/dotfiles/.git/worktrees/main
 		local is_bare_repository = parts[4] == "worktrees"
 		if not is_bare_repository then
 			goto continue

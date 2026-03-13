@@ -1,0 +1,74 @@
+#!/usr/bin/env luajit
+
+-- Add script directory to package path
+local script_dir = arg[0]:match("^(.+)/[^/]+$") or "."
+package.path = script_dir .. "/?.lua;" .. package.path
+
+local wt = require("utils")
+
+local git_dir = wt.require_bare_repo()
+local ctx = wt.repo_context(git_dir)
+
+-- Build branch->path map from worktree list
+local worktrees = wt.get_worktree_branches(git_dir)
+local wt_map = {}
+for _, entry in ipairs(worktrees) do
+	wt_map[entry.branch] = entry.path
+end
+
+-- Get all branches (local + remote), deduplicated
+local output = wt.exec_capture(string.format('git -C "%s" branch -a --no-color', git_dir))
+local seen = {}
+local all_branches = {}
+for line in output:gmatch("[^\n]+") do
+	local name = line:gsub("^[%s*]+", "")
+	if name:match("->") then
+		goto continue
+	end
+	name = name:gsub("^remotes/[^/]+/", "")
+	if not seen[name] then
+		seen[name] = true
+		all_branches[#all_branches + 1] = name
+	end
+	::continue::
+end
+table.sort(all_branches)
+
+-- Build fzf input with [wt] annotations
+local fzf_input = {}
+for _, branch in ipairs(all_branches) do
+	if wt_map[branch] then
+		fzf_input[#fzf_input + 1] = "[wt] " .. branch
+	else
+		fzf_input[#fzf_input + 1] = branch
+	end
+end
+
+if #fzf_input == 0 then
+	io.stderr:write("No branches found.\n")
+	os.exit(1)
+end
+
+local selected = wt.fzf(fzf_input, '--reverse --header="Select branch >"')
+if selected == "" then
+	os.exit(1)
+end
+
+-- Strip [wt] prefix if present
+local has_worktree = selected:match("^%[wt%] ")
+local branch_name = selected:gsub("^%[wt%] ", "")
+local sname = wt.session_name(ctx.org_name, ctx.repo_name, branch_name)
+
+if has_worktree then
+	if not wt.tmux_switch_or_create(sname, wt_map[branch_name]) then
+		io.stderr:write("Not in tmux. Worktree path: " .. wt_map[branch_name] .. "\n")
+	end
+else
+	local worktree_path = ctx.parent_dir .. "/" .. branch_name
+	wt.create_worktree(git_dir, worktree_path, branch_name)
+	wt.trust_mise(worktree_path)
+
+	if not wt.tmux_switch_or_create(sname, worktree_path) then
+		io.stderr:write("Worktree created at: " .. worktree_path .. "\n")
+	end
+end

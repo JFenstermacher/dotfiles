@@ -1,119 +1,47 @@
-#!/usr/bin/env bash
+#!/usr/bin/env luajit
 
-set -e
+-- Add script directory to package path
+local script_dir = arg[0]:match("^(.+)/[^/]+$") or "."
+package.path = script_dir .. "/?.lua;" .. package.path
 
-# Function to find the bare repository (.git directory)
-find_git_dir() {
-  local current_dir="$1"
-  while [[ "$current_dir" != "/" ]]; do
-    # Check if current directory is a .git directory (bare)
-    if [[ "$current_dir" == *.git ]] && [[ -d "$current_dir" ]]; then
-      echo "$current_dir"
-      return 0
-    fi
-    # Check if there is a .git directory inside
-    local found=$(find "$current_dir" -maxdepth 2 -name "*.git" -type d | head -n 1)
-    if [[ -n "$found" ]]; then
-      echo "$found"
-      return 0
-    fi
-    current_dir=$(dirname "$current_dir")
-  done
-  return 1
-}
+local wt = require("utils")
 
-BRANCH_NAME="$1"
+local branch_name = arg[1]
 
-if [[ -z "$BRANCH_NAME" ]]; then
-  read -p "Worktree Name: " BRANCH_NAME
-fi
+if not branch_name or branch_name == "" then
+	io.write("Worktree Name: ")
+	branch_name = io.read()
+end
 
-if [[ -z "$BRANCH_NAME" ]]; then
-  echo "Error: Branch name is required."
-  exit 1
-fi
+if not branch_name or branch_name == "" then
+	io.stderr:write("Error: Branch name is required.\n")
+	os.exit(1)
+end
 
-# Validate branch name contains only allowed characters
-if [[ ! "$BRANCH_NAME" =~ ^[A-Za-z0-9_-]+$ ]]; then
-  echo "Error: Branch name '$BRANCH_NAME' contains invalid characters."
-  echo "Branch names can only contain: letters, numbers, hyphens, and underscores."
-  exit 1
-fi
+if not branch_name:match("^[A-Za-z0-9_/-]+$") then
+	io.stderr:write("Error: Branch name '" .. branch_name .. "' contains invalid characters.\n")
+	io.stderr:write("Branch names can only contain: letters, numbers, hyphens, underscores, and slashes.\n")
+	os.exit(1)
+end
 
-GIT_DIR=$(find_git_dir "$(pwd)")
+local git_dir = wt.require_git_dir()
+local ctx = wt.repo_context(git_dir)
+local worktree_path = ctx.parent_dir .. "/" .. branch_name
 
-if [[ -z "$GIT_DIR" ]]; then
-  echo "Error: Could not find a .git directory."
-  exit 1
-fi
+if wt.exec(string.format('test -d "%s"', worktree_path)) == 0 then
+	io.stderr:write("Error: Worktree path " .. worktree_path .. " already exists.\n")
+	os.exit(1)
+end
 
-PARENT_DIR=$(dirname "$GIT_DIR")
-REPO_NAME=$(basename "$PARENT_DIR")
-WORKTREE_PATH="$PARENT_DIR/$BRANCH_NAME"
+print("Creating worktree for branch '" .. branch_name .. "' in " .. worktree_path .. "...")
 
-if [[ -d "$WORKTREE_PATH" ]]; then
-  echo "Error: Worktree path $WORKTREE_PATH already exists."
-  exit 1
-fi
+wt.create_worktree(git_dir, worktree_path, branch_name)
+wt.trust_mise(worktree_path)
 
-echo "Creating worktree for branch '$BRANCH_NAME' in $WORKTREE_PATH..."
+local sname = wt.session_name(ctx.org_name, ctx.repo_name, branch_name)
+print("Creating tmux session '" .. sname .. "'...")
+if not wt.tmux_switch_or_create(sname, worktree_path) then
+	print("Not in tmux. Worktree created at: " .. worktree_path)
+end
 
-# Check if branch exists locally
-if git -C "$GIT_DIR" rev-parse --verify "$BRANCH_NAME" >/dev/null 2>&1; then
-  echo "Branch '$BRANCH_NAME' exists locally."
-  git -C "$GIT_DIR" worktree add "$WORKTREE_PATH" "$BRANCH_NAME"
-else
-  # Check if branch exists on remote
-  REMOTE_BRANCH=$(git -C "$GIT_DIR" branch -r | grep "/$BRANCH_NAME$" | head -n 1 | sed 's/^[[:space:]]*//')
-  if [[ -n "$REMOTE_BRANCH" ]]; then
-    echo "Branch '$BRANCH_NAME' exists on remote as $REMOTE_BRANCH."
-    git -C "$GIT_DIR" worktree add -b "$BRANCH_NAME" "$WORKTREE_PATH" "$REMOTE_BRANCH"
-  else
-    echo "Branch '$BRANCH_NAME' does not exist. Creating new branch."
-    git -C "$GIT_DIR" worktree add -b "$BRANCH_NAME" "$WORKTREE_PATH"
-  fi
-fi
-
-# Trust mise configuration if available
-if [ -f "$WORKTREE_PATH/mise.toml" ] && [ -f "$WORKTREE_PATH/.mise.toml" ]; then
-  echo "Both mise.toml and .mise.toml found, checking project-local configuration..."
-  # Prioritize .mise.toml if both exist
-  if command -v mise &>/dev/null; then
-    mise trust -q "$WORKTREE_PATH/.mise.toml" 2>/dev/null || echo "Note: .mise.toml found but not trusted (run 'mise trust' manually if needed)"
-  fi
-elif [ -f "$WORKTREE_PATH/.mise.toml" ]; then
-  if command -v mise &>/dev/null; then
-    mise trust -q "$WORKTREE_PATH/.mise.toml" 2>/dev/null || echo "Note: .mise.toml found but not trusted (run 'mise trust' manually if needed)"
-    if [ $? -eq 0 ]; then
-      echo "Trusted .mise.toml configuration"
-    fi
-  else
-    echo "Note: .mise.toml found but mise is not installed"
-  fi
-elif [ -f "$WORKTREE_PATH/mise.toml" ]; then
-  if command -v mise &>/dev/null; then
-    mise trust -q "$WORKTREE_PATH/mise.toml" 2>/dev/null || echo "Note: mise.toml found but not trusted (run 'mise trust' manually if needed)"
-    if [ $? -eq 0 ]; then
-      echo "Trusted mise.toml configuration"
-    fi
-  else
-    echo "Note: mise.toml found but mise is not installed"
-  fi
-fi
-
-# Tmux integration
-if [[ -n "$TMUX" ]]; then
-  ORG_DIR=$(dirname $PARENT_DIR)
-  ORG_NAME=$(basename $ORG_DIR)
-  SESSION_NAME=$(echo "${ORG_NAME}/${REPO_NAME}@${BRANCH_NAME}" | tr ' .' '__')
-  echo "Creating tmux session '$SESSION_NAME'..."
-
-  if ! tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
-    TMUX="" tmux new-session -d -s "$SESSION_NAME" -c "$WORKTREE_PATH"
-    tmux send-keys -t "$SESSION_NAME" "nvim" Enter
-  fi
-
-  tmux switch-client -t "$SESSION_NAME"
-fi
-
-echo "Done."
+print("Done.")

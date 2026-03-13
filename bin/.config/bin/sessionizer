@@ -1,32 +1,17 @@
 #!/usr/bin/env luajit
 
-print("hello")
+-- Add script directory to package path
+local script_dir = arg[0]:match("^(.+)/[^/]+$") or "."
+package.path = script_dir .. "/?.lua;" .. package.path
 
--- Helper to run command and capture output
-local function exec_capture(cmd)
-	local handle = io.popen(cmd)
-	local result = handle:read("*a")
-	handle:close()
-	return result
-end
-
--- Helper to run command and return status
-local function exec(cmd)
-	local status = os.execute(cmd)
-	-- LuaJIT os.execute returns the exit status directly
-	return status
-end
-
-local function not_in_tmux()
-	return os.getenv("TMUX") == nil
-end
+local u = require("utils")
 
 local dir = arg[1]
 
 -- If no arguments, try to attach or default to --start
 if not dir or dir == "" then
-	if not_in_tmux() then
-		if exec("tmux attach") == 0 then
+	if not u.in_tmux() then
+		if u.exec("tmux attach") == 0 then
 			os.exit(1)
 		else
 			dir = "--start"
@@ -36,86 +21,65 @@ if not dir or dir == "" then
 	end
 end
 
-local session_name = ""
+local sname = ""
 local path_name = ""
 
 if dir == "--start" then
-	print("starting")
-	-- path_name="$(basename "$PWD" | tr . -)"
 	local pwd = os.getenv("PWD")
 	local basename = pwd:match("^.+/(.+)$") or pwd
 	path_name = basename:gsub("%.", "-")
-
-	-- session_name=${path_name//./_}
-	session_name = path_name:gsub("%.", "_")
+	sname = path_name:gsub("%.", "_")
 else
-	-- ask user
-	-- Use < /dev/tty to ensure fzf gets user input
 	local cmd =
 		string.format('list-workspaces %s | fzf --reverse --header="Select project from $(basename %s) >"', dir, dir)
-	local selected = exec_capture(cmd):gsub("\n", "")
+	local selected = u.exec_capture(cmd):gsub("\n", "")
 
 	if selected == "" then
-		-- operation cancelled by user
 		os.exit(1)
 	end
 
 	local directory, branch = selected:match("^(.+) %((.+)%)$")
 	if directory and branch then
 		path_name = dir .. "/" .. directory .. "/" .. branch
-		session_name = (directory .. "@" .. branch):gsub("%.", "_"):gsub(" ", "_")
+		sname = (directory .. "@" .. branch):gsub("%.", "_"):gsub(" ", "_")
 	else
 		path_name = dir .. "/" .. selected
-		session_name = selected:gsub("%.", "_"):gsub(" ", "_")
+		sname = selected:gsub("%.", "_"):gsub(" ", "_")
 	end
 end
 
-print('session name is "' .. session_name .. '"')
+print('session name is "' .. sname .. '"')
 print("path name is " .. path_name)
 
 local function session_exists()
-	-- tmux has-session -t "=$session_name"
-	return exec('tmux has-session -t "=' .. session_name .. '"') == 0
+	return u.exec('tmux has-session -t "=' .. sname .. '"') == 0
 end
 
 local function create_detached_session()
-	local tmux_cmd_prefix = "TMUX='' tmux"
-
 	if dir == "--start" then
-		local cmd = string.format('%s new-session -Ad -s "%s" -c "%s"', tmux_cmd_prefix, session_name, path_name)
-		exec(cmd)
+		u.exec(string.format('TMUX="" tmux new-session -Ad -s "%s" -c "%s"', sname, path_name))
 	else
-		local cmd1 = string.format('%s new-session -Ad -s "%s" -c "%s"', tmux_cmd_prefix, session_name, path_name)
-		-- using ; to separate commands in os.execute might be cleaner than two exec calls if we want atomicity,
-		-- but two calls is fine and matches script flow.
-		exec(cmd1)
-
-		local cmd2 = string.format('tmux send-keys -t "%s" "nvim" Enter', session_name)
-		exec(cmd2)
+		u.exec(string.format('TMUX="" tmux new-session -Ad -s "%s" -c "%s"', sname, path_name))
+		u.exec(string.format('tmux send-keys -t "%s" "nvim" Enter', sname))
 	end
 end
 
 local function create_if_needed_and_attach()
-	if not_in_tmux() then
-		local cmd = string.format('tmux new-session -As "%s" -c "%s"', session_name, path_name)
-		return exec(cmd) == 0
+	if not u.in_tmux() then
+		return u.exec(string.format('tmux new-session -As "%s" -c "%s"', sname, path_name)) == 0
 	else
 		if not session_exists() then
 			create_detached_session()
 		end
-		local cmd = string.format('tmux switch-client -t "%s"', session_name)
-		return exec(cmd) == 0
+		return u.exec(string.format('tmux switch-client -t "%s"', sname)) == 0
 	end
 end
 
 local function attach_to_first_session()
-	-- bash: tmux attach -t $(tmux list-sessions -F "${session_name}" | head -n 1)
-	-- Fixed to use #{session_name} to actually find a session if logic failed
-	local cmd_list = 'tmux list-sessions -F "#{session_name}" | head -n 1'
-	local target = exec_capture(cmd_list):gsub("\n", "")
+	local target = u.trim(u.exec_capture('tmux list-sessions -F "#{session_name}" | head -n 1'))
 	if target ~= "" then
-		exec('tmux attach -t "' .. target .. '"')
-		exec("tmux choose-tree -Za")
+		u.exec('tmux attach -t "' .. target .. '"')
+		u.exec("tmux choose-tree -Za")
 	end
 end
 

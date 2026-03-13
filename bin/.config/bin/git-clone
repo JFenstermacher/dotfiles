@@ -1,92 +1,76 @@
-#!/bin/sh
+#!/usr/bin/env luajit
 
-set -e
+-- Add script directory to package path
+local script_dir = arg[0]:match("^(.+)/[^/]+$") or "."
+package.path = script_dir .. "/?.lua;" .. package.path
 
-ROOT_DIR="${HOME}/workspaces"
+local u = require("utils")
 
-# Parse arguments
-BARE=false
-if [ "$1" = "--bare" ]; then
-  BARE=true
-  shift
-fi
+local ROOT_DIR = os.getenv("HOME") .. "/workspaces"
 
-repo="$1"
+-- Parse arguments
+local bare = false
+local repo = nil
 
-if [ -z "$repo" ]; then
-  echo "Error: A repository to clone must be provided" >&2
-  exit 1
-fi
+local i = 1
+while i <= #arg do
+	if arg[i] == "--bare" then
+		bare = true
+	else
+		repo = arg[i]
+	end
+	i = i + 1
+end
 
-# Automatically assume github.com if only <org>/<repo> is provided
-case "$repo" in
-*://* | *@*)
-  org_repo=$(echo "$repo" | sed 's/\/$//' | sed -E 's/.*[:\/]([^\/]+\/[^\/]+)$/\1/' | sed 's/\.git$//')
-  ;;
-*/*)
-  org_repo="$repo"
-  echo "Assuming GitHub repository: https://github.com/${org_repo}.git"
-  repo="https://github.com/${org_repo}.git"
-  ;;
-*)
-  echo "Error: Repository must be in <org>/<repo> format or a full URL" >&2
-  exit 1
-  ;;
-esac
+if not repo then
+	io.stderr:write("Error: A repository to clone must be provided\n")
+	os.exit(1)
+end
 
-target_dir="${ROOT_DIR}/${org_repo}"
+-- Extract org/repo from URL or short form
+local org_repo
 
-if [ "$BARE" = true ]; then
-  target_git_dir="${target_dir}/.git"
-
-  if [ -d "$target_dir" ]; then
-    echo "Error: Target directory $target_dir already exists" >&2
-    exit 1
-  fi
-
-  mkdir -p "$target_dir"
-
-  echo "Cloning bare $repo into $target_git_dir..."
-  git clone --bare "$repo" "$target_git_dir"
-
-  # Determine the default branch
-  default_branch=$(git -C "$target_git_dir" symbolic-ref --short HEAD || git -C "$target_git_dir" rev-parse --abbrev-ref HEAD)
-
-  echo "Default branch is: $default_branch"
-
-  worktree_path="${target_dir}/${default_branch}"
-  echo "Adding worktree for $default_branch at $worktree_path..."
-  git -C "$target_git_dir" worktree add "$worktree_path" "$default_branch"
+if repo:match("://") or repo:match("@") then
+	-- Full URL: extract org/repo
+	org_repo = repo:gsub("/$", ""):match("([^/:]+/[^/:]+)$"):gsub("%.git$", "")
+elseif repo:match("/") then
+	-- Short form: org/repo
+	org_repo = repo
+	print("Assuming GitHub repository: https://github.com/" .. org_repo .. ".git")
+	repo = "https://github.com/" .. org_repo .. ".git"
 else
-  echo "Cloning $repo into $target_dir..."
-  git clone "$repo" "$target_dir"
-fi
+	io.stderr:write("Error: Repository must be in <org>/<repo> format or a full URL\n")
+	os.exit(1)
+end
 
-# Trust mise configuration if available
-if [ -f "$target_dir/mise.toml" ] && [ -f "$target_dir/.mise.toml" ]; then
-  echo "Both mise.toml and .mise.toml found, checking project-local configuration..."
-  # Prioritize .mise.toml if both exist
-  if command -v mise &>/dev/null; then
-    mise trust -q "$target_dir/.mise.toml" 2>/dev/null || echo "Note: .mise.toml found but not trusted (run 'mise trust' manually if needed)"
-  fi
-elif [ -f "$target_dir/.mise.toml" ]; then
-  if command -v mise &>/dev/null; then
-    mise trust -q "$target_dir/.mise.toml" 2>/dev/null || echo "Note: .mise.toml found but not trusted (run 'mise trust' automatically if you trust this project)"
-    if [ $? -eq 0 ]; then
-      echo "Trusted .mise.toml configuration"
-    fi
-  else
-    echo "Note: .mise.toml found but mise is not installed"
-  fi
-elif [ -f "$target_dir/mise.toml" ]; then
-  if command -v mise &>/dev/null; then
-    mise trust -q "$target_dir/mise.toml" 2>/dev/null || echo "Note: mise.toml found but not trusted (run 'mise trust' automatically if you trust this project)"
-    if [ $? -eq 0 ]; then
-      echo "Trusted mise.toml configuration"
-    fi
-  else
-    echo "Note: mise.toml found but mise is not installed"
-  fi
-fi
+local target_dir = ROOT_DIR .. "/" .. org_repo
 
-echo "Successfully set up repository at $target_dir"
+if bare then
+	local target_git_dir = target_dir .. "/.git"
+
+	if u.exec(string.format('test -d "%s"', target_dir)) == 0 then
+		io.stderr:write("Error: Target directory " .. target_dir .. " already exists\n")
+		os.exit(1)
+	end
+
+	u.exec(string.format('mkdir -p "%s"', target_dir))
+
+	print("Cloning bare " .. repo .. " into " .. target_git_dir .. "...")
+	u.exec(string.format('git clone --bare "%s" "%s"', repo, target_git_dir))
+
+	local default_branch = u.default_branch(target_git_dir)
+	print("Default branch is: " .. default_branch)
+
+	local worktree_path = target_dir .. "/" .. default_branch
+	print("Adding worktree for " .. default_branch .. " at " .. worktree_path .. "...")
+	u.exec(string.format('git -C "%s" worktree add "%s" "%s"', target_git_dir, worktree_path, default_branch))
+
+	u.trust_mise(worktree_path)
+else
+	print("Cloning " .. repo .. " into " .. target_dir .. "...")
+	u.exec(string.format('git clone "%s" "%s"', repo, target_dir))
+
+	u.trust_mise(target_dir)
+end
+
+print("Successfully set up repository at " .. target_dir)

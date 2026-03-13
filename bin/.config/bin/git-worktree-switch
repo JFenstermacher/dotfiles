@@ -1,108 +1,53 @@
-#!/usr/bin/env bash
+#!/usr/bin/env luajit
 
-set -e
+-- Add script directory to package path
+local script_dir = arg[0]:match("^(.+)/[^/]+$") or "."
+package.path = script_dir .. "/?.lua;" .. package.path
 
-# Function to find the bare repository (.git directory)
-find_git_dir() {
-  local current_dir="$1"
-  while [[ "$current_dir" != "/" ]]; do
-    # Check if current directory is a .git directory (bare)
-    if [[ "$current_dir" == *.git ]] && [[ -d "$current_dir" ]]; then
-      echo "$current_dir"
-      return 0
-    fi
-    # Check if there is a .git directory inside
-    local found=$(find "$current_dir" -maxdepth 2 -name "*.git" -type d | head -n 1)
-    if [[ -n "$found" ]]; then
-      echo "$found"
-      return 0
-    fi
-    current_dir=$(dirname "$current_dir")
-  done
-  return 1
-}
+local wt = require("utils")
 
-GIT_DIR=$(find_git_dir "$(pwd)")
+local git_dir = wt.require_bare_repo()
+local ctx = wt.repo_context(git_dir)
+local current_worktree = wt.exec_capture("git rev-parse --show-toplevel 2>/dev/null"):gsub("%s+$", "")
 
-if [[ -z "$GIT_DIR" ]]; then
-  echo "Error: Could not find a .git directory."
-  exit 1
-fi
+local worktrees = wt.get_worktree_branches(git_dir)
 
-# Check if it's a bare repository by looking for worktrees directory
-if [[ ! -d "$GIT_DIR/worktrees" ]]; then
-  echo "Error: This does not appear to be a bare repository with worktrees."
-  exit 1
-fi
+-- Build list, excluding current worktree and bare repo
+local available = {}
+for _, entry in ipairs(worktrees) do
+	if entry.path ~= current_worktree and not entry.path:match("%.git$") then
+		available[#available + 1] = entry
+	end
+end
 
-PARENT_DIR=$(dirname "$GIT_DIR")
-REPO_NAME=$(basename "$PARENT_DIR")
+if #available == 0 then
+	print("No other worktrees available to switch to.")
+	os.exit(0)
+end
 
-# Get current worktree path
-CURRENT_WORKTREE=$(git rev-parse --show-toplevel 2>/dev/null || echo "")
+local fzf_lines = {}
+for _, entry in ipairs(available) do
+	fzf_lines[#fzf_lines + 1] = entry.path:match("^.+/([^/]+)$")
+end
 
-# List worktrees, excluding the current one
-WORKTREES=$(git -C "$GIT_DIR" worktree list --porcelain | grep "^worktree " | cut -d' ' -f2-)
+local selected = wt.fzf(fzf_lines, '--reverse --header="Select worktree to switch to >"')
+if selected == "" then
+	os.exit(0)
+end
 
-AVAILABLE=""
-for wt in $WORKTREES; do
-  # Skip if it's the current worktree
-  if [[ "$wt" == "$CURRENT_WORKTREE" ]]; then
-    continue
-  fi
+local worktree_path = ctx.parent_dir .. "/" .. selected
 
-  # Skip if it's the bare repository itself
-  if [[ "$wt" == *.git ]]; then
-    continue
-  fi
+-- Find the branch for the selected worktree
+local selected_branch = selected
+for _, entry in ipairs(available) do
+	if entry.path == worktree_path then
+		selected_branch = entry.branch
+		break
+	end
+end
 
-  # Get branch name for this worktree
-  wt_branch=$(git -C "$GIT_DIR" worktree list | grep "^$wt " | sed 's/.*\[\([^]]*\)\].*/\1/')
-
-  if [[ "$wt_branch" == *"bare"* ]]; then
-    continue
-  fi
-
-  # If sed didn't find brackets, try awk as fallback
-  if [[ -z "$wt_branch" ]] || [[ "$wt_branch" == "$wt"* ]]; then
-    wt_branch=$(git -C "$GIT_DIR" worktree list | grep "^$wt " | awk '{for(i=3;i<=NF;i++) printf "%s%s", $i, (i<NF?" ":"");}' | tr -d '[]')
-  fi
-
-  AVAILABLE+="$(basename "$wt")"$'\n'
-done
-
-if [[ -z "$AVAILABLE" ]]; then
-  echo "No other worktrees available to switch to."
-  exit 0
-fi
-
-# Use fzf to select worktree to switch to
-SELECTED=$(echo -n "$AVAILABLE" | sed '/^$/d' | fzf --reverse --header="Select worktree to switch to >")
-
-if [[ -z "$SELECTED" ]]; then
-  echo "No worktree selected."
-  exit 0
-fi
-
-WORKTREE_PATH="$PARENT_DIR/$SELECTED"
-
-# Tmux integration - switch to or create session for the worktree
-if [[ -n "$TMUX" ]]; then
-  ORG_DIR=$(dirname $PARENT_DIR)
-  ORG_NAME=$(basename $ORG_DIR)
-  SESSION_NAME=$(echo "${ORG_NAME}/${REPO_NAME}@${SELECTED}" | tr ' .' '__')
-
-  if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
-    echo "Switching to existing session '$SESSION_NAME'..."
-    tmux switch-client -t "$SESSION_NAME"
-  else
-    echo "Creating new session '$SESSION_NAME'..."
-    TMUX="" tmux new-session -d -s "$SESSION_NAME" -c "$WORKTREE_PATH"
-    tmux send-keys -t "$SESSION_NAME" "nvim" Enter
-    tmux switch-client -t "$SESSION_NAME"
-  fi
-else
-  echo "Not in tmux, changing directory to $WORKTREE_PATH"
-  cd "$WORKTREE_PATH"
-  exec $SHELL
-fi
+local sname = wt.session_name(ctx.org_name, ctx.repo_name, selected_branch)
+if not wt.tmux_switch_or_create(sname, worktree_path) then
+	print("Not in tmux, changing directory to " .. worktree_path)
+	wt.exec(string.format('cd "%s" && exec $SHELL', worktree_path))
+end

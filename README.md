@@ -34,14 +34,16 @@ cd ~/workspace/dotfiles
 
 ## Custom Scripts
 
-This repository includes several custom utility scripts located in `bin/.config/bin/`:
+All custom scripts are written in LuaJIT and share a common `utils.lua` module. They are located in `bin/.config/bin/`:
 
+- `utils.lua`: Shared utility library (shell helpers, git worktree parsing, tmux integration, fzf, mise trust).
 - `sessionizer`: A smart project/session switcher for tmux.
 - `list-workspaces`: Lists standard and bare Git repositories for the session switcher.
-- `git-clone`: Clones a repository as a bare repo and sets up a default worktree.
+- `git-clone`: Clones a repository (optionally as a bare repo) and sets up a default worktree.
 - `git-worktree-add`: Creates a new git worktree and associated tmux session.
 - `git-worktree-remove`: Interactively removes worktrees and their associated tmux sessions.
 - `git-worktree-switch`: Interactively switches between worktrees and their associated tmux sessions.
+- `git-worktree-checkout`: Fuzzy-finds across all branches and either switches to an existing worktree or creates one.
 - `git-worktree-purge`: Automatically removes worktrees and tmux sessions for branches that have been merged into the default branch.
 - `home-session`: Creates or jumps to a default "home" tmux session.
 
@@ -58,4 +60,5 @@ Note: The prefix key is configured as `Ctrl-a`.
   - `c`: Create a new git worktree and session (`git-worktree-add`).
   - `d` / `k`: Remove existing git worktrees and sessions (`git-worktree-remove`).
   - `s` / `j`: Switch between git worktrees (`git-worktree-switch`).
+  - `b`: Browse all branches and checkout/create worktree (`git-worktree-checkout`).
   - `p`: Purge merged worktrees and their sessions (`git-worktree-purge`).

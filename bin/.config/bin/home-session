@@ -1,33 +1,28 @@
-#!/usr/bin/env bash
+#!/usr/bin/env luajit
 
-# Get username for session name
-USER_SESSION=$(whoami)
+-- Add script directory to package path
+local script_dir = arg[0]:match("^(.+)/[^/]+$") or "."
+package.path = script_dir .. "/?.lua;" .. package.path
 
-# Function to create user session if it doesn't exist
-create_user_session() {
-  if ! tmux list-sessions | grep -q "^${USER_SESSION}:"; then
-    tmux new-session -d -s "$USER_SESSION" -c "$HOME"
-  fi
-}
+local u = require("utils")
 
-# Function to switch to or attach to user session
-switch_or_attach() {
-  if [ -n "$TMUX" ]; then
-    # Within tmux, switch to user session
-    create_user_session
-    tmux switch-client -t "$USER_SESSION"
-  else
-    # Outside tmux, attach to user session
-    if tmux list-sessions >/dev/null 2>&1; then
-      # Tmux server is running
-      create_user_session
-      tmux attach-session -t "$USER_SESSION"
-    else
-      # Tmux server not running, start it with user session
-      tmux new-session -s "$USER_SESSION" -c "$HOME"
-    fi
-  fi
-}
+local user_session = u.trim(u.exec_capture("whoami"))
+local home = os.getenv("HOME")
 
-# Main execution
-switch_or_attach
+local function create_user_session()
+	if u.exec(string.format('tmux has-session -t "%s" 2>/dev/null', user_session)) ~= 0 then
+		u.exec(string.format('TMUX="" tmux new-session -d -s "%s" -c "%s"', user_session, home))
+	end
+end
+
+if u.in_tmux() then
+	create_user_session()
+	u.exec(string.format('tmux switch-client -t "%s"', user_session))
+else
+	if u.exec("tmux list-sessions >/dev/null 2>&1") == 0 then
+		create_user_session()
+		u.exec(string.format('tmux attach-session -t "%s"', user_session))
+	else
+		u.exec(string.format('tmux new-session -s "%s" -c "%s"', user_session, home))
+	end
+end
