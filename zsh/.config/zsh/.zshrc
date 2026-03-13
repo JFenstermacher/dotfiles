@@ -7,6 +7,10 @@ PERSONAL_DIR=$HOME/.personal/zsh
 source $ZDOTDIR/zsh-functions
 source $ZDOTDIR/zsh-exports
 
+# Brew - potentially installed mise with brew, so need brew to be available on path
+# Otherwise, native install is available via $PATH update in the zsh-exports
+brew_setup
+
 # Mise
 mise_setup
 
@@ -92,9 +96,6 @@ zsh_add_plugins "${PLUGINS[@]}"
 ##################################################################
 
 eval "$(starship init zsh)"
-
-# BREW
-brew_setup
 
 # UV
 uv_setup
