@@ -57,6 +57,7 @@ if bare then
 
 	print("Cloning bare " .. repo .. " into " .. target_git_dir .. "...")
 	u.exec(string.format('git clone --bare "%s" "%s"', repo, target_git_dir))
+	u.exec(string.format('git -C "%s" config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"', target_git_dir))
 
 	local default_branch = u.default_branch(target_git_dir)
 	print("Default branch is: " .. default_branch)

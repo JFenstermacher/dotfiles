@@ -8,44 +8,17 @@ local u = require("utils")
 
 local ROOT_DIR = arg[1] or os.getenv("HOME") .. "/workspaces"
 
-local find_cmd = string.format("fd --hidden --type d --max-depth 5 . %s", ROOT_DIR)
+local find_cmd = string.format("fd --hidden --min-depth 2 --type d --max-depth 2 . %s", ROOT_DIR)
 local found_paths = u.exec_lines(find_cmd)
 
 local repos = {}
 for _, path in ipairs(found_paths) do
 	local no_prefix = path:gsub("^" .. ROOT_DIR .. "/", "")
-	local no_suffix = no_prefix:gsub("/$", "")
-	local parts = u.str_split(no_suffix, "/")
+	local no_suffix = no_prefix:sub(1, -2)
 
-	local num_parts = #parts
-	if num_parts == 2 then
-		local repo_org = parts[1] .. "/" .. parts[2]
-		if not repos[repo_org] then
-			repos[repo_org] = {}
-		end
-	elseif num_parts == 5 then
-		local is_bare_repository = parts[4] == "worktrees"
-		if not is_bare_repository then
-			goto continue
-		end
-
-		local repo_org = parts[1] .. "/" .. parts[2]
-
-		local worktrees = repos[repo_org]
-		worktrees[#worktrees + 1] = parts[5]
-	else
-		goto continue
-	end
-
-	::continue::
+	repos[#repos + 1] = no_suffix
 end
 
-for repo_org, worktrees in pairs(repos) do
-	if #worktrees == 0 then
-		print(repo_org)
-	else
-		for _, worktree in ipairs(worktrees) do
-			print(string.format("%s (%s)", repo_org, worktree))
-		end
-	end
+for _, repo in ipairs(repos) do
+	print(repo)
 end
