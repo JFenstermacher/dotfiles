@@ -44,7 +44,6 @@ All custom scripts are written in LuaJIT and share a common `utils.lua` module. 
 - `git-worktree-remove`: Interactively removes worktrees and their associated tmux sessions.
 - `git-worktree-switch`: Interactively switches between worktrees and their associated tmux sessions.
 - `git-worktree-checkout`: Fuzzy-finds across all branches and either switches to an existing worktree or creates one.
-- `git-worktree-purge`: Automatically removes worktrees and tmux sessions for branches that have been merged into the default branch.
 - `home-session`: Creates or jumps to a default "home" tmux session.
 
 ## Tmux Keybindings
@@ -61,4 +60,3 @@ Note: The prefix key is configured as `Ctrl-a`.
   - `d` / `k`: Remove existing git worktrees and sessions (`git-worktree-remove`).
   - `s` / `j`: Switch between git worktrees (`git-worktree-switch`).
   - `b`: Browse all branches and checkout/create worktree (`git-worktree-checkout`).
-  - `p`: Purge merged worktrees and their sessions (`git-worktree-purge`).
