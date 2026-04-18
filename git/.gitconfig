@@ -2,6 +2,16 @@
 	name = Jonathan Fenstermacher
 	email = jfenstermacher123@gmail.com
 
+[delta]
+  side-by-side = true
+  line-numbers = true
+
+[pager]
+  diff = delta
+  log = delta
+  reflog = delta
+  show = delta
+
 [core]
   editor = nvim
   excludesfile = ~/.gitignore_global

@@ -107,3 +107,15 @@ function mise_setup() {
 
   eval "$(mise activate zsh)"
 }
+
+function dm() {
+  case "$1" in
+    use|unuse)
+      local sub="$1"; shift
+      mise "$sub" --path="$HOME/.config/mise/conf.d/dotfiles.toml" "$@"
+      ;;
+    *)
+      mise "$@"
+      ;;
+  esac
+}
