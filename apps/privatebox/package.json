@@ -1,0 +1,29 @@
+{
+  "name": "privatebox",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "privatebox": "src/index.ts"
+  },
+  "scripts": {
+    "start": "bun run src/index.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-ec2": "^3.1038.0",
+    "@aws-sdk/client-ssm": "^3.1038.0",
+    "@aws-sdk/client-sts": "^3.1038.0",
+    "@aws-sdk/credential-providers": "^3.1038.0",
+    "@mariozechner/pi-tui": "^0.70.5",
+    "@pulumi/aws-native": "^1.62.0",
+    "@pulumi/pulumi": "^3.232.0",
+    "@smithy/shared-ini-file-loader": "^4.4.9",
+    "chalk": "^5.6.2",
+    "yaml": "^2",
+    "zod": "^3.x"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "latest",
+    "typescript": "latest"
+  }
+}

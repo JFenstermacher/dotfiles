@@ -46,3 +46,6 @@ alias mr="mise run"
 
 # TMUX
 alias ts="sessionizer"
+
+# PrivateBox
+alias pb="privatebox"
