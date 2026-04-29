@@ -19,7 +19,7 @@ function generateScaffold(args: {
 }): string {
   const config: Record<string, unknown> = {
     ami: args.skipAmi ? "# TODO: fill in AMI ID" : args.ami,
-    instance_type: "t3.medium",
+    instance_type: "t4g.medium",
     aws_profile: args.awsProfile,
     aws_region: args.awsRegion,
     username: "ec2-user",

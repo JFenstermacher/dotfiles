@@ -17,7 +17,7 @@ function isParameterNotFoundError(error: any): boolean {
 // ── Amazon Linux 2 AMI via SSM ──────────────────────────────────────────────
 
 const AL2_SSM_PARAMETER =
-  "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2";
+  "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2";
 
 /**
  * Resolve the latest Amazon Linux 2 AMI ID for a given AWS region via SSM.
