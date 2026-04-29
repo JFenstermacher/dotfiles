@@ -132,6 +132,7 @@ export const PrivateBoxConfigObjectSchema = z.object({
   volume_size: z.number().int().positive().default(20),
   volume_device: z.string().default("/dev/sdf"),
   public_key: z.string().default(""),
+  connect_command: z.string().min(1, "Connect command is required").default("ssh ${username}@${public_ip}"),
   userdata: z.string().default(""),
 });
 

@@ -1,4 +1,3 @@
-import { existsSync } from "node:fs";
 import { join } from "node:path";
 import {
   configExists,
@@ -49,7 +48,7 @@ export async function runEdit(originalName: string): Promise<void> {
     if (await stackExists(trimmedName)) {
       throw new Error(
         `Cannot rename config "${trimmedName}" to "${config.name}": a Pulumi stack exists for "${trimmedName}". ` +
-          `Run \`privatebox destroy ${trimmedName}\` first, then edit and rename.`
+        `Run \`privatebox destroy ${trimmedName}\` first, then edit and rename.`
       );
     }
 

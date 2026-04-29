@@ -12,6 +12,7 @@ import { runUp } from "./commands/up.js";
 import { runDown } from "./commands/down.js";
 import { runListConfigs, runListInstances } from "./commands/list.js";
 import { runGetConfig, runGetInstance } from "./commands/get.js";
+import { runConnect } from "./commands/connect.js";
 import { fuzzySelectConfig, fuzzySelectInstance } from "./tui/fuzzy.js";
 
 function getVersion(): string {
@@ -40,6 +41,7 @@ Commands:
   create [name] [--ssh-config]      Alias for apply
   up [name]                         Start a stopped instance
   down [name]                       Stop a running instance
+  connect [name]                    Connect using the configured command
   destroy [name]                    Destroy all cloud resources
   delete [name]                     Delete a config file (requires destroy first)
   edit [name]                       Edit an existing config
@@ -154,6 +156,12 @@ async function main() {
     case "down":
       await runDown(
         await requireSelectedName(args, () => fuzzySelectInstance("Select instance to stop:"))
+      );
+      return;
+
+    case "connect":
+      await runConnect(
+        await requireSelectedName(args, () => fuzzySelectInstance("Select instance to connect:"))
       );
       return;
 

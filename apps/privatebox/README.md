@@ -62,7 +62,7 @@ privatebox configure my-dev-box
 privatebox apply my-dev-box --ssh-config
 
 # Connect, then stop/start as needed
-ssh pb-my-dev-box
+privatebox connect my-dev-box
 privatebox down my-dev-box
 privatebox up my-dev-box
 
@@ -117,6 +117,7 @@ use_volume: false
 volume_size: 20
 volume_device: /dev/sdf
 public_key: "file:///home/user/.ssh/id_ed25519.pub"
+connect_command: "ssh ${username}@${public_ip}"
 userdata: ""
 ```
 
@@ -132,6 +133,7 @@ userdata: ""
 | `enable_public_ip` | Whether to associate a public IPv4 address. |
 | `ingress` / `egress` | Security group rules. Supports TCP, UDP, ICMP, and all traffic (`-1`). |
 | `public_key` | `file://<path>`, inline SSH key, or `""` to auto-generate. |
+| `connect_command` | Command template used by `privatebox connect`. Defaults to `ssh ${username}@${public_ip}`. Supports `${username}`, `${public_ip}`, `${private_ip}`, and `${public_key_path}`. |
 | `use_volume` / `volume_size` | Create an encrypted EBS home volume of the given size (GiB). |
 | `userdata` | `file://<path>` or inline shell script appended after the PrivateBox bootstrap. |
 
@@ -150,6 +152,7 @@ Commands:
   create [name] [--ssh-config]      Alias for apply
   up [name]                         Start a stopped instance
   down [name]                       Stop a running instance
+  connect [name]                    Connect using the configured command
   destroy [name]                    Destroy all cloud resources
   delete [name]                     Delete a config file (requires destroy first)
   edit [name]                       Edit an existing config
@@ -198,6 +201,19 @@ Start or stop the EC2 instance using the AWS SDK. These are fast operations
 that preserve all other resources (KMS key, security group, volume, etc.).
 
 Both are no-ops if the instance is already in the target state.
+
+#### `connect [name]`
+
+Render the config's `connect_command` and replace the command process with it.
+The default command is `ssh ${username}@${public_ip}`. Available template
+variables are `${username}`, `${public_ip}`, `${private_ip}`, and
+`${public_key_path}`. Template values are shell-quoted before execution.
+
+If `${public_key_path}` is used and `public_key` is an inline SSH public key,
+PrivateBox writes it to `$XDG_DATA_HOME/privatebox/keys/<name>/public_key.pub`
+so the variable can refer to that file. For `file://` keys, it resolves to the
+referenced path; for auto-generated keys, it resolves to the generated
+`id_ed25519.pub` path.
 
 #### `destroy [name]`
 

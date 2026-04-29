@@ -45,6 +45,7 @@ function generateScaffold(args: {
     volume_size: 20,
     volume_device: "/dev/sdf",
     public_key: args.publicKey,
+    connect_command: "ssh ${username}@${public_ip}",
     userdata: "",
   };
 
