@@ -243,6 +243,7 @@ export async function fuzzySelect<T extends { value: string }>(
     };
 
     tui.addChild(finder);
+    tui.setFocus(finder);
     tui.start();
   });
 }
