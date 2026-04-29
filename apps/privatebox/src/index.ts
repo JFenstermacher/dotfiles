@@ -160,18 +160,20 @@ async function main() {
       return;
 
     case "connect":
+    case "conn":
       await runConnect(
         await requireSelectedName(args, () => fuzzySelectInstance("Select instance to connect:"))
       );
       return;
 
-    case "list": {
+    case "list":
+    case "ls": {
       const sub = args[0];
-      if (sub === "configs" || sub === "cfg") {
+      if (sub === "config" || sub === "configs" || sub === "cfg" || sub === "cfgs") {
         await runListConfigs();
         return;
       }
-      if (sub === "instances" || sub === "instance" || sub === "inst") {
+      if (sub === "instance" || sub === "instances" || sub === "inst") {
         await runListInstances();
         return;
       }

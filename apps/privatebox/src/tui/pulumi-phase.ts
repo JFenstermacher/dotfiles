@@ -14,9 +14,9 @@ class PulumiEventLog implements Component {
   private events: string[] = [];
   private resourceStates = new Map<string, string>();
 
-  constructor(private maxEvents = 8) {}
+  constructor(private maxEvents = 8) { }
 
-  invalidate(): void {}
+  invalidate(): void { }
 
   addEvent(event: EngineEvent): void {
     const rendered = this.renderEvent(event);
@@ -99,7 +99,7 @@ class PulumiPhaseView implements Component {
     private loader: Loader,
     private log: PulumiEventLog,
     private hint: string
-  ) {}
+  ) { }
 
   invalidate(): void {
     this.loader.invalidate();
@@ -116,10 +116,10 @@ class PulumiPhaseView implements Component {
     const title = ` ${this.title} `;
     lines.push(
       chalk.gray("┌") +
-        chalk.gray("─") +
-        chalk.bold(title) +
-        chalk.gray("─".repeat(Math.max(0, width - 3 - title.length))) +
-        chalk.gray("┐")
+      chalk.gray("─") +
+      chalk.bold(title) +
+      chalk.gray("─".repeat(Math.max(0, width - 3 - title.length))) +
+      chalk.gray("┐")
     );
 
     for (const line of this.loader.render(innerWidth)) {
@@ -149,7 +149,7 @@ export async function runPulumiPhase<T>(
   // errors normally.
   if (!process.stdin.isTTY || !process.stdout.isTTY) {
     console.log(`\n${initialMessage}`);
-    return operation(() => {});
+    return operation(() => { });
   }
 
   const terminal = new ProcessTerminal();
