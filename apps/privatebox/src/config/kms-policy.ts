@@ -24,6 +24,7 @@ function buildPolicyDocument(args: KmsPolicyArgs): any {
         "kms:PutKeyPolicy",
         "kms:GetKeyPolicy",
         "kms:CreateGrant",
+        "kms:ListGrants",
         "kms:RevokeGrant",
         "kms:ScheduleKeyDeletion",
         "kms:CancelKeyDeletion",
@@ -35,10 +36,10 @@ function buildPolicyDocument(args: KmsPolicyArgs): any {
       Resource: "*",
     },
     {
-      Sid: "EC2EBSServiceAccess",
+      Sid: "OwnerEC2EBSServiceUse",
       Effect: "Allow",
       Principal: {
-        AWS: "*",
+        AWS: args.ownerPrincipalArn,
       },
       Action: [
         "kms:Encrypt",
@@ -46,6 +47,22 @@ function buildPolicyDocument(args: KmsPolicyArgs): any {
         "kms:ReEncrypt*",
         "kms:GenerateDataKey*",
         "kms:DescribeKey",
+      ],
+      Resource: "*",
+      Condition: {
+        StringEquals: {
+          "kms:ViaService": `ec2.${args.region}.amazonaws.com`,
+          "kms:CallerAccount": args.accountId,
+        },
+      },
+    },
+    {
+      Sid: "OwnerEC2EBSGrantManagement",
+      Effect: "Allow",
+      Principal: {
+        AWS: args.ownerPrincipalArn,
+      },
+      Action: [
         "kms:CreateGrant",
         "kms:ListGrants",
         "kms:RevokeGrant",

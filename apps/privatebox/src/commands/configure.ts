@@ -1,14 +1,22 @@
+import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { configExists, resolveConfig, saveConfig } from "../config/store.js";
 import { validateName } from "../config/validation.js";
 import { resolveAwsProfile, resolveAwsRegion } from "../utils/aws.js";
-import { getLatestAmazonLinux2Ami } from "../utils/ami.js";
+import { getLatestUbuntu2404Arm64Ami } from "../utils/ami.js";
 import { runEditorValidationLoop } from "../utils/editor-validation.js";
 import { cacheDir, configPath } from "../utils/xdg.js";
 import { stringifyYaml } from "../config/yaml.js";
 
 // ── Scaffold generation (no name field) ─────────────────────────────────────
+
+const SCRIPT_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "pulumi", "scripts");
+
+function loadDefaultUserdata(): string {
+  return readFileSync(join(SCRIPT_DIR, "default-userdata.sh"), "utf8").trimEnd();
+}
 
 function generateScaffold(args: {
   ami: string;
@@ -22,7 +30,7 @@ function generateScaffold(args: {
     instance_type: "t4g.medium",
     aws_profile: args.awsProfile,
     aws_region: args.awsRegion,
-    username: "ec2-user",
+    username: "ubuntu",
     owner_principal_arn: "",
     kms_deletion_principal_arns: [],
     kms_deletion_window_days: 30,
@@ -46,7 +54,7 @@ function generateScaffold(args: {
     volume_device: "/dev/sdf",
     public_key: args.publicKey,
     connect_command: "ssh ${username}@${public_ip}",
-    userdata: "",
+    userdata: loadDefaultUserdata(),
   };
 
   return stringifyYaml(config);
@@ -92,7 +100,7 @@ export async function runConfigure(options: {
       latestAmi = "# TODO: fill in AMI ID";
     } else {
       try {
-        latestAmi = await getLatestAmazonLinux2Ami(profile, region);
+        latestAmi = await getLatestUbuntu2404Arm64Ami(profile, region);
       } catch (err) {
         throw new Error(
           `Failed to resolve latest AMI: ${err instanceof Error ? err.message : String(err)}`
@@ -130,7 +138,7 @@ export async function runConfigure(options: {
     latestAmi = "# TODO: fill in AMI ID";
   } else {
     try {
-      latestAmi = await getLatestAmazonLinux2Ami(profile, region);
+      latestAmi = await getLatestUbuntu2404Arm64Ami(profile, region);
     } catch (err) {
       throw new Error(
         `Failed to resolve latest AMI: ${err instanceof Error ? err.message : String(err)}`

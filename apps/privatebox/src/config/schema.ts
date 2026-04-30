@@ -117,7 +117,7 @@ export const PrivateBoxConfigObjectSchema = z.object({
   username: z
     .string()
     .regex(LINUX_USERNAME_REGEX, "Invalid Linux username")
-    .default("ec2-user"),
+    .default("ubuntu"),
   owner_principal_arn: z.string().default(""),
   kms_deletion_principal_arns: z
     .array(z.string().regex(ARN_REGEX, "Must be a valid IAM ARN"))

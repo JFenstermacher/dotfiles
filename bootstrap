@@ -37,6 +37,9 @@ else
   log_info "Tmux Plugin Manager is already installed"
 fi
 
+# Trust current configuration files
+mise trust --yes
+
 # Install dotfile dependencies
 mise install
 

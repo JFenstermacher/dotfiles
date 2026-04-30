@@ -113,7 +113,7 @@ async function resolveSubnet(
 
 /**
  * Resolve the root device name for an AMI.
- * Defaults to `/dev/xvda` (Amazon Linux 2 standard) if lookup fails.
+ * Defaults to `/dev/xvda` if lookup fails.
  */
 export async function resolveAmiRootDevice(
   profile: string,

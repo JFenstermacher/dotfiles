@@ -84,10 +84,10 @@ $XDG_CONFIG_HOME/privatebox/configs/<name>.yml
 ```yaml
 name: my-dev-box
 ami: ami-0abcdef1234567890
-instance_type: t3.medium
+instance_type: t4g.medium
 aws_profile: default
 aws_region: us-east-1
-username: ec2-user
+username: ubuntu
 owner_principal_arn: ""
 kms_deletion_principal_arns: []
 kms_deletion_window_days: 30
@@ -125,7 +125,7 @@ userdata: ""
 
 | Field | Description |
 |-------|-------------|
-| `ami` | AMI ID for the EC2 instance. The `configure` command pre-fills the latest Amazon Linux 2 AMI. |
+| `ami` | AMI ID for the EC2 instance. The `configure` command pre-fills the latest Ubuntu 24.04 LTS ARM64 AMI. |
 | `aws_profile` / `aws_region` | AWS profile and region used for all API calls and Pulumi operations. |
 | `username` | Linux user created/managed on the instance and used for SSH. |
 | `owner_principal_arn` | IAM user or role ARN that owns the generated KMS key policy. If empty, defaults to the current caller at apply time. |
@@ -260,8 +260,10 @@ The generated policy has these properties:
 - **Owner principal** gets full admin and cryptographic use of the key.
 - **Deletion-only principals** (if configured) can only schedule/cancel key
   deletion — they cannot decrypt, encrypt, or edit the policy.
-- **EC2/EBS service access** is constrained via `kms:ViaService`,
-  `kms:CallerAccount`, and `kms:GrantIsForAWSResource` conditions.
+- **EC2/EBS service access** is granted only when the owner principal calls EC2/EBS
+  in the configured account/region; other account principals cannot use a self-created
+  EC2 instance, EBS volume, or snapshot path to obtain decrypt access. Grant creation
+  is additionally constrained by `kms:GrantIsForAWSResource`.
 
 > ⚠️ **Warning**: Because the policy deliberately excludes root/admin, loss of
 > the owner principal can make data unrecoverable. Ensure the owner principal

@@ -162,6 +162,7 @@ export async function runApply(
     }
     appendedUserdata = readFileUrl(appendedUserdata);
   }
+  appendedUserdata = appendedUserdata.replaceAll("${username}", config.username);
 
   const bootstrapScript = generateBootstrapScript({
     username: config.username,

@@ -14,19 +14,19 @@ function isParameterNotFoundError(error: any): boolean {
   );
 }
 
-// ── Amazon Linux 2 AMI via SSM ──────────────────────────────────────────────
+// ── Ubuntu AMI via SSM ──────────────────────────────────────────────────────
 
-const AL2_SSM_PARAMETER =
-  "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2";
+const UBUNTU_2404_ARM64_SSM_PARAMETER =
+  "/aws/service/canonical/ubuntu/server/24.04/stable/current/arm64/hvm/ebs-gp3/ami-id";
 
 /**
- * Resolve the latest Amazon Linux 2 AMI ID for a given AWS region via SSM.
+ * Resolve the latest Ubuntu 24.04 LTS ARM64 AMI ID for a given AWS region via SSM.
  *
  * @param profile — AWS profile name to use for credentials
  * @param region  — AWS region to query
  * @returns AMI ID string (e.g. "ami-0abcdef1234567890")
  */
-export async function getLatestAmazonLinux2Ami(
+export async function getLatestUbuntu2404Arm64Ami(
   profile: string,
   region: string
 ): Promise<string> {
@@ -37,12 +37,12 @@ export async function getLatestAmazonLinux2Ami(
 
   async function fetchParameter(): Promise<string> {
     const response = await client.send(
-      new GetParameterCommand({ Name: AL2_SSM_PARAMETER })
+      new GetParameterCommand({ Name: UBUNTU_2404_ARM64_SSM_PARAMETER })
     );
     const amiId = response.Parameter?.Value;
     if (!amiId) {
       throw new Error(
-        `SSM parameter "${AL2_SSM_PARAMETER}" returned an empty value ` +
+        `SSM parameter "${UBUNTU_2404_ARM64_SSM_PARAMETER}" returned an empty value ` +
           `in region "${region}".`
       );
     }
@@ -61,8 +61,8 @@ export async function getLatestAmazonLinux2Ami(
 
     if (isParameterNotFoundError(error)) {
       throw new Error(
-        `Could not find the latest Amazon Linux 2 AMI in region "${region}". ` +
-          `The SSM parameter "${AL2_SSM_PARAMETER}" may not be available ` +
+        `Could not find the latest Ubuntu 24.04 LTS ARM64 AMI in region "${region}". ` +
+          `The SSM parameter "${UBUNTU_2404_ARM64_SSM_PARAMETER}" may not be available ` +
           `in this region. Check your AWS region configuration.`
       );
     }
@@ -79,7 +79,7 @@ export async function getLatestAmazonLinux2Ami(
     }
 
     throw new Error(
-      `Failed to fetch latest Amazon Linux 2 AMI: ${error.message ?? String(error)}`
+      `Failed to fetch latest Ubuntu 24.04 LTS ARM64 AMI: ${error.message ?? String(error)}`
     );
   } finally {
     client.destroy();
