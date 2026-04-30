@@ -24,7 +24,7 @@ platform_filters = {
 }.get(os_name, set())
 
 # Paths that should never be linked by fling.
-excluded_path_roots = {pathlib.Path("apps")}
+excluded_path_roots = {pathlib.Path("apps"), pathlib.Path("git")}
 
 def is_excluded_path(path):
     path = pathlib.Path(path)
@@ -47,12 +47,7 @@ if args:
     for dir_name in args:
         path = pathlib.Path(dir_name)
         if path.is_dir():
-            if is_excluded_path(path):
-                log_warn(f"'{dir_name}' is excluded from symlinking. Skipping.")
-            elif dir_name in platform_filters:
-                log_warn(f"'{dir_name}' doesn't work for this platform: {os_name}")
-            else:
-                to_link.append(dir_name)
+            to_link.append(dir_name)
         else:
             # Check if it exists at all
             if path.exists():
