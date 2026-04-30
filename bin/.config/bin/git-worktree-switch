@@ -1,53 +1,38 @@
-#!/usr/bin/env luajit
+#!/usr/bin/env bun
 
--- Add script directory to package path
-local script_dir = arg[0]:match("^(.+)/[^/]+$") or "."
-package.path = script_dir .. "/?.lua;" .. package.path
+import path from "node:path";
+import { exec, execCapture, fzf, getWorktreeBranches, requireBareRepo, repoContext, sessionName, shellQuote, tmuxSwitchOrCreate } from "./utils.js";
 
-local wt = require("utils")
+const gitDir = requireBareRepo();
+const ctx = repoContext(gitDir);
+const currentWorktree = execCapture("git rev-parse --show-toplevel 2>/dev/null").replace(/\s+$/g, "");
 
-local git_dir = wt.require_bare_repo()
-local ctx = wt.repo_context(git_dir)
-local current_worktree = wt.exec_capture("git rev-parse --show-toplevel 2>/dev/null"):gsub("%s+$", "")
+const worktrees = getWorktreeBranches(gitDir);
 
-local worktrees = wt.get_worktree_branches(git_dir)
+const available = worktrees.filter((entry) => entry.path !== currentWorktree && !entry.path.endsWith(".git"));
 
--- Build list, excluding current worktree and bare repo
-local available = {}
-for _, entry in ipairs(worktrees) do
-	if entry.path ~= current_worktree and not entry.path:match("%.git$") then
-		available[#available + 1] = entry
-	end
-end
+if (available.length === 0) {
+  console.log("No other worktrees available to switch to.");
+  process.exit(0);
+}
 
-if #available == 0 then
-	print("No other worktrees available to switch to.")
-	os.exit(0)
-end
+const fzfLines = available.map((entry) => path.basename(entry.path));
 
-local fzf_lines = {}
-for _, entry in ipairs(available) do
-	fzf_lines[#fzf_lines + 1] = entry.path:match("^.+/([^/]+)$")
-end
+const selected = fzf(fzfLines, '--reverse --header="Select worktree to switch to >"');
+if (selected === "") {
+  process.exit(0);
+}
 
-local selected = wt.fzf(fzf_lines, '--reverse --header="Select worktree to switch to >"')
-if selected == "" then
-	os.exit(0)
-end
+const worktreePath = path.join(ctx.parentDir, selected);
 
-local worktree_path = ctx.parent_dir .. "/" .. selected
+let selectedBranch = selected;
+const entry = available.find((candidate) => candidate.path === worktreePath);
+if (entry) {
+  selectedBranch = entry.branch;
+}
 
--- Find the branch for the selected worktree
-local selected_branch = selected
-for _, entry in ipairs(available) do
-	if entry.path == worktree_path then
-		selected_branch = entry.branch
-		break
-	end
-end
-
-local sname = wt.session_name(ctx.org_name, ctx.repo_name, selected_branch)
-if not wt.tmux_switch_or_create(sname, worktree_path) then
-	print("Not in tmux, changing directory to " .. worktree_path)
-	wt.exec(string.format('cd "%s" && exec $SHELL', worktree_path))
-end
+const sname = sessionName(ctx.orgName, ctx.repoName, selectedBranch);
+if (!tmuxSwitchOrCreate(sname, worktreePath)) {
+  console.log(`Not in tmux, changing directory to ${worktreePath}`);
+  exec(`cd ${shellQuote(worktreePath)} && exec $SHELL`);
+}

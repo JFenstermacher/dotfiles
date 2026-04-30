@@ -1,47 +1,51 @@
-#!/usr/bin/env luajit
+#!/usr/bin/env bun
 
--- Add script directory to package path
-local script_dir = arg[0]:match("^(.+)/[^/]+$") or "."
-package.path = script_dir .. "/?.lua;" .. package.path
+import path from "node:path";
+import { createWorktree, exec, requireGitDir, repoContext, sessionName, shellQuote, tmuxSwitchOrCreate, trustMise } from "./utils.js";
 
-local wt = require("utils")
+async function prompt(message) {
+  process.stdout.write(message);
+  for await (const line of console) {
+    return line;
+  }
+  return "";
+}
 
-local branch_name = arg[1]
+let branchName = process.argv[2];
 
-if not branch_name or branch_name == "" then
-	io.write("Worktree Name: ")
-	branch_name = io.read()
-end
+if (!branchName) {
+  branchName = await prompt("Worktree Name: ");
+}
 
-if not branch_name or branch_name == "" then
-	io.stderr:write("Error: Branch name is required.\n")
-	os.exit(1)
-end
+if (!branchName) {
+  console.error("Error: Branch name is required.");
+  process.exit(1);
+}
 
-if not branch_name:match("^[A-Za-z0-9_/-]+$") then
-	io.stderr:write("Error: Branch name '" .. branch_name .. "' contains invalid characters.\n")
-	io.stderr:write("Branch names can only contain: letters, numbers, hyphens, underscores, and slashes.\n")
-	os.exit(1)
-end
+if (!/^[A-Za-z0-9_/-]+$/.test(branchName)) {
+  console.error(`Error: Branch name '${branchName}' contains invalid characters.`);
+  console.error("Branch names can only contain: letters, numbers, hyphens, underscores, and slashes.");
+  process.exit(1);
+}
 
-local git_dir = wt.require_git_dir()
-local ctx = wt.repo_context(git_dir)
-local worktree_path = ctx.parent_dir .. "/" .. branch_name
+const gitDir = requireGitDir();
+const ctx = repoContext(gitDir);
+const worktreePath = path.join(ctx.parentDir, branchName);
 
-if wt.exec(string.format('test -d "%s"', worktree_path)) == 0 then
-	io.stderr:write("Error: Worktree path " .. worktree_path .. " already exists.\n")
-	os.exit(1)
-end
+if (exec(`test -d ${shellQuote(worktreePath)}`) === 0) {
+  console.error(`Error: Worktree path ${worktreePath} already exists.`);
+  process.exit(1);
+}
 
-print("Creating worktree for branch '" .. branch_name .. "' in " .. worktree_path .. "...")
+console.log(`Creating worktree for branch '${branchName}' in ${worktreePath}...`);
 
-wt.create_worktree(git_dir, worktree_path, branch_name)
-wt.trust_mise(worktree_path)
+createWorktree(gitDir, worktreePath, branchName);
+trustMise(worktreePath);
 
-local sname = wt.session_name(ctx.org_name, ctx.repo_name, branch_name)
-print("Creating tmux session '" .. sname .. "'...")
-if not wt.tmux_switch_or_create(sname, worktree_path) then
-	print("Not in tmux. Worktree created at: " .. worktree_path)
-end
+const sname = sessionName(ctx.orgName, ctx.repoName, branchName);
+console.log(`Creating tmux session '${sname}'...`);
+if (!tmuxSwitchOrCreate(sname, worktreePath)) {
+  console.log(`Not in tmux. Worktree created at: ${worktreePath}`);
+}
 
-print("Done.")
+console.log("Done.");

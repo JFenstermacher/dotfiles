@@ -13,6 +13,7 @@ This repository uses [mise](https://mise.jdx.dev/) and [fling](https://github.co
 - **Terminal Multiplexer:** `tmux` with a custom Tokyo Night themed status bar.
 - **Terminal Emulator:** `Ghostty`.
 - **Tool Management:** `mise` for managing runtimes and CLI tools.
+- **Script Runtime:** `bun` for custom automation scripts in `bin/.config/bin/`.
 - **Window Management:** `xmonad` (for Linux environments).
 
 ## Getting Started
@@ -34,9 +35,11 @@ cd ~/workspace/dotfiles
 
 ## Custom Scripts
 
-All custom scripts are written in LuaJIT and share a common `utils.lua` module. They are located in `bin/.config/bin/`:
+Custom automation scripts live in `bin/.config/bin/`. Scripts that were previously written for LuaJIT have been rewritten for [Bun](https://bun.sh/) because LuaJIT installation via mise is unreliable on some machines. Bun must be available on `PATH` for these scripts.
 
-- `utils.lua`: Shared utility library (shell helpers, git worktree parsing, tmux integration, fzf, mise trust).
+The Bun scripts share `utils.js`, which provides shell helpers, git worktree parsing, tmux integration, fzf integration, and mise trust helpers.
+
+- `utils.js`: Shared Bun utility library.
 - `sessionizer`: A smart project/session switcher for tmux.
 - `list-workspaces`: Lists standard and bare Git repositories for the session switcher.
 - `git-clone`: Clones a repository (optionally as a bare repo) and sets up a default worktree.
@@ -44,7 +47,9 @@ All custom scripts are written in LuaJIT and share a common `utils.lua` module. 
 - `git-worktree-remove`: Interactively removes worktrees and their associated tmux sessions.
 - `git-worktree-switch`: Interactively switches between worktrees and their associated tmux sessions.
 - `git-worktree-checkout`: Fuzzy-finds across all branches and either switches to an existing worktree or creates one.
+- `git-worktree-purge`: Removes merged worktrees and deletes their merged branches.
 - `home-session`: Creates or jumps to a default "home" tmux session.
+- `privatebox`: Shell wrapper that runs the Privatebox Bun app.
 
 ## Tmux Keybindings
 

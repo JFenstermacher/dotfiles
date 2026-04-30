@@ -1,24 +1,13 @@
-#!/usr/bin/env luajit
+#!/usr/bin/env bun
 
--- Add script directory to package path
-local script_dir = arg[0]:match("^(.+)/[^/]+$") or "."
-package.path = script_dir .. "/?.lua;" .. package.path
+import path from "node:path";
+import { execLines, shellQuote } from "./utils.js";
 
-local u = require("utils")
+const rootDir = process.argv[2] ?? path.join(process.env.HOME ?? "", "workspaces");
 
-local ROOT_DIR = arg[1] or os.getenv("HOME") .. "/workspaces"
+const foundPaths = execLines(`fd --hidden --min-depth 2 --type d --max-depth 2 . ${shellQuote(rootDir)}`);
 
-local find_cmd = string.format("fd --hidden --min-depth 2 --type d --max-depth 2 . %s", ROOT_DIR)
-local found_paths = u.exec_lines(find_cmd)
-
-local repos = {}
-for _, path in ipairs(found_paths) do
-	local no_prefix = path:gsub("^" .. ROOT_DIR .. "/", "")
-	local no_suffix = no_prefix:sub(1, -2)
-
-	repos[#repos + 1] = no_suffix
-end
-
-for _, repo in ipairs(repos) do
-	print(repo)
-end
+for (const foundPath of foundPaths) {
+  const relative = foundPath.startsWith(`${rootDir}/`) ? foundPath.slice(rootDir.length + 1) : foundPath;
+  console.log(relative.replace(/\/$/, ""));
+}

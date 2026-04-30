@@ -1,51 +1,44 @@
-#!/usr/bin/env luajit
+#!/usr/bin/env bun
 
--- Add script directory to package path
-local script_dir = arg[0]:match("^(.+)/[^/]+$") or "."
-package.path = script_dir .. "/?.lua;" .. package.path
+import path from "node:path";
+import { defaultBranch, exec, execCapture, getWorktreeBranches, requireBareRepo, repoContext, sessionName, shellQuote, tmuxKillSession } from "./utils.js";
 
-local wt = require("utils")
+const gitDir = requireBareRepo();
+const ctx = repoContext(gitDir);
+const defaultBranchName = defaultBranch(gitDir);
+const currentWorktree = execCapture("git rev-parse --show-toplevel 2>/dev/null").replace(/\s+$/g, "");
 
-local git_dir = wt.require_bare_repo()
-local ctx = wt.repo_context(git_dir)
-local default_branch = wt.default_branch(git_dir)
-local current_worktree = wt.exec_capture("git rev-parse --show-toplevel 2>/dev/null"):gsub("%s+$", "")
+const mergedOutput = execCapture(
+  `git -C ${shellQuote(gitDir)} branch --format="%(refname:short)" --merged ${shellQuote(defaultBranchName)}`,
+);
+const mergedSet = new Set(mergedOutput.split(/\n/).filter(Boolean));
 
--- Get merged branches
-local merged_output = wt.exec_capture(string.format('git -C "%s" branch --format="%%(refname:short)" --merged "%s"', git_dir, default_branch))
-local merged_set = {}
-for line in merged_output:gmatch("[^\n]+") do
-	merged_set[line] = true
-end
+const worktrees = getWorktreeBranches(gitDir);
 
-local worktrees = wt.get_worktree_branches(git_dir)
+for (const entry of worktrees) {
+  if (entry.path === currentWorktree) {
+    continue;
+  }
+  if (entry.path.endsWith(".git")) {
+    continue;
+  }
+  if (entry.branch === defaultBranchName) {
+    continue;
+  }
 
-for _, entry in ipairs(worktrees) do
-	if entry.path == current_worktree then
-		goto continue
-	end
-	if entry.path:match("%.git$") then
-		goto continue
-	end
-	if entry.branch == default_branch then
-		goto continue
-	end
+  if (mergedSet.has(entry.branch)) {
+    const relPath = path.basename(entry.path);
+    console.log(`Purging merged worktree ${relPath} (branch: ${entry.branch}) at ${entry.path}...`);
 
-	if merged_set[entry.branch] then
-		local rel_path = entry.path:match("^.+/([^/]+)$")
-		print("Purging merged worktree " .. rel_path .. " (branch: " .. entry.branch .. ") at " .. entry.path .. "...")
+    const sname = sessionName(ctx.orgName, ctx.repoName, entry.branch);
+    tmuxKillSession(sname);
 
-		local sname = wt.session_name(ctx.org_name, ctx.repo_name, entry.branch)
-		wt.tmux_kill_session(sname)
+    console.log(`Removing worktree ${relPath}...`);
+    exec(`git -C ${shellQuote(gitDir)} worktree remove --force ${shellQuote(entry.path)}`);
 
-		print("Removing worktree " .. rel_path .. "...")
-		wt.exec(string.format('git -C "%s" worktree remove --force "%s"', git_dir, entry.path))
+    console.log(`Deleting merged branch ${entry.branch}...`);
+    exec(`git -C ${shellQuote(gitDir)} branch -d ${shellQuote(entry.branch)} 2>/dev/null`);
+  }
+}
 
-		print("Deleting merged branch " .. entry.branch .. "...")
-		wt.exec(string.format('git -C "%s" branch -d "%s" 2>/dev/null', git_dir, entry.branch))
-	end
-
-	::continue::
-end
-
-print("Purge complete.")
+console.log("Purge complete.");

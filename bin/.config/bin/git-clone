@@ -1,77 +1,72 @@
-#!/usr/bin/env luajit
+#!/usr/bin/env bun
 
--- Add script directory to package path
-local script_dir = arg[0]:match("^(.+)/[^/]+$") or "."
-package.path = script_dir .. "/?.lua;" .. package.path
+import path from "node:path";
+import { exec, shellQuote, defaultBranch, trustMise } from "./utils.js";
 
-local u = require("utils")
+const rootDir = path.join(process.env.HOME ?? "", "workspaces");
 
-local ROOT_DIR = os.getenv("HOME") .. "/workspaces"
+let bare = false;
+let repo = null;
 
--- Parse arguments
-local bare = false
-local repo = nil
+for (const arg of process.argv.slice(2)) {
+  if (arg === "--bare") {
+    bare = true;
+  } else {
+    repo = arg;
+  }
+}
 
-local i = 1
-while i <= #arg do
-	if arg[i] == "--bare" then
-		bare = true
-	else
-		repo = arg[i]
-	end
-	i = i + 1
-end
+if (!repo) {
+  console.error("Error: A repository to clone must be provided");
+  process.exit(1);
+}
 
-if not repo then
-	io.stderr:write("Error: A repository to clone must be provided\n")
-	os.exit(1)
-end
+let orgRepo;
+if (repo.includes("://") || repo.includes("@")) {
+  orgRepo = repo.replace(/\/$/, "").match(/([^/:]+\/[^/:]+)$/)?.[1]?.replace(/\.git$/, "");
+} else if (repo.includes("/")) {
+  orgRepo = repo;
+  console.log(`Assuming GitHub repository: https://github.com/${orgRepo}.git`);
+  repo = `https://github.com/${orgRepo}.git`;
+} else {
+  console.error("Error: Repository must be in <org>/<repo> format or a full URL");
+  process.exit(1);
+}
 
--- Extract org/repo from URL or short form
-local org_repo
+if (!orgRepo) {
+  console.error("Error: Could not determine <org>/<repo> from repository");
+  process.exit(1);
+}
 
-if repo:match("://") or repo:match("@") then
-	-- Full URL: extract org/repo
-	org_repo = repo:gsub("/$", ""):match("([^/:]+/[^/:]+)$"):gsub("%.git$", "")
-elseif repo:match("/") then
-	-- Short form: org/repo
-	org_repo = repo
-	print("Assuming GitHub repository: https://github.com/" .. org_repo .. ".git")
-	repo = "https://github.com/" .. org_repo .. ".git"
-else
-	io.stderr:write("Error: Repository must be in <org>/<repo> format or a full URL\n")
-	os.exit(1)
-end
+const targetDir = path.join(rootDir, orgRepo);
 
-local target_dir = ROOT_DIR .. "/" .. org_repo
+if (bare) {
+  const targetGitDir = path.join(targetDir, ".git");
 
-if bare then
-	local target_git_dir = target_dir .. "/.git"
+  if (exec(`test -d ${shellQuote(targetDir)}`) === 0) {
+    console.error(`Error: Target directory ${targetDir} already exists`);
+    process.exit(1);
+  }
 
-	if u.exec(string.format('test -d "%s"', target_dir)) == 0 then
-		io.stderr:write("Error: Target directory " .. target_dir .. " already exists\n")
-		os.exit(1)
-	end
+  exec(`mkdir -p ${shellQuote(targetDir)}`);
 
-	u.exec(string.format('mkdir -p "%s"', target_dir))
+  console.log(`Cloning bare ${repo} into ${targetGitDir}...`);
+  exec(`git clone --bare ${shellQuote(repo)} ${shellQuote(targetGitDir)}`);
+  exec(`git -C ${shellQuote(targetGitDir)} config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"`);
 
-	print("Cloning bare " .. repo .. " into " .. target_git_dir .. "...")
-	u.exec(string.format('git clone --bare "%s" "%s"', repo, target_git_dir))
-	u.exec(string.format('git -C "%s" config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"', target_git_dir))
+  const branch = defaultBranch(targetGitDir);
+  console.log(`Default branch is: ${branch}`);
 
-	local default_branch = u.default_branch(target_git_dir)
-	print("Default branch is: " .. default_branch)
+  const worktreePath = path.join(targetDir, branch);
+  console.log(`Adding worktree for ${branch} at ${worktreePath}...`);
+  exec(`git -C ${shellQuote(targetGitDir)} worktree add ${shellQuote(worktreePath)} ${shellQuote(branch)}`);
 
-	local worktree_path = target_dir .. "/" .. default_branch
-	print("Adding worktree for " .. default_branch .. " at " .. worktree_path .. "...")
-	u.exec(string.format('git -C "%s" worktree add "%s" "%s"', target_git_dir, worktree_path, default_branch))
+  trustMise(worktreePath);
+} else {
+  console.log(`Cloning ${repo} into ${targetDir}...`);
+  exec(`git clone ${shellQuote(repo)} ${shellQuote(targetDir)}`);
 
-	u.trust_mise(worktree_path)
-else
-	print("Cloning " .. repo .. " into " .. target_dir .. "...")
-	u.exec(string.format('git clone "%s" "%s"', repo, target_dir))
+  trustMise(targetDir);
+}
 
-	u.trust_mise(target_dir)
-end
-
-print("Successfully set up repository at " .. target_dir)
+console.log(`Successfully set up repository at ${targetDir}`);

@@ -1,65 +1,47 @@
-#!/usr/bin/env luajit
+#!/usr/bin/env bun
 
--- Add script directory to package path
-local script_dir = arg[0]:match("^(.+)/[^/]+$") or "."
-package.path = script_dir .. "/?.lua;" .. package.path
+import path from "node:path";
+import { defaultBranch, exec, execCapture, fzf, getWorktreeBranches, requireBareRepo, repoContext, sessionName, shellQuote, tmuxKillSession } from "./utils.js";
 
-local wt = require("utils")
+const gitDir = requireBareRepo();
+const ctx = repoContext(gitDir);
+const defaultBranchName = defaultBranch(gitDir);
+const currentWorktree = execCapture("git rev-parse --show-toplevel 2>/dev/null").replace(/\s+$/g, "");
 
-local git_dir = wt.require_bare_repo()
-local ctx = wt.repo_context(git_dir)
-local default_branch = wt.default_branch(git_dir)
-local current_worktree = wt.exec_capture("git rev-parse --show-toplevel 2>/dev/null"):gsub("%s+$", "")
+const worktrees = getWorktreeBranches(gitDir);
 
-local worktrees = wt.get_worktree_branches(git_dir)
+const removable = worktrees.filter(
+  (entry) => entry.path !== currentWorktree && !entry.path.endsWith(".git") && entry.branch !== defaultBranchName,
+);
 
--- Build list of removable worktrees (exclude current, bare repo, default branch)
-local removable = {}
-for _, entry in ipairs(worktrees) do
-	if entry.path ~= current_worktree
-		and not entry.path:match("%.git$")
-		and entry.branch ~= default_branch then
-		removable[#removable + 1] = entry
-	end
-end
+if (removable.length === 0) {
+  console.log("No worktrees available to remove (excluding current and default branch).");
+  process.exit(0);
+}
 
-if #removable == 0 then
-	print("No worktrees available to remove (excluding current and default branch).")
-	os.exit(0)
-end
+const fzfLines = removable.map((entry) => path.basename(entry.path));
 
-local fzf_lines = {}
-for _, entry in ipairs(removable) do
-	fzf_lines[#fzf_lines + 1] = entry.path:match("^.+/([^/]+)$")
-end
+const selected = fzf(fzfLines, '--multi --reverse --header="Select worktrees to remove (Tab to multi-select) >"');
+if (selected === "") {
+  process.exit(0);
+}
 
-local selected = wt.fzf(fzf_lines, '--multi --reverse --header="Select worktrees to remove (Tab to multi-select) >"')
-if selected == "" then
-	os.exit(0)
-end
+for (const line of selected.split(/\n/).filter(Boolean)) {
+  const relPath = line;
+  const worktreePath = path.join(ctx.parentDir, relPath);
 
-for line in selected:gmatch("[^\n]+") do
-	local rel_path = line
-	local path = ctx.parent_dir .. "/" .. rel_path
+  const entry = removable.find((candidate) => candidate.path === worktreePath);
+  const branch = entry?.branch;
 
-	-- Find the branch for this worktree
-	local branch = nil
-	for _, entry in ipairs(removable) do
-		if entry.path == path then
-			branch = entry.branch
-			break
-		end
-	end
+  console.log(`Processing ${relPath} (branch: ${branch ?? "unknown"}) at ${worktreePath}...`);
 
-	print("Processing " .. rel_path .. " (branch: " .. (branch or "unknown") .. ") at " .. path .. "...")
+  if (branch) {
+    const sname = sessionName(ctx.orgName, ctx.repoName, branch);
+    tmuxKillSession(sname);
+  }
 
-	if branch then
-		local sname = wt.session_name(ctx.org_name, ctx.repo_name, branch)
-		wt.tmux_kill_session(sname)
-	end
+  console.log(`Removing worktree ${relPath}...`);
+  exec(`git -C ${shellQuote(gitDir)} worktree remove --force ${shellQuote(worktreePath)}`);
+}
 
-	print("Removing worktree " .. rel_path .. "...")
-	wt.exec(string.format('git -C "%s" worktree remove --force "%s"', git_dir, path))
-end
-
-print("Done.")
+console.log("Done.");

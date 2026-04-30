@@ -1,28 +1,22 @@
-#!/usr/bin/env luajit
+#!/usr/bin/env bun
 
--- Add script directory to package path
-local script_dir = arg[0]:match("^(.+)/[^/]+$") or "."
-package.path = script_dir .. "/?.lua;" .. package.path
+import { exec, execCapture, inTmux, shellQuote, trim } from "./utils.js";
 
-local u = require("utils")
+const userSession = trim(execCapture("whoami"));
+const home = process.env.HOME ?? "";
 
-local user_session = u.trim(u.exec_capture("whoami"))
-local home = os.getenv("HOME")
+function createUserSession() {
+  if (exec(`tmux has-session -t ${shellQuote(userSession)} 2>/dev/null`) !== 0) {
+    exec(`TMUX="" tmux new-session -d -s ${shellQuote(userSession)} -c ${shellQuote(home)}`);
+  }
+}
 
-local function create_user_session()
-	if u.exec(string.format('tmux has-session -t "%s" 2>/dev/null', user_session)) ~= 0 then
-		u.exec(string.format('TMUX="" tmux new-session -d -s "%s" -c "%s"', user_session, home))
-	end
-end
-
-if u.in_tmux() then
-	create_user_session()
-	u.exec(string.format('tmux switch-client -t "%s"', user_session))
-else
-	if u.exec("tmux list-sessions >/dev/null 2>&1") == 0 then
-		create_user_session()
-		u.exec(string.format('tmux attach-session -t "%s"', user_session))
-	else
-		u.exec(string.format('tmux new-session -s "%s" -c "%s"', user_session, home))
-	end
-end
+if (inTmux()) {
+  createUserSession();
+  exec(`tmux switch-client -t ${shellQuote(userSession)}`);
+} else if (exec("tmux list-sessions >/dev/null 2>&1") === 0) {
+  createUserSession();
+  exec(`tmux attach-session -t ${shellQuote(userSession)}`);
+} else {
+  exec(`tmux new-session -s ${shellQuote(userSession)} -c ${shellQuote(home)}`);
+}
