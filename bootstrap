@@ -1,5 +1,26 @@
 #!/usr/bin/env bash
 
+# Resolve this script's real directory so mise always runs from the dotfiles
+# root, regardless of the caller's current working directory or symlinks.
+resolve_script_dir() {
+  local source="${BASH_SOURCE[0]}"
+  local dir
+
+  if [[ "$source" != */* ]]; then
+    source=$(command -v -- "$source")
+  fi
+
+  while [[ -L "$source" ]]; do
+    dir=$(CDPATH= cd -P -- "$(dirname -- "$source")" >/dev/null 2>&1 && pwd)
+    source=$(readlink -- "$source")
+    [[ "$source" != /* ]] && source="$dir/$source"
+  done
+
+  CDPATH= cd -P -- "$(dirname -- "$source")" >/dev/null 2>&1 && pwd
+}
+
+SCRIPT_DIR=$(resolve_script_dir)
+
 # Logging utilities
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -27,6 +48,20 @@ else
   log_info "Mise is already installed"
 fi
 
+# Trust dotfiles configuration files
+mise --cd "$SCRIPT_DIR" trust --yes
+
+# Install dotfile dependencies
+mise --cd "$SCRIPT_DIR" install
+
+# Link dotfiles from the dotfiles directory
+log_info "Linking all dotfiles"
+mise --cd "$SCRIPT_DIR" stow
+
+# Global mise tools now installed
+log_info "Installing all tools"
+mise --cd "$SCRIPT_DIR" install
+
 # Install TPM (Tmux Plugin Manager)
 if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
   log_info "Installing Tmux Plugin Manager..."
@@ -36,17 +71,3 @@ if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
 else
   log_info "Tmux Plugin Manager is already installed"
 fi
-
-# Trust current configuration files
-mise trust --yes
-
-# Install dotfile dependencies
-mise install
-
-# Run mise install in current directory
-log_info "Linking all dotfiles"
-mise stow
-
-# Global mise tools now installed
-log_info "Installing all tools"
-mise install
