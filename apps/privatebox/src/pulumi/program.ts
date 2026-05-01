@@ -17,6 +17,13 @@ export interface ResolvedPrivateBoxConfig extends PrivateBoxConfig {
 
 type Tag = { key: string; value: string };
 
+function interpolateDescription(
+  template: string,
+  name: string
+): string {
+  return template.replace(/{name}/g, name);
+}
+
 type SecurityGroupRuleResource =
   | aws_native.ec2.SecurityGroupIngress
   | aws_native.ec2.SecurityGroupEgress;
@@ -131,14 +138,20 @@ export function createProgram(config: ResolvedPrivateBoxConfig): PulumiFn {
     ];
 
     const kmsKey = new aws_native.kms.Key(`${config.name}-key`, {
-      description: `PrivateBox encryption key for ${config.name}`,
+      description: interpolateDescription(
+        config.kms_key_description,
+        config.name
+      ),
       keyPolicy: JSON.parse(config.resolvedKmsPolicy),
       pendingWindowInDays: config.kms_deletion_window_days,
       tags: commonTags,
     });
 
     const sg = new aws_native.ec2.SecurityGroup(`${config.name}-sg`, {
-      groupDescription: `Security group for private box ${config.name}`,
+      groupDescription: interpolateDescription(
+        config.security_group_description,
+        config.name
+      ),
       vpcId: config.resolvedVpcId,
       tags: commonTags,
     });

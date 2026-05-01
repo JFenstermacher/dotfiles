@@ -134,6 +134,12 @@ export const PrivateBoxConfigObjectSchema = z.object({
   public_key: z.string().default(""),
   connect_command: z.string().min(1, "Connect command is required").default("ssh ${username}@${public_ip}"),
   userdata: z.string().default(""),
+  kms_key_description: z
+    .string()
+    .default("PrivateBox encryption key for {name}"),
+  security_group_description: z
+    .string()
+    .default("Security group for private box {name}"),
 });
 
 export const PrivateBoxConfigSchema = PrivateBoxConfigObjectSchema.refine(
