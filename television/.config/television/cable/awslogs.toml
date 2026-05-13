@@ -1,0 +1,17 @@
+[metadata]
+name = "awslogs"
+description = "List CloudWatch log groups and tail logs"
+requirements = ["aws", "aws-list-log-groups"]
+
+[source]
+command = "aws-list-log-groups --tsv"
+display = "{split:\\t:0} (retention: {split:\\t:1}d)"
+output = "{split:\\t:0}"
+
+[keybindings]
+enter = "actions:tail"
+
+[actions.tail]
+description = "Follow logs for the selected log group"
+command = "aws logs tail --follow '{split:\\t:0}'"
+mode = "execute"

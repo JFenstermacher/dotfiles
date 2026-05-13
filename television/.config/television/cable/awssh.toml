@@ -1,0 +1,17 @@
+[metadata]
+name = "awssh"
+description = "List AWS instances and start an SSM session"
+requirements = ["aws", "aws-list-instances"]
+
+[source]
+command = "aws-list-instances --tsv"
+display = "{split:\\t:1} ({split:\\t:0}) [{split:\\t:2}]"
+output = "{split:\\t:0}"
+
+[keybindings]
+enter = "actions:ssm"
+
+[actions.ssm]
+description = "Start SSM session on the selected instance"
+command = "aws ssm start-session --target '{split:\\t:0}'"
+mode = "execute"
