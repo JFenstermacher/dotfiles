@@ -1,5 +1,6 @@
 import { Result, TaggedError } from "better-result";
 import { readdir, access, rm, readFile } from "node:fs/promises";
+import { accessSync } from "node:fs";
 import type { Dirent } from "node:fs"
 import { execFile, spawn } from "node:child_process";
 import {
@@ -172,6 +173,7 @@ export class App {
           continue;
         }
         const isBare = bareResult.value;
+        const gitDir = this.#discoverGitDir(repoPath, isBare);
 
         const existing = this.state.getWorkspace(slug);
         if (!existing) {
@@ -182,11 +184,11 @@ export class App {
             repo,
             isCheckedOut: !isBare,
             isBareRepo: isBare,
-            defaultBranch: await this.#resolveDefaultBranch(repoPath, isBare),
+            defaultBranch: await this.#resolveDefaultBranch(gitDir),
           };
 
           if (isBare) {
-            workspace.worktrees = await this.#buildWorktrees(repoPath);
+            workspace.worktrees = await this.#buildWorktrees(gitDir);
           } else {
             const branchResult = await currentBranch(repoPath);
             if (Result.isOk(branchResult)) {
@@ -197,7 +199,7 @@ export class App {
           this.state.insertWorkspace(workspace);
         } else if (existing.isBareRepo) {
           this.logger.debug("syncing worktrees", { slug });
-          const current = await this.#buildWorktrees(repoPath);
+          const current = await this.#buildWorktrees(this.#gitDir(existing));
           this.state.syncBranches(slug, current);
         }
       }
@@ -289,7 +291,8 @@ export class App {
     }
 
     this.logger.info("cloning repo", { repoSlug, bare: opts?.bare ?? false });
-    const result = await clone({ repoSlug, path: repoPath, bare: opts?.bare });
+    const clonePath = opts?.bare ? `${repoPath}/.git` : repoPath;
+    const result = await clone({ repoSlug, path: clonePath, bare: opts?.bare });
     if (Result.isError(result)) {
       this.logger.error("clone failed", { repoSlug, error: result.error.message });
       return Result.err(
@@ -321,11 +324,81 @@ export class App {
       repo,
       isCheckedOut: !isBare,
       isBareRepo: isBare,
-      defaultBranch: await this.#resolveDefaultBranch(repoPath, isBare),
+      defaultBranch: await this.#resolveDefaultBranch(`${repoPath}/.git`),
     };
 
     if (isBare) {
-      workspace.worktrees = await this.#buildWorktrees(repoPath);
+      const gitDir = `${repoPath}/.git`;
+
+      // Set fetch config to track all remote branches
+      this.logger.debug("setting remote fetch config", { slug });
+      await Result.tryPromise({
+        try: () =>
+          new Promise<void>((resolve, reject) => {
+            execFile(
+              "git",
+              ["-C", gitDir, "config", "remote.origin.fetch", "+refs/heads/*:refs/remotes/origin/*"],
+              (err) => (err ? reject(err) : resolve()),
+            );
+          }),
+        catch: (cause) =>
+          new AppError({
+            message: "Failed to set remote fetch config",
+            cause,
+          }),
+      });
+
+      // Fetch to populate refs
+      this.logger.debug("fetching refs", { slug });
+      const fetchResult = await fetch({ cwd: gitDir, all: true });
+      if (Result.isError(fetchResult)) {
+        this.logger.warn("fetch failed after clone", { slug, error: fetchResult.error.message });
+      }
+
+      // Create worktree for default branch
+      const worktreePath = `${repoPath}/${workspace.defaultBranch}`;
+      this.logger.info("creating default worktree", { slug, branch: workspace.defaultBranch, path: worktreePath });
+      const wtResult = await worktreeCreate({
+        cwd: gitDir,
+        path: worktreePath,
+        branch: workspace.defaultBranch,
+      });
+      if (Result.isError(wtResult)) {
+        this.logger.error("default worktree creation failed", { slug, error: wtResult.error.message });
+        return Result.err(
+          new AppError({
+            message: `Failed to create default worktree: ${wtResult.error.message}`,
+            cause: wtResult.error,
+          }),
+        );
+      }
+
+      // Set upstream tracking for default branch
+      this.logger.debug("setting upstream tracking", { slug, branch: workspace.defaultBranch });
+      await Result.tryPromise({
+        try: () =>
+          new Promise<void>((resolve, reject) => {
+            execFile(
+              "git",
+              [
+                "-C",
+                worktreePath,
+                "branch",
+                "--set-upstream-to",
+                `origin/${workspace.defaultBranch}`,
+                workspace.defaultBranch,
+              ],
+              (err) => (err ? reject(err) : resolve()),
+            );
+          }),
+        catch: (cause) =>
+          new AppError({
+            message: "Failed to set upstream tracking",
+            cause,
+          }),
+      });
+
+      workspace.worktrees = await this.#buildWorktrees(gitDir);
     } else {
       const branchResult = await currentBranch(repoPath);
       if (Result.isOk(branchResult)) {
@@ -407,10 +480,11 @@ export class App {
 
     const branch = opts.branch;
     const worktreePath = `${workspace.path}/${branch}`;
+    const gitDir = this.#gitDir(workspace);
 
     this.logger.info("adding worktree", { slug, branch, path: worktreePath });
     const result = await worktreeCreate({
-      cwd: workspace.path,
+      cwd: gitDir,
       branch,
       path: worktreePath,
     });
@@ -429,7 +503,7 @@ export class App {
       );
     }
 
-    const hasRemote = await hasRemoteTrackingBranch(workspace.path, branch);
+    const hasRemote = await hasRemoteTrackingBranch(gitDir, branch);
     const entry = {
       name: branch,
       hasRemote: Result.isOk(hasRemote) ? (hasRemote.value as boolean) : false,
@@ -464,6 +538,7 @@ export class App {
 
     const branch = opts.branch;
     const worktreePath = `${workspace.path}/${branch}`;
+    const gitDir = this.#gitDir(workspace);
 
     const existing = this.state.listBranches(slug);
     const idx = existing.findIndex((e) => e.name === branch);
@@ -487,7 +562,7 @@ export class App {
 
     this.logger.info("removing worktree", { slug, branch, path: worktreePath });
     const result = await worktreeDelete({
-      cwd: workspace.path,
+      cwd: gitDir,
       path: worktreePath,
     });
 
@@ -693,15 +768,17 @@ export class App {
 
     this.logger.info("branches sync started", { slug });
 
+    const gitDir = this.#gitDir(workspace);
+
     // 1. Fetch remote refs
     this.logger.debug("fetching remote refs", { slug });
-    const fetchResult = await fetch({ cwd: workspace.path, all: true });
+    const fetchResult = await fetch({ cwd: gitDir, all: true });
     if (Result.isError(fetchResult)) {
       this.logger.warn("fetch failed", { slug, error: fetchResult.error.message });
     }
 
     // 2. List remote branches (strip origin/ prefix)
-    const remoteResult = await branchList({ cwd: workspace.path, remote: true });
+    const remoteResult = await branchList({ cwd: gitDir, remote: true });
     const remoteBranches = new Set<string>();
     if (Result.isOk(remoteResult)) {
       for (const ref of remoteResult.value) {
@@ -713,7 +790,7 @@ export class App {
     }
 
     // 3. List local branches
-    const localResult = await branchList({ cwd: workspace.path });
+    const localResult = await branchList({ cwd: gitDir });
     const localBranches = new Set<string>();
     if (Result.isOk(localResult)) {
       for (const name of localResult.value) {
@@ -724,7 +801,7 @@ export class App {
     // 4. For bare repos, also get worktrees
     const worktreeSet = new Set<string>();
     if (workspace.isBareRepo) {
-      const wtResult = await worktreeList({ cwd: workspace.path });
+      const wtResult = await worktreeList({ cwd: gitDir });
       if (Result.isOk(wtResult)) {
         for (const wt of wtResult.value) {
           if (wt.branch) worktreeSet.add(wt.branch);
@@ -1310,25 +1387,53 @@ export class App {
     return Result.ok(undefined);
   }
 
-  async #resolveDefaultBranch(repoPath: string, isBare?: boolean): Promise<string> {
-    const refPath = isBare
-      ? `${repoPath}/refs/heads/main`
-      : `${repoPath}/.git/refs/heads/main`;
+  async #resolveDefaultBranch(gitDir: string): Promise<string> {
+    return new Promise((resolve) => {
+      execFile("git", ["-C", gitDir, "rev-parse", "--abbrev-ref", "HEAD"], (err, stdout) => {
+        if (!err) {
+          const branch = stdout.trim();
+          if (branch && branch !== "HEAD") {
+            resolve(branch);
+            return;
+          }
+        }
+        // Fallback to filesystem probe for main/master
+        access(`${gitDir}/refs/heads/main`)
+          .then(() => resolve("main"))
+          .catch(() => resolve("master"));
+      });
+    });
+  }
+
+  #discoverGitDir(repoPath: string, isBare: boolean): string {
+    if (!isBare) return `${repoPath}/.git`;
+    const newLayout = `${repoPath}/.git`;
     try {
-      await access(refPath);
-      return "main";
+      accessSync(newLayout);
+      return newLayout;
     } catch {
-      return "master";
+      return repoPath;
+    }
+  }
+
+  #gitDir(workspace: Workspace): string {
+    if (!workspace.isBareRepo) return `${workspace.path}/.git`;
+    const newLayout = `${workspace.path}/.git`;
+    try {
+      accessSync(newLayout);
+      return newLayout;
+    } catch {
+      return workspace.path;
     }
   }
 
   async #buildWorktrees(
-    repoPath: string,
+    gitDir: string,
   ): Promise<NonNullable<Workspace["worktrees"]>> {
-    const result = await worktreeList({ cwd: repoPath });
+    const result = await worktreeList({ cwd: gitDir });
     if (Result.isError(result)) {
       this.logger.warn("failed to list worktrees", {
-        path: repoPath,
+        path: gitDir,
         error: result.error.message,
       });
       return [];
@@ -1339,7 +1444,7 @@ export class App {
     for (const entry of result.value) {
       if (!entry.branch) continue;
 
-      const hasRemote = await hasRemoteTrackingBranch(repoPath, entry.branch);
+      const hasRemote = await hasRemoteTrackingBranch(gitDir, entry.branch);
       worktrees.push({
         name: entry.branch,
         hasRemote: Result.isOk(hasRemote) ? (hasRemote.value as boolean) : false,
