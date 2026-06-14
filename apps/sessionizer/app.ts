@@ -64,6 +64,7 @@ export class App {
   config: Config;
   state: State;
   logger: Logger;
+  #workspaceIndex = 0;
 
   constructor(config: Config, state: State, logger: Logger) {
     this.config = config;
@@ -848,7 +849,7 @@ export class App {
     }
 
     // Start remote sync cronjob (every hour)
-    const job = schedule("0 * * * *", async () => {
+    const remoteSyncJob = schedule("0 * * * *", async () => {
       this.logger.info("cron: syncing remote workspaces");
       const result = await this.workspacesSync({ mode: "remote" });
       if (Result.isError(result)) {
@@ -858,13 +859,19 @@ export class App {
       }
     });
 
+    // Start branch sync cronjob (every minute, round-robin over active workspaces)
+    const branchSyncJob = schedule("* * * * *", async () => {
+      await this.#runBranchSyncCron();
+    });
+
     this.logger.info("cron scheduled");
 
     // Keep process alive until interrupted
     return new Promise<AppResult>((resolve) => {
       const cleanup = () => {
         this.logger.info("stopping sessionizer daemon");
-        job.stop();
+        remoteSyncJob.stop();
+        branchSyncJob.stop();
         resolve(Result.ok(undefined));
       };
 
@@ -1388,5 +1395,53 @@ export class App {
     }
 
     return workspace.path;
+  }
+
+  /** Extract unique workspace slugs from active tmux sessions. */
+  async #getActiveWorkspaceSlugs(): Promise<string[]> {
+    const sessionsResult = await listSessions();
+    if (Result.isError(sessionsResult)) {
+      this.logger.warn("failed to list tmux sessions", { error: sessionsResult.error.message });
+      return [];
+    }
+
+    const slugs = new Set<string>();
+    for (const name of sessionsResult.value) {
+      if (isHomeSession(name)) continue;
+      const parsed = parseRepoSlug(name);
+      if (!parsed) continue;
+      slugs.add(`${parsed.owner}/${parsed.repo}`);
+    }
+
+    return [...slugs];
+  }
+
+  /** Run branch sync for active workspaces in round-robin order. */
+  async #runBranchSyncCron(): Promise<void> {
+    const active = await this.#getActiveWorkspaceSlugs();
+    this.logger.debug("branch sync cron", { activeCount: active.length, index: this.#workspaceIndex });
+
+    if (active.length === 0) {
+      this.logger.debug("no active workspaces, skipping branch sync");
+      this.#workspaceIndex = 0;
+      return;
+    }
+
+    // Validate current index
+    if (this.#workspaceIndex >= active.length || !active[this.#workspaceIndex]) {
+      this.logger.debug("workspace index out of bounds, resetting to 0");
+      this.#workspaceIndex = 0;
+    }
+
+    const slug = active[this.#workspaceIndex];
+    this.logger.info("cron: syncing branches", { slug, index: this.#workspaceIndex });
+    const result = await this.branchesSync({ workspace: slug });
+    if (Result.isError(result)) {
+      this.logger.error("cron: branch sync failed", { slug, error: result.error.message });
+    } else {
+      this.logger.info("cron: branch sync complete", { slug });
+    }
+
+    this.#workspaceIndex = (this.#workspaceIndex + 1) % active.length;
   }
 }
