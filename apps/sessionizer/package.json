@@ -1,0 +1,36 @@
+{
+  "name": "@dotfiles/sessionizer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sessionizer app",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@cliffy/command": "npm:@jsr/cliffy__command@^1.2.1",
+    "@dotfiles/envs": "workspace:*",
+    "@dotfiles/git": "workspace:*",
+    "@dotfiles/logger": "workspace:*",
+    "@dotfiles/tmux": "workspace:*",
+    "better-result": "^2.9.2",
+    "better-sqlite3": "^12.10.1",
+    "drizzle-orm": "^0.45.2",
+    "node-cron": "^4.2.1",
+    "proper-lockfile": "^4.1.2",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^25.9.3",
+    "@types/node-cron": "^3.0.11",
+    "@types/proper-lockfile": "^4.1.4",
+    "drizzle-kit": "^0.31.10",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

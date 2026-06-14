@@ -1,0 +1,163 @@
+import { eq, and } from "drizzle-orm";
+import { workspaces, branches } from "./db/schema.ts";
+import { createDb, databasePath } from "./db/client.ts";
+import type { DbClient } from "./db/client.ts";
+import type { Config } from "./config.ts";
+import type { Workspace, Worktree } from "./workspaces.ts";
+
+export class State {
+  config: Config;
+  db!: DbClient;
+
+  constructor(config: Config) {
+    this.config = config;
+  }
+
+  init(): { dbPath: string } {
+    this.db = createDb(this.config);
+    return { dbPath: databasePath(this.config) };
+  }
+
+  // ─── Workspaces ──────────────────────────────────────────────────────────
+
+  listWorkspaces(): string[] {
+    return this.db
+      .select({ slug: workspaces.slug })
+      .from(workspaces)
+      .all()
+      .map((r) => r.slug);
+  }
+
+  getWorkspace(slug: string): Workspace | null {
+    const row = this.db
+      .select()
+      .from(workspaces)
+      .where(eq(workspaces.slug, slug))
+      .get();
+    if (!row) return null;
+
+    return {
+      path: row.path,
+      owner: row.owner,
+      repo: row.repo,
+      isCheckedOut: row.isCheckedOut,
+      isBareRepo: row.isBareRepo ?? false,
+      defaultBranch: row.defaultBranch,
+      activeBranch: row.activeBranch ?? undefined,
+      worktrees: row.isBareRepo ? this.listBranches(slug) : undefined,
+    };
+  }
+
+  insertWorkspace(workspace: Workspace): void {
+    const slug = `${workspace.owner}/${workspace.repo}`;
+    this.db
+      .insert(workspaces)
+      .values({
+        slug,
+        path: workspace.path,
+        isCheckedOut: workspace.isCheckedOut,
+        isBareRepo: workspace.isBareRepo,
+        defaultBranch: workspace.defaultBranch,
+        activeBranch: workspace.activeBranch ?? null,
+      })
+      .run();
+
+    if (workspace.worktrees) {
+      for (const wt of workspace.worktrees) {
+        this.insertBranch(slug, wt, true);
+      }
+    }
+  }
+
+  removeWorkspace(slug: string): void {
+    this.db.delete(workspaces).where(eq(workspaces.slug, slug)).run();
+  }
+
+  updateActiveBranch(slug: string, activeBranch: string | undefined): void {
+    this.db
+      .update(workspaces)
+      .set({ activeBranch: activeBranch ?? null })
+      .where(eq(workspaces.slug, slug))
+      .run();
+  }
+
+  // ─── Branches / Worktrees ────────────────────────────────────────────────
+
+  listBranches(workspaceSlug: string): Worktree[] {
+    return this.db
+      .select({
+        name: branches.name,
+        hasRemote: branches.hasRemote,
+      })
+      .from(branches)
+      .where(eq(branches.workspace, workspaceSlug))
+      .all();
+  }
+
+  insertBranch(workspaceSlug: string, branch: Worktree, isWorktree = false): void {
+    this.db
+      .insert(branches)
+      .values({
+        name: branch.name,
+        hasRemote: branch.hasRemote,
+        isWorktree,
+        hasPullRequest: false,
+        workspace: workspaceSlug,
+      })
+      .run();
+  }
+
+  removeBranch(workspaceSlug: string, branchName: string): void {
+    this.db
+      .delete(branches)
+      .where(
+        and(
+          eq(branches.workspace, workspaceSlug),
+          eq(branches.name, branchName),
+        ),
+      )
+      .run();
+  }
+
+  syncBranches(workspaceSlug: string, current: Worktree[], isWorktree = false): void {
+    const existing = this.db
+      .select({ name: branches.name })
+      .from(branches)
+      .where(eq(branches.workspace, workspaceSlug))
+      .all()
+      .map((r) => r.name);
+
+    const currentNames = new Set(current.map((w) => w.name));
+    const existingNames = new Set(existing);
+
+    for (const br of current) {
+      if (!existingNames.has(br.name)) {
+        this.insertBranch(workspaceSlug, br, isWorktree);
+      }
+    }
+
+    for (const name of existing) {
+      if (!currentNames.has(name)) {
+        this.removeBranch(workspaceSlug, name);
+      }
+    }
+  }
+
+  // ─── Debug helpers ─────────────────────────────────────────────────────────
+
+  /** Build a full state dump from the database. */
+  dump(): Record<string, Workspace> {
+    const allSlugs = this.listWorkspaces();
+    const result: Record<string, Workspace> = {};
+    for (const slug of allSlugs) {
+      const ws = this.getWorkspace(slug);
+      if (ws) result[slug] = ws;
+    }
+    return result;
+  }
+
+  /** Clear all workspaces from the database. */
+  clear(): void {
+    this.db.delete(workspaces).run();
+  }
+}

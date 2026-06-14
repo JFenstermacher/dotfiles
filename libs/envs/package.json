@@ -1,0 +1,17 @@
+{
+  "name": "@dotfiles/envs",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Resolve XDG Base Directory variables with sensible defaults",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "dotfiles",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Jonathan Fenstermacher's dotfiles",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.15.9",
+  "scripts": {
+    "lint": "echo 'lint placeholder'",
+    "format": "echo 'format placeholder'"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.3",
+    "typescript": "^6.0.3"
+  }
+}

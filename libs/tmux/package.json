@@ -1,0 +1,24 @@
+{
+  "name": "@dotfiles/tmux",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tmux operations via child_process with Result-based error handling",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "better-result": "^2.9.2"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.3",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

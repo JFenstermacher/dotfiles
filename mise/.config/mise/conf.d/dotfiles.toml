@@ -1,15 +1,11 @@
 [settings]
 experimental = true
 
-[settings.npm]
-bun = true
-
 [tools]
 awscli = "latest"
 fd = "latest"
 fzf = "latest"
 kubectl = "latest"
-neovim = "latest"
 python = "latest"
 ripgrep = "latest"
 starship = "latest"
@@ -19,16 +15,19 @@ uv = "latest"
 yq = "latest"
 usage = "latest"
 "conda:mosh" = "latest"
-tmux = "latest"
 gh = "latest"
 opencode = "latest"
 lazygit = "latest"
-bun = "latest"
 bat = "latest"
-node = "25.2.1"
+node = "26.3.0"
 markdownlint-cli2 = "0.20.0"
 delta = "latest"
-"npm:@mariozechner/pi-coding-agent" = "latest"
 pulumi = "3.232.0"
 jj = "0.40.0"
 "github:amber-lang/amber" = "0.6.0-alpha"
+"npm:@earendil-works/pi-coding-agent" = "0.79.2"
+neovim = "0.12.3"
+
+[tools.tmux]
+version = "latest" 
+install_env = { TEST = "what", TMUX_EXTRA_CONFIGURE_OPTIONS = "--enable-utf8proc" }

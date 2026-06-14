@@ -24,7 +24,7 @@ platform_filters = {
 }.get(os_name, set())
 
 # Paths that should never be linked by fling.
-excluded_path_roots = {pathlib.Path("apps"), pathlib.Path("git")}
+excluded_path_roots = {pathlib.Path("apps"), pathlib.Path("git"), pathlib.Path("libs")}
 
 def is_excluded_path(path):
     path = pathlib.Path(path)
