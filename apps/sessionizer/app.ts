@@ -1,6 +1,5 @@
 import { Result, TaggedError } from "better-result";
 import { readdir, access, rm, readFile } from "node:fs/promises";
-import { accessSync } from "node:fs";
 import type { Dirent } from "node:fs"
 import { execFile, spawn } from "node:child_process";
 import {
@@ -1405,26 +1404,12 @@ export class App {
     });
   }
 
-  #discoverGitDir(repoPath: string, isBare: boolean): string {
-    if (!isBare) return `${repoPath}/.git`;
-    const newLayout = `${repoPath}/.git`;
-    try {
-      accessSync(newLayout);
-      return newLayout;
-    } catch {
-      return repoPath;
-    }
+  #discoverGitDir(repoPath: string, _isBare: boolean): string {
+    return `${repoPath}/.git`;
   }
 
   #gitDir(workspace: Workspace): string {
-    if (!workspace.isBareRepo) return `${workspace.path}/.git`;
-    const newLayout = `${workspace.path}/.git`;
-    try {
-      accessSync(newLayout);
-      return newLayout;
-    } catch {
-      return workspace.path;
-    }
+    return `${workspace.path}/.git`;
   }
 
   async #buildWorktrees(
