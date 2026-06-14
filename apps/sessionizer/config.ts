@@ -42,6 +42,12 @@ export const ConfigSchema = z.object({
   fileLevel: logLevelSchema,
   filePath: z.string(),
   databaseDir: z.string(),
+  windows: z.array(
+    z.object({
+      name: z.string(),
+      command: z.string(),
+    }),
+  ),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -54,6 +60,7 @@ export const DEFAULT_CONFIG: Config = {
   fileLevel: LogLevel.DEBUG,
   filePath: `${process.env.HOME}/.local/share/sessionizer/sessionizer.jsonl`,
   databaseDir: `${process.env.HOME}/.local/share/sessionizer`,
+  windows: [{ name: "code", command: "$EDITOR" }],
 };
 
 /**

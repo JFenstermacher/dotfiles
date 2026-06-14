@@ -16,6 +16,7 @@ import {
   branchDelete,
   fetch,
 } from "@dotfiles/git";
+import { newWindow } from "@dotfiles/tmux";
 import { schedule } from "node-cron";
 import { listSessions, killSession, hasSession, newSession, switchClient, startServer } from "@dotfiles/tmux";
 import { xdgState } from "@dotfiles/envs";
@@ -1195,9 +1196,12 @@ export class App {
     }
 
     this.logger.info("creating session", { session: sessionName, path: sessionPath });
+    const firstWindow = this.config.windows[0];
     const createResult = await newSession({
       sessionName,
       path: sessionPath,
+      windowName: firstWindow?.name,
+      command: firstWindow?.command,
     });
     if (Result.isError(createResult)) {
       return Result.err(
@@ -1206,6 +1210,20 @@ export class App {
           cause: createResult.error,
         }),
       );
+    }
+
+    // Create additional windows from config
+    for (let i = 1; i < this.config.windows.length; i++) {
+      const w = this.config.windows[i];
+      this.logger.debug("creating window", { session: sessionName, window: w.name });
+      const winResult = await newWindow({
+        target: sessionName,
+        name: w.name,
+        command: w.command,
+      });
+      if (Result.isError(winResult)) {
+        this.logger.warn("failed to create window", { session: sessionName, window: w.name, error: winResult.error.message });
+      }
     }
 
     this.logger.info("session created", { session: sessionName });

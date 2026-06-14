@@ -233,6 +233,8 @@ export interface NewSessionOptions {
   windowName?: string;
   /** Create the session detached (default: true) */
   detached?: boolean;
+  /** Command to run in the first window */
+  command?: string;
 }
 
 /**
@@ -242,6 +244,7 @@ export interface NewSessionOptions {
  * @param opts.path        – optional working directory
  * @param opts.windowName  – optional first-window name
  * @param opts.detached    – create without attaching (default true)
+ * @param opts.command     – optional command to run in the first window
  *
  * @returns `Ok(void)` on success, `Err(TmuxError)` on failure.
  */
@@ -255,6 +258,7 @@ export async function newSession(
     opts.sessionName,
     ...(opts.path ? ["-c", opts.path] : []),
     ...(opts.windowName ? ["-n", opts.windowName] : []),
+    ...(opts.command ? [opts.command] : []),
   ];
 
   return Result.tryPromise({
@@ -275,13 +279,16 @@ export interface NewWindowOptions {
   target?: string;
   /** Name for the new window */
   name?: string;
+  /** Command to run in the new window */
+  command?: string;
 }
 
 /**
  * Create a new tmux window.
  *
- * @param opts.target – optional target session (default: current session)
- * @param opts.name   – optional window name
+ * @param opts.target  – optional target session (default: current session)
+ * @param opts.name    – optional window name
+ * @param opts.command – optional command to run in the window
  *
  * @returns `Ok(void)` on success, `Err(TmuxError)` on failure.
  */
@@ -292,6 +299,7 @@ export async function newWindow(
     "new-window",
     ...(opts.target ? ["-t", opts.target] : []),
     ...(opts.name ? ["-n", opts.name] : []),
+    ...(opts.command ? [opts.command] : []),
   ];
 
   return Result.tryPromise({
