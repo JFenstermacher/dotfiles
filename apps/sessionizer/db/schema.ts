@@ -18,11 +18,27 @@ export const workspaces = sqliteTable("workspaces", {
   activeBranch: text("active_branch"),
 })
 
+export const pullRequests = sqliteTable("pull_requests", {
+  id: text().primaryKey(),
+  title: text().notNull(),
+  updatedAt: int("updated_at", { mode: "timestamp" }).notNull(),
+  state: text("state"),
+  repo: text().generatedAlwaysAs(
+    () => sql`substr(id, 1, instr(id, '#') - 1)`,
+    { mode: 'stored' }
+  ).notNull(),
+  prNumber: int("pr_number").generatedAlwaysAs(
+    () => sql`cast(substr(id, instr(id, '#') + 1) as integer)`,
+    { mode: 'stored' }
+  ).notNull(),
+})
+
 export const branches = sqliteTable("branches", {
   name: text().notNull(),
   hasRemote: int("has_remote", { mode: "boolean" }).notNull(),
   isWorktree: int("is_worktree", { mode: "boolean" }).notNull(),
-  hasPullRequest: int("has_pull_request", { mode: "boolean" }).notNull(),
+  pullRequestId: text("pull_request_id")
+    .references(() => pullRequests.id, { onDelete: "set null" }),
   workspace: text("workspace")
     .notNull()
     .references(() => workspaces.slug, { onDelete: "cascade" })

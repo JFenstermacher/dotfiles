@@ -1,4 +1,4 @@
-import { mkdirSync, existsSync, cpSync } from "node:fs";
+import { mkdirSync, cpSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import Database from "better-sqlite3";
@@ -25,13 +25,10 @@ export function createDb(config: Config) {
   mkdirSync(dirname(dbPath), { recursive: true });
   mkdirSync(migrationsDir, { recursive: true });
 
-  const journalPath = join(migrationsDir, "meta", "_journal.json");
-  if (!existsSync(journalPath)) {
-    cpSync(bundledMigrationsPath(), migrationsDir, {
-      recursive: true,
-      force: true,
-    });
-  }
+  cpSync(bundledMigrationsPath(), migrationsDir, {
+    recursive: true,
+    force: true,
+  });
 
   const sqlite = new Database(dbPath);
   const db = drizzle(sqlite);

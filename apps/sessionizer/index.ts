@@ -26,6 +26,31 @@ const sessionsListCmd = new Command()
     }
   });
 
+const sessionsAddCmd = new Command()
+  .description("Add a tmux session without switching")
+  .option("-H, --home", "Add home session")
+  .option("-w, --workspace <repo-slug>", "Workspace repo slug (owner/repo)")
+  .option("-b, --branch <branch>", "Branch (bare repos only)")
+  .action(async (opts: { home?: boolean; workspace?: string; branch?: string }) => {
+    const result = await app.addSession(opts);
+    if (Result.isError(result)) {
+      logger.error(result.error.message);
+    }
+  });
+
+const sessionsRemoveCmd = new Command()
+  .description("Remove a tmux session")
+  .alias("rm")
+  .option("-H, --home", "Remove home session")
+  .option("-w, --workspace <repo-slug>", "Workspace repo slug (owner/repo)")
+  .option("-b, --branch <branch>", "Branch (bare repos only)")
+  .action(async (opts: { home?: boolean; workspace?: string; branch?: string }) => {
+    const result = await app.removeSession(opts);
+    if (Result.isError(result)) {
+      logger.error(result.error.message);
+    }
+  });
+
 const sessionsSwitchCmd = new Command()
   .description("Switch to a tmux session")
   .alias("sw")
@@ -44,6 +69,8 @@ const sessionsCmd = new Command()
   .alias("session")
   .alias("s")
   .command("list", sessionsListCmd)
+  .command("add", sessionsAddCmd)
+  .command("remove", sessionsRemoveCmd)
   .command("switch", sessionsSwitchCmd);
 
 const workspacesListCmd = new Command()
@@ -141,9 +168,9 @@ const configCmd = new Command()
 
 const worktreeAddCmd = new Command()
   .description("Add a worktree to a bare workspace")
-  .option("-w, --workspace <repo-slug>", "Workspace repo slug (owner/repo)", { required: true })
+  .option("-w, --workspace <repo-slug>", "Workspace repo slug (owner/repo)")
   .option("-b, --branch <branch>", "Branch to checkout", { required: true })
-  .action(async (opts: { workspace: string; branch: string }) => {
+  .action(async (opts: { workspace?: string; branch: string }) => {
     const result = await app.addWorktree(opts);
     if (Result.isError(result)) {
       logger.error(result.error.message);
@@ -152,9 +179,9 @@ const worktreeAddCmd = new Command()
 
 const worktreeRemoveCmd = new Command()
   .description("Remove a worktree from a bare workspace")
-  .option("-w, --workspace <repo-slug>", "Workspace repo slug (owner/repo)", { required: true })
+  .option("-w, --workspace <repo-slug>", "Workspace repo slug (owner/repo)")
   .option("-b, --branch <branch>", "Branch to remove", { required: true })
-  .action(async (opts: { workspace: string; branch: string }) => {
+  .action(async (opts: { workspace?: string; branch: string }) => {
     const result = await app.removeWorktree(opts);
     if (Result.isError(result)) {
       logger.error(result.error.message);
@@ -168,12 +195,12 @@ const worktreeCmd = new Command()
   .command("add", worktreeAddCmd)
   .command("remove", worktreeRemoveCmd);
 
-const branchesCreateCmd = new Command()
-  .description("Create a new branch")
-  .option("-w, --workspace <repo-slug>", "Workspace repo slug (owner/repo)", { required: true })
-  .option("-b, --branch <branch>", "Branch name to create", { required: true })
+const branchesAddCmd = new Command()
+  .description("Add a new branch")
+  .option("-w, --workspace <repo-slug>", "Workspace repo slug (owner/repo)")
+  .option("-b, --branch <branch>", "Branch name to add", { required: true })
   .option("-s, --start-point <ref>", "Starting point (commit or branch)")
-  .action(async (opts: { workspace: string; branch: string; startPoint?: string }) => {
+  .action(async (opts: { workspace?: string; branch: string; startPoint?: string }) => {
     const result = await app.createBranch(opts);
     if (Result.isError(result)) {
       logger.error(result.error.message);
@@ -183,21 +210,36 @@ const branchesCreateCmd = new Command()
 const branchesListCmd = new Command()
   .description("List branches")
   .alias("ls")
-  .option("-w, --workspace <repo-slug>", "Workspace repo slug (owner/repo)", { required: true })
-  .action(async (opts: { workspace: string }) => {
-    const branches = await app.listBranches(opts);
-    for (const branch of branches) {
-      console.log(branch);
+  .option("-w, --workspace <repo-slug>", "Workspace repo slug (owner/repo)")
+  .action(async (opts: { workspace?: string }) => {
+    try {
+      const branches = await app.listBranches(opts);
+      for (const branch of branches) {
+        console.log(branch);
+      }
+    } catch {
+      // Error already logged by app layer
     }
   });
 
-const branchesDeleteCmd = new Command()
-  .description("Delete a branch")
+const branchesSyncCmd = new Command()
+  .description("Sync branches from remote and associate pull requests")
+  .option("-w, --workspace <repo-slug>", "Workspace repo slug (owner/repo)")
+  .action(async (opts: { workspace?: string }) => {
+    const result = await app.branchesSync(opts);
+    if (Result.isError(result)) {
+      logger.error(result.error.message);
+    }
+  });
+
+const branchesRemoveCmd = new Command()
+  .description("Remove a branch")
+  .alias("delete")
   .alias("rm")
-  .option("-w, --workspace <repo-slug>", "Workspace repo slug (owner/repo)", { required: true })
-  .option("-b, --branch <branch>", "Branch to delete", { required: true })
+  .option("-w, --workspace <repo-slug>", "Workspace repo slug (owner/repo)")
+  .option("-b, --branch <branch>", "Branch to remove", { required: true })
   .option("--force", "Force delete even if not merged")
-  .action(async (opts: { workspace: string; branch: string; force?: boolean }) => {
+  .action(async (opts: { workspace?: string; branch: string; force?: boolean }) => {
     const result = await app.deleteBranch(opts);
     if (Result.isError(result)) {
       logger.error(result.error.message);
@@ -208,9 +250,10 @@ const branchesCmd = new Command()
   .description("Branch management commands")
   .alias("branch")
   .alias("br")
-  .command("create", branchesCreateCmd)
+  .command("add", branchesAddCmd)
   .command("list", branchesListCmd)
-  .command("delete", branchesDeleteCmd);
+  .command("sync", branchesSyncCmd)
+  .command("remove", branchesRemoveCmd);
 
 const serverStartCmd = new Command()
   .description("Start the sessionizer daemon (tmux server, home session, remote sync cron)")
@@ -266,7 +309,7 @@ const initCmd = new Command()
 
 const main = new Command()
   .name("sessionizer")
-  .description("Sessionizer CLI")
+  .description("Tmux workspace manager — syncs repos, branches, and PRs from GitHub, manages tmux sessions and worktrees")
   .version("0.1.0")
   .action(async () => {
     const result = await app.serverStart();

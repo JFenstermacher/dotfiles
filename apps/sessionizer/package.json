@@ -2,7 +2,7 @@
   "name": "@dotfiles/sessionizer",
   "version": "0.1.0",
   "private": true,
-  "description": "Sessionizer app",
+  "description": "Tmux workspace manager — syncs repos, branches, and PRs from GitHub, manages tmux sessions and worktrees",
   "license": "MIT",
   "type": "module",
   "scripts": {

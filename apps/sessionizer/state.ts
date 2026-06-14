@@ -1,5 +1,5 @@
 import { eq, and } from "drizzle-orm";
-import { workspaces, branches } from "./db/schema.ts";
+import { workspaces, branches, session, pullRequests } from "./db/schema.ts";
 import { createDb, databasePath } from "./db/client.ts";
 import type { DbClient } from "./db/client.ts";
 import type { Config } from "./config.ts";
@@ -81,6 +81,77 @@ export class State {
       .run();
   }
 
+  // ─── Pull Requests ────────────────────────────────────────────────────────
+
+  upsertPullRequest(pr: {
+    id: string;
+    title: string;
+    updatedAt: Date;
+    state: string | null;
+  }): void {
+    this.db
+      .insert(pullRequests)
+      .values(pr)
+      .onConflictDoUpdate({
+        target: pullRequests.id,
+        set: {
+          title: pr.title,
+          updatedAt: pr.updatedAt,
+          state: pr.state,
+        },
+      })
+      .run();
+  }
+
+  clearPullRequestsForRepo(repoSlug: string): void {
+    this.db
+      .delete(pullRequests)
+      .where(eq(pullRequests.repo, repoSlug))
+      .run();
+  }
+
+  linkBranchPR(workspaceSlug: string, branchName: string, pullRequestId: string | null): void {
+    this.db
+      .update(branches)
+      .set({ pullRequestId })
+      .where(
+        and(
+          eq(branches.workspace, workspaceSlug),
+          eq(branches.name, branchName),
+        ),
+      )
+      .run();
+  }
+
+  unlinkAllBranchPRs(workspaceSlug: string): void {
+    this.db
+      .update(branches)
+      .set({ pullRequestId: null })
+      .where(eq(branches.workspace, workspaceSlug))
+      .run();
+  }
+
+  // ─── Branches ─────────────────────────────────────────────────────────────
+
+  replaceBranches(workspaceSlug: string, items: { name: string; hasRemote: boolean; isWorktree: boolean }[]): void {
+    this.db
+      .delete(branches)
+      .where(eq(branches.workspace, workspaceSlug))
+      .run();
+
+    for (const br of items) {
+      this.db
+        .insert(branches)
+        .values({
+          name: br.name,
+          hasRemote: br.hasRemote,
+          isWorktree: br.isWorktree,
+          workspace: workspaceSlug,
+        })
+        .run();
+    }
+  }
+
   // ─── Branches / Worktrees ────────────────────────────────────────────────
 
   listBranches(workspaceSlug: string): Worktree[] {
@@ -101,7 +172,6 @@ export class State {
         name: branch.name,
         hasRemote: branch.hasRemote,
         isWorktree,
-        hasPullRequest: false,
         workspace: workspaceSlug,
       })
       .run();
@@ -154,6 +224,11 @@ export class State {
       if (ws) result[slug] = ws;
     }
     return result;
+  }
+
+  /** Clear all sessions from the database. */
+  clearSessions(): void {
+    this.db.delete(session).run();
   }
 
   /** Clear all workspaces from the database. */
