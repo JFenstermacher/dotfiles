@@ -564,12 +564,7 @@ export class App {
 
     const branch = opts.branch;
 
-    if (workspace.isBareRepo) {
-      this.logger.info("creating worktree for bare repo", { slug, branch });
-      return this.addWorktree({ workspace: slug, branch });
-    }
-
-    // Standard repo — create a local branch
+    // Create a local branch (same behavior for bare and non-bare repos)
     this.logger.info("creating branch", { slug, branch, startPoint: opts.startPoint ?? null });
     const result = await branchCreate({
       cwd: workspace.path,
