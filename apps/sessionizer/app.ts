@@ -4,7 +4,6 @@ import type { Dirent } from "node:fs"
 import { execFile, spawn } from "node:child_process";
 import {
   clone,
-  isRepo,
   isBareRepo,
   currentBranch,
   worktreeList,
