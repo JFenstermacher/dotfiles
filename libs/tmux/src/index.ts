@@ -78,7 +78,7 @@ export async function hasSession(
       err !== null &&
       "code" in err &&
       (err as { code: unknown }).code === 1 &&
-      /(not found|does not exist|can't find session)/i.test(stderr)
+      /(not found|does not exist|can't find session|no server running)/i.test(stderr)
     ) {
       return Result.ok(false);
     }
