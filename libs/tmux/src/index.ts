@@ -316,6 +316,51 @@ export async function attachSession(
   });
 }
 
+// ─── currentSession ────────────────────────────────────────────────────────
+
+/**
+ * Get the name of the tmux session the current client is attached to.
+ *
+ * @returns `Ok(string | undefined)` — the session name when inside tmux,
+ *          `Ok(undefined)` when not inside tmux or when the tmux server
+ *          is not running.
+ */
+export async function currentSession(): Promise<TmuxResult<string | undefined>> {
+  if (!process.env.TMUX) {
+    return Result.ok(undefined);
+  }
+
+  const args = ["display-message", "-p", "#S"];
+
+  try {
+    const stdout = await runTmuxOutput(args);
+    return Result.ok(stdout.trim() || undefined);
+  } catch (err: unknown) {
+    const stderr =
+      err && typeof err === "object" && "stderr" in err
+        ? String((err as Record<string, unknown>).stderr)
+        : "";
+
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      (err as { code: unknown }).code === 1 &&
+      /no server running/i.test(stderr)
+    ) {
+      return Result.ok(undefined);
+    }
+
+    return Result.err(
+      new TmuxError({
+        message: "Failed to get current tmux session",
+        command: `tmux ${args.join(" ")}`,
+        cause: err,
+      }),
+    );
+  }
+}
+
 // ─── newWindow ─────────────────────────────────────────────────────────────
 
 export interface NewWindowOptions {

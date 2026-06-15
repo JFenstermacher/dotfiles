@@ -1,0 +1,17 @@
+[metadata]
+name = "branches"
+description = "Lists branches and workspaces"
+requirements = ["sessionizer"]
+
+[source]
+command = "sessionizer branches list"
+no_sort = true
+frecency = true
+
+[keybindings]
+enter = "actions:switch"
+
+[actions.switch]
+description = "Switch to branch, creates worktree in bare checkouts"
+command = "sessionizer actions branches-switch {}"
+mode = "execute"

@@ -81,6 +81,23 @@ export class State {
       .run();
   }
 
+  updateWorkspaceCheckout(
+    slug: string,
+    updates: Partial<Pick<Workspace, "isCheckedOut" | "isBareRepo" | "defaultBranch" | "activeBranch">>,
+  ): void {
+    const dbUpdates: Record<string, unknown> = {};
+    if (updates.isCheckedOut !== undefined) dbUpdates.isCheckedOut = updates.isCheckedOut;
+    if (updates.isBareRepo !== undefined) dbUpdates.isBareRepo = updates.isBareRepo;
+    if (updates.defaultBranch !== undefined) dbUpdates.defaultBranch = updates.defaultBranch;
+    if (updates.activeBranch !== undefined) dbUpdates.activeBranch = updates.activeBranch ?? null;
+
+    this.db
+      .update(workspaces)
+      .set(dbUpdates)
+      .where(eq(workspaces.slug, slug))
+      .run();
+  }
+
   // ─── Pull Requests ────────────────────────────────────────────────────────
 
   upsertPullRequest(pr: {

@@ -19,19 +19,23 @@ const app = new App(config, state, logger);
 const sessionsListCmd = new Command()
   .description("List tmux sessions")
   .alias("ls")
-  .action(async () => {
+  .option("--json", "Output as JSON")
+  .action(async (opts: { json?: boolean }) => {
     const sessions = await app.listSessions();
-    for (const session of sessions) {
-      console.log(session.name);
+    if (opts.json) {
+      console.log(JSON.stringify(sessions, null, 2));
+    } else {
+      for (const session of sessions) {
+        console.log(session.name);
+      }
     }
   });
 
 const sessionsAddCmd = new Command()
   .description("Add a tmux session without switching")
-  .option("-H, --home", "Add home session")
   .option("-w, --workspace <repo-slug>", "Workspace repo slug (owner/repo)")
   .option("-b, --branch <branch>", "Branch (bare repos only)")
-  .action(async (opts: { home?: boolean; workspace?: string; branch?: string }) => {
+  .action(async (opts: { workspace?: string; branch?: string }) => {
     const result = await app.addSession(opts);
     if (Result.isError(result)) {
       logger.error(result.error.message);
@@ -41,10 +45,9 @@ const sessionsAddCmd = new Command()
 const sessionsRemoveCmd = new Command()
   .description("Remove a tmux session")
   .alias("rm")
-  .option("-H, --home", "Remove home session")
   .option("-w, --workspace <repo-slug>", "Workspace repo slug (owner/repo)")
   .option("-b, --branch <branch>", "Branch (bare repos only)")
-  .action(async (opts: { home?: boolean; workspace?: string; branch?: string }) => {
+  .action(async (opts: { workspace?: string; branch?: string }) => {
     const result = await app.removeSession(opts);
     if (Result.isError(result)) {
       logger.error(result.error.message);
@@ -54,10 +57,9 @@ const sessionsRemoveCmd = new Command()
 const sessionsSwitchCmd = new Command()
   .description("Switch to a tmux session")
   .alias("sw")
-  .option("-H, --home", "Switch to home session")
   .option("-w, --workspace <repo-slug>", "Workspace repo slug (owner/repo)")
   .option("-b, --branch <branch>", "Branch (bare repos only)")
-  .action(async (opts: { home?: boolean; workspace?: string; branch?: string }) => {
+  .action(async (opts: { workspace?: string; branch?: string }) => {
     const result = await app.switchSession(opts);
     if (Result.isError(result)) {
       logger.error(result.error.message);
@@ -76,10 +78,23 @@ const sessionsCmd = new Command()
 const workspacesListCmd = new Command()
   .description("List workspaces")
   .alias("ls")
-  .action(async () => {
-    const workspaces = app.listWorkspaces();
-    for (const workspace of workspaces) {
-      console.log(workspace);
+  .option("--json", "Output as JSON")
+  .action(async (opts: { json?: boolean }) => {
+    const workspaces = await app.listWorkspaces();
+    if (opts.json) {
+      console.log(JSON.stringify(workspaces, null, 2));
+    } else {
+      for (const ws of workspaces) {
+        const emojiMap: Record<number, string> = {
+          0: "*",
+          1: "+",
+          2: "-",
+          3: " ",
+        };
+        const priority = ws.isActive ? 0 : ws.hasSession ? 1 : ws.isCheckedOut ? 2 : 3;
+        const prefix = emojiMap[priority];
+        console.log(prefix ? `${prefix} ${ws.slug}` : ws.slug);
+      }
     }
   });
 
@@ -211,11 +226,16 @@ const branchesListCmd = new Command()
   .description("List branches")
   .alias("ls")
   .option("-w, --workspace <repo-slug>", "Workspace repo slug (owner/repo)")
-  .action(async (opts: { workspace?: string }) => {
+  .option("--json", "Output as JSON")
+  .action(async (opts: { workspace?: string; json?: boolean }) => {
     try {
       const branches = await app.listBranches(opts);
-      for (const branch of branches) {
-        console.log(branch);
+      if (opts.json) {
+        console.log(JSON.stringify(branches, null, 2));
+      } else {
+        for (const branch of branches) {
+          console.log(branch.name);
+        }
       }
     } catch {
       // Error already logged by app layer
@@ -311,12 +331,34 @@ const daemonCmd = new Command()
   .command("status", daemonStatusCmd)
   .command("logs", daemonLogsCmd);
 
-const initCmd = new Command()
-  .description("Initialize the sessionizer database")
-  .action(async () => {
-    const { dbPath } = app.init();
-    logger.info("database initialized", { dbPath });
+const actionsWorkspaceEnterCmd = new Command()
+  .description("Enter a workspace (clone if needed, then switch session)")
+  .arguments("<repo-slug>")
+  .option("--bare", "Clone as a bare repository")
+  .action(async (opts: { bare?: boolean }, repoSlug: string) => {
+    const result = await app.workspaceEnter(repoSlug, opts);
+    if (Result.isError(result)) {
+      logger.error(result.error.message);
+      process.exit(1);
+    }
   });
+
+const actionsBranchEnterCmd = new Command()
+  .description("Enter a branch (create branch/worktree/session if needed, then switch)")
+  .arguments("<branch>")
+  .option("-w, --workspace <repo-slug>", "Workspace repo slug (owner/repo)")
+  .action(async (opts: { workspace?: string }, branch: string) => {
+    const result = await app.branchEnter({ workspace: opts.workspace, branch });
+    if (Result.isError(result)) {
+      logger.error(result.error.message);
+      process.exit(1);
+    }
+  });
+
+const actionsCmd = new Command()
+  .description("Action commands")
+  .command("workspace-enter", actionsWorkspaceEnterCmd)
+  .command("branch-enter", actionsBranchEnterCmd);
 
 const main = new Command()
   .name("sessionizer")
@@ -329,7 +371,7 @@ const main = new Command()
       process.exit(1);
     }
   })
-  .command("init", initCmd)
+  .command("actions", actionsCmd)
   .command("daemon", daemonCmd)
   .command("sessions", sessionsCmd)
   .command("workspaces", workspacesCmd)

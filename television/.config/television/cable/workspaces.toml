@@ -5,11 +5,20 @@ requirements = ["sessionizer"]
 
 [source]
 command = "sessionizer workspaces list"
+no_sort = true
+frecency = false
 
 [keybindings]
-enter = "actions:enter"
+enter = "actions:bare"
+ctrl-b = "actions:bare"
+ctrl-o = "actions:standard"
 
-[actions.enter]
-description = "Enters workspace"
-command = "sessionizer session switch --workspace {}"
+[actions.bare]
+description = "Enter workspace with bare checkout"
+command = "sessionizer actions workspace-enter --bare {split: :-1}"
+mode = "execute"
+
+[actions.standard]
+description = "Enter workspace (standard checkout)"
+command = "sessionizer actions workspace-enter {split: :-1}"
 mode = "execute"

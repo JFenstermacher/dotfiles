@@ -24,6 +24,8 @@ import {
   switchClient,
   startServer,
   attachSession,
+  currentSession,
+  sendKeys,
 } from "@dotfiles/tmux";
 import { schedule } from "node-cron";
 import { xdgState, xdgData } from "@dotfiles/envs";
@@ -43,6 +45,18 @@ export const AppError = TaggedError("AppError")<{
 export type Session = {
   name: string;
   workspace?: Workspace;
+};
+
+export type WorkspaceInfo = {
+  slug: string;
+  isCheckedOut: boolean;
+  hasSession: boolean;
+  isActive: boolean;
+};
+
+export type BranchInfo = {
+  name: string;
+  hasRemote?: boolean;
 };
 
 export type AppResult<T = void> = Result<T, InstanceType<typeof AppError>>;
@@ -89,12 +103,60 @@ export class App {
     return this.#buildSessions();
   }
 
-  listWorkspaces(): string[] {
+  async listWorkspaces(): Promise<WorkspaceInfo[]> {
     const slugs = this.state.listWorkspaces();
-    this.logger.debug("listing workspaces", {
-      count: slugs.length,
+
+    const sessionsResult = await listSessions();
+    const tmuxSessions = Result.isOk(sessionsResult) ? sessionsResult.value : [];
+
+    const currentResult = await currentSession();
+    const activeSession = Result.isOk(currentResult) ? currentResult.value : undefined;
+
+    const items: WorkspaceInfo[] = [];
+
+    for (const slug of slugs) {
+      const ws = this.state.getWorkspace(slug);
+      if (!ws || !ws.isCheckedOut) {
+        items.push({ slug, isCheckedOut: false, hasSession: false, isActive: false });
+        continue;
+      }
+
+      let hasSession = false;
+      let isActive = false;
+
+      if (ws.isBareRepo) {
+        for (const sessionName of tmuxSessions) {
+          if (sessionName.startsWith(`${slug}@`)) {
+            hasSession = true;
+            if (sessionName === activeSession) {
+              isActive = true;
+            }
+          }
+        }
+      } else {
+        if (tmuxSessions.includes(slug)) {
+          hasSession = true;
+          if (slug === activeSession) {
+            isActive = true;
+          }
+        }
+      }
+
+      items.push({ slug, isCheckedOut: true, hasSession, isActive });
+    }
+
+    items.sort((a, b) => {
+      const priorityA = a.isActive ? 0 : a.hasSession ? 1 : a.isCheckedOut ? 2 : 3;
+      const priorityB = b.isActive ? 0 : b.hasSession ? 1 : b.isCheckedOut ? 2 : 3;
+      if (priorityA !== priorityB) return priorityA - priorityB;
+      return a.slug.localeCompare(b.slug);
     });
-    return slugs;
+
+    this.logger.debug("listing workspaces", {
+      count: items.length,
+    });
+
+    return items;
   }
 
   showConfig(): string {
@@ -288,6 +350,31 @@ export class App {
       return Result.err(new AppError({ message: `Workspace ${slug} already exists` }));
     }
 
+    const checkoutResult = await this.#checkoutWorkspace(repoSlug, opts);
+    if (Result.isError(checkoutResult)) return Result.err(checkoutResult.error);
+
+    this.state.insertWorkspace(checkoutResult.value);
+    this.logger.info("workspace added", { slug, isBare: checkoutResult.value.isBareRepo });
+    return Result.ok(undefined);
+  }
+
+  async #checkoutWorkspace(
+    repoSlug: string,
+    opts?: { bare?: boolean },
+  ): Promise<AppResult<Workspace>> {
+    const parts = repoSlug.split("/");
+    if (parts.length !== 2 || !parts[0] || !parts[1]) {
+      return Result.err(
+        new AppError({
+          message: `Invalid repoSlug "${repoSlug}" (expected {owner}/{repo})`,
+        }),
+      );
+    }
+
+    const [owner, repo] = parts;
+    const repoPath = `${WORKSPACES_ROOT}/${owner}/${repo}`;
+    const slug = `${owner}/${repo}`;
+
     try {
       await access(repoPath);
       this.logger.warn("directory already exists on disk", { path: repoPath });
@@ -328,7 +415,7 @@ export class App {
       path: repoPath,
       owner,
       repo,
-      isCheckedOut: !isBare,
+      isCheckedOut: true,
       isBareRepo: isBare,
       defaultBranch: await this.#resolveDefaultBranch(`${repoPath}/.git`),
     };
@@ -405,6 +492,7 @@ export class App {
       });
 
       workspace.worktrees = await this.#buildWorktrees(gitDir);
+      workspace.activeBranch = workspace.defaultBranch;
     } else {
       const branchResult = await currentBranch(repoPath);
       if (Result.isOk(branchResult)) {
@@ -412,9 +500,7 @@ export class App {
       }
     }
 
-    this.state.insertWorkspace(workspace);
-    this.logger.info("workspace added", { slug, isBare });
-    return Result.ok(undefined);
+    return Result.ok(workspace);
   }
 
   async removeWorkspace(repoSlug: string): Promise<AppResult> {
@@ -457,10 +543,82 @@ export class App {
     this.logger.info("deleting workspace directory", { path: repoPath });
     await rm(repoPath, { recursive: true, force: true });
 
-    // Remove from db (branches cascade via FK)
+    // Remove from db (branches cascade via FK), then re-insert as remote reference
+    const { defaultBranch } = workspace;
     this.state.removeWorkspace(slug);
+    this.state.insertWorkspace({
+      path: repoPath,
+      owner: workspace.owner,
+      repo: workspace.repo,
+      isCheckedOut: false,
+      isBareRepo: false,
+      defaultBranch,
+    });
+
     this.logger.info("workspace removed", { slug });
     return Result.ok(undefined);
+  }
+
+  async workspaceEnter(repoSlug: string, opts?: { bare?: boolean }): Promise<AppResult> {
+    const parts = repoSlug.split("/");
+    if (parts.length !== 2 || !parts[0] || !parts[1]) {
+      this.logger.error("invalid repo slug", { repoSlug });
+      return Result.err(
+        new AppError({ message: `Invalid repoSlug "${repoSlug}" (expected {owner}/{repo})` }),
+      );
+    }
+
+    const [owner, repo] = parts;
+    const slug = `${owner}/${repo}`;
+
+    let workspace = this.state.getWorkspace(slug);
+
+    if (!workspace) {
+      this.logger.info("workspace not found, adding", { slug });
+      const addResult = await this.addWorkspace(repoSlug, opts);
+      if (Result.isError(addResult)) return addResult;
+      workspace = this.state.getWorkspace(slug)!;
+    } else if (!workspace.isCheckedOut) {
+      this.logger.info("workspace not checked out, cloning", { slug });
+      const checkoutResult = await this.#checkoutWorkspace(repoSlug, opts);
+      if (Result.isError(checkoutResult)) return Result.err(checkoutResult.error);
+      const checkedOut = checkoutResult.value;
+      this.state.updateWorkspaceCheckout(slug, {
+        isCheckedOut: true,
+        isBareRepo: checkedOut.isBareRepo,
+        defaultBranch: checkedOut.defaultBranch,
+        activeBranch: checkedOut.activeBranch,
+      });
+      if (checkedOut.worktrees) {
+        for (const wt of checkedOut.worktrees) {
+          this.state.insertBranch(slug, wt, true);
+        }
+      }
+      workspace = this.state.getWorkspace(slug)!;
+    }
+
+    // Ensure session exists with full window config, then switch
+    let sessionName: string;
+    if (workspace.isBareRepo) {
+      const branch = workspace.activeBranch ?? workspace.defaultBranch;
+      sessionName = `${slug}@${branch}`;
+    } else {
+      sessionName = slug;
+    }
+
+    const exists = await hasSession({ session: sessionName });
+    if (Result.isError(exists)) {
+      return Result.err(
+        new AppError({ message: exists.error.message, cause: exists.error }),
+      );
+    }
+
+    if (!exists.value) {
+      const addResult = await this.addSession({ workspace: slug });
+      if (Result.isError(addResult)) return addResult;
+    }
+
+    return this.switchSession({ workspace: slug });
   }
 
   async addWorktree(opts: { workspace?: string; branch: string }): Promise<AppResult> {
@@ -673,7 +831,7 @@ export class App {
     return Result.ok(undefined);
   }
 
-  async listBranches(opts: { workspace?: string }): Promise<string[]> {
+  async listBranches(opts: { workspace?: string }): Promise<BranchInfo[]> {
     const resolved = this.#resolveWorkspaceSlug(opts.workspace);
     if (Result.isError(resolved)) {
       this.logger.error(resolved.error.message);
@@ -691,7 +849,7 @@ export class App {
 
     if (workspace.isBareRepo) {
       const entries = this.state.listBranches(slug);
-      return entries.map((e) => e.name);
+      return entries.map((e) => ({ name: e.name, hasRemote: e.hasRemote }));
     }
 
     const result = await branchList({ cwd: workspace.path });
@@ -700,7 +858,7 @@ export class App {
       return [];
     }
 
-    return result.value;
+    return result.value.map((name) => ({ name }));
   }
 
   async deleteBranch(opts: {
@@ -755,6 +913,106 @@ export class App {
 
     this.state.removeBranch(slug, branch);
     this.logger.info("branch deleted", { slug, branch });
+    return Result.ok(undefined);
+  }
+
+  async branchEnter(opts: {
+    workspace?: string;
+    branch: string;
+  }): Promise<AppResult> {
+    const resolved = this.#resolveWorkspaceSlug(opts.workspace);
+    if (Result.isError(resolved)) {
+      this.logger.error(resolved.error.message);
+      return Result.err(resolved.error);
+    }
+    const slug = resolved.value;
+    const workspace = this.state.getWorkspace(slug);
+
+    if (!workspace) {
+      this.logger.error("workspace not found", { slug });
+      return Result.err(new AppError({ message: `Workspace ${slug} not found` }));
+    }
+
+    const branch = opts.branch;
+
+    // Ensure branch exists
+    const branchesResult = await branchList({ cwd: this.#gitDir(workspace) });
+    const branches = Result.isOk(branchesResult) ? branchesResult.value : [];
+
+    if (!branches.includes(branch)) {
+      this.logger.info("branch does not exist, creating", { slug, branch });
+      const createResult = await this.createBranch({ workspace: slug, branch });
+      if (Result.isError(createResult)) return createResult;
+    }
+
+    if (workspace.isBareRepo) {
+      // Ensure worktree exists
+      const worktreesResult = await worktreeList({ cwd: this.#gitDir(workspace) });
+      const worktrees = Result.isOk(worktreesResult) ? worktreesResult.value : [];
+      const hasWorktree = worktrees.some((wt) => wt.branch === branch);
+
+      if (!hasWorktree) {
+        this.logger.info("worktree does not exist, creating", { slug, branch });
+        const wtResult = await this.addWorktree({ workspace: slug, branch });
+        if (Result.isError(wtResult)) return wtResult;
+      }
+
+      // Ensure session exists with full window config
+      const sessionName = `${slug}@${branch}`;
+      const exists = await hasSession({ session: sessionName });
+      if (Result.isError(exists)) {
+        return Result.err(
+          new AppError({ message: exists.error.message, cause: exists.error }),
+        );
+      }
+
+      if (!exists.value) {
+        this.logger.info("session does not exist, creating", { session: sessionName });
+        const addResult = await this.addSession({ workspace: slug, branch });
+        if (Result.isError(addResult)) return addResult;
+      }
+
+      // Switch
+      return this.switchSession({ workspace: slug, branch });
+    }
+
+    // Non-bare: ensure session exists, then switch git branch inside it
+    const exists = await hasSession({ session: slug });
+    if (Result.isError(exists)) {
+      return Result.err(
+        new AppError({ message: exists.error.message, cause: exists.error }),
+      );
+    }
+
+    if (!exists.value) {
+      this.logger.info("session does not exist, creating", { session: slug });
+      const addResult = await this.addSession({ workspace: slug });
+      if (Result.isError(addResult)) return addResult;
+    }
+
+    // Switch to session first
+    const switchResult = await this.switchSession({ workspace: slug });
+    if (Result.isError(switchResult)) return switchResult;
+
+    // Update active branch in state
+    this.state.updateActiveBranch(slug, branch);
+
+    // Send git switch inside the tmux session
+    this.logger.info("switching git branch in session", { slug, branch });
+    const keysResult = await sendKeys({
+      target: `${slug}:0.0`,
+      keys: [`git switch ${branch}`, "Enter"],
+    });
+    if (Result.isError(keysResult)) {
+      return Result.err(
+        new AppError({
+          message: `Failed to switch branch in session: ${keysResult.error.message}`,
+          cause: keysResult.error,
+        }),
+      );
+    }
+
+    this.logger.info("switched to branch", { slug, branch });
     return Result.ok(undefined);
   }
 
@@ -1150,55 +1408,9 @@ export class App {
   }
 
   async switchSession(opts: {
-    home?: boolean;
     workspace?: string;
     branch?: string;
   }): Promise<AppResult> {
-    if (opts.home) {
-      if (opts.workspace || opts.branch) {
-        this.logger.error("--home is exclusive with --workspace and --branch");
-        return Result.err(
-          new AppError({ message: "--home is exclusive with --workspace and --branch" }),
-        );
-      }
-
-      const sessionName = process.env.USER!;
-      const homePath = process.env.HOME!;
-
-      this.logger.info("switching to home session", { session: sessionName });
-      const exists = await hasSession({ session: sessionName });
-      if (Result.isError(exists)) {
-        return Result.err(
-          new AppError({ message: exists.error.message, cause: exists.error }),
-        );
-      }
-
-      if (!exists.value) {
-        const createResult = await newSession({
-          sessionName,
-          path: homePath,
-        });
-        if (Result.isError(createResult)) {
-          return Result.err(
-            new AppError({
-              message: createResult.error.message,
-              cause: createResult.error,
-            }),
-          );
-        }
-      }
-
-      const switchResult = await switchClient({ session: sessionName });
-      if (Result.isError(switchResult)) {
-        return Result.err(
-          new AppError({ message: switchResult.error.message, cause: switchResult.error }),
-        );
-      }
-
-      this.logger.info("switched to home session", { session: sessionName });
-      return Result.ok(undefined);
-    }
-
     if (!opts.workspace) {
       this.logger.debug("inferring workspace from cwd");
       const resolved = this.#resolveWorkspaceSlug();
@@ -1294,52 +1506,9 @@ export class App {
   }
 
   async addSession(opts: {
-    home?: boolean;
     workspace?: string;
     branch?: string;
   }): Promise<AppResult> {
-    if (opts.home) {
-      if (opts.workspace || opts.branch) {
-        this.logger.error("--home is exclusive with --workspace and --branch");
-        return Result.err(
-          new AppError({ message: "--home is exclusive with --workspace and --branch" }),
-        );
-      }
-
-      const sessionName = process.env.USER!;
-      const homePath = process.env.HOME!;
-
-      const exists = await hasSession({ session: sessionName });
-      if (Result.isError(exists)) {
-        return Result.err(
-          new AppError({ message: exists.error.message, cause: exists.error }),
-        );
-      }
-
-      if (exists.value) {
-        this.logger.warn("home session already exists", { session: sessionName });
-        return Result.err(
-          new AppError({ message: `Home session ${sessionName} already exists` }),
-        );
-      }
-
-      this.logger.info("creating home session", { session: sessionName, path: homePath });
-      const createResult = await newSession({
-        sessionName,
-        path: homePath,
-      });
-      if (Result.isError(createResult)) {
-        return Result.err(
-          new AppError({
-            message: createResult.error.message,
-            cause: createResult.error,
-          }),
-        );
-      }
-      this.logger.info("home session created");
-      return Result.ok(undefined);
-    }
-
     if (!opts.workspace) {
       this.logger.debug("inferring workspace from cwd");
       const resolved = this.#resolveWorkspaceSlug();
@@ -1446,34 +1615,9 @@ export class App {
   }
 
   async removeSession(opts: {
-    home?: boolean;
     workspace?: string;
     branch?: string;
   }): Promise<AppResult> {
-    if (opts.home) {
-      if (opts.workspace || opts.branch) {
-        this.logger.error("--home is exclusive with --workspace and --branch");
-        return Result.err(
-          new AppError({ message: "--home is exclusive with --workspace and --branch" }),
-        );
-      }
-
-      const sessionName = process.env.USER!;
-      this.logger.info("removing home session", { session: sessionName });
-      const result = await killSession({ session: sessionName });
-      if (Result.isError(result)) {
-        this.logger.error("failed to remove home session", { error: result.error.message });
-        return Result.err(
-          new AppError({
-            message: `Failed to remove home session: ${result.error.message}`,
-            cause: result.error,
-          }),
-        );
-      }
-      this.logger.info("home session removed");
-      return Result.ok(undefined);
-    }
-
     if (!opts.workspace) {
       this.logger.debug("inferring workspace from cwd");
       const resolved = this.#resolveWorkspaceSlug();
