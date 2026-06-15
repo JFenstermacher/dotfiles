@@ -182,6 +182,25 @@ export class State {
       .all();
   }
 
+  listBranchDetails(workspaceSlug: string): { name: string; hasRemote: boolean; isWorktree: boolean; hasPR: boolean }[] {
+    return this.db
+      .select({
+        name: branches.name,
+        hasRemote: branches.hasRemote,
+        isWorktree: branches.isWorktree,
+        pullRequestId: branches.pullRequestId,
+      })
+      .from(branches)
+      .where(eq(branches.workspace, workspaceSlug))
+      .all()
+      .map((r) => ({
+        name: r.name,
+        hasRemote: r.hasRemote,
+        isWorktree: r.isWorktree,
+        hasPR: r.pullRequestId != null,
+      }));
+  }
+
   insertBranch(workspaceSlug: string, branch: Worktree, isWorktree = false): void {
     this.db
       .insert(branches)
@@ -190,6 +209,13 @@ export class State {
         hasRemote: branch.hasRemote,
         isWorktree,
         workspace: workspaceSlug,
+      })
+      .onConflictDoUpdate({
+        target: [branches.name, branches.workspace],
+        set: {
+          isWorktree,
+          hasRemote: branch.hasRemote,
+        },
       })
       .run();
   }
@@ -228,6 +254,34 @@ export class State {
         this.removeBranch(workspaceSlug, name);
       }
     }
+  }
+
+  // ─── Merged PR cleanup
+
+  listMergedPRBranches(): { workspace: string; name: string; isWorktree: boolean }[] {
+    const mergedPRs = this.db
+      .select({ id: pullRequests.id })
+      .from(pullRequests)
+      .where(eq(pullRequests.state, "merged"))
+      .all();
+
+    const results: { workspace: string; name: string; isWorktree: boolean }[] = [];
+
+    for (const pr of mergedPRs) {
+      const rows = this.db
+        .select({
+          workspace: branches.workspace,
+          name: branches.name,
+          isWorktree: branches.isWorktree,
+        })
+        .from(branches)
+        .where(eq(branches.pullRequestId, pr.id))
+        .all();
+
+      results.push(...rows);
+    }
+
+    return results;
   }
 
   // ─── Debug helpers ─────────────────────────────────────────────────────────

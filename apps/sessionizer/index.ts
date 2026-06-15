@@ -181,35 +181,6 @@ const configCmd = new Command()
   .command("show", configShowCmd)
   .command("edit", configEditCmd);
 
-const worktreeAddCmd = new Command()
-  .description("Add a worktree to a bare workspace")
-  .option("-w, --workspace <repo-slug>", "Workspace repo slug (owner/repo)")
-  .option("-b, --branch <branch>", "Branch to checkout", { required: true })
-  .action(async (opts: { workspace?: string; branch: string }) => {
-    const result = await app.addWorktree(opts);
-    if (Result.isError(result)) {
-      logger.error(result.error.message);
-    }
-  });
-
-const worktreeRemoveCmd = new Command()
-  .description("Remove a worktree from a bare workspace")
-  .option("-w, --workspace <repo-slug>", "Workspace repo slug (owner/repo)")
-  .option("-b, --branch <branch>", "Branch to remove", { required: true })
-  .action(async (opts: { workspace?: string; branch: string }) => {
-    const result = await app.removeWorktree(opts);
-    if (Result.isError(result)) {
-      logger.error(result.error.message);
-    }
-  });
-
-const worktreeCmd = new Command()
-  .description("Worktree management commands")
-  .alias("worktree")
-  .alias("wt")
-  .command("add", worktreeAddCmd)
-  .command("remove", worktreeRemoveCmd);
-
 const branchesAddCmd = new Command()
   .description("Add a new branch")
   .option("-w, --workspace <repo-slug>", "Workspace repo slug (owner/repo)")
@@ -234,7 +205,19 @@ const branchesListCmd = new Command()
         console.log(JSON.stringify(branches, null, 2));
       } else {
         for (const branch of branches) {
-          console.log(branch.name);
+          let prefix: string;
+          if (branch.isActive) {
+            prefix = "*";
+          } else if (branch.isWorktree && branch.hasPR) {
+            prefix = "^";
+          } else if (branch.isWorktree) {
+            prefix = "+";
+          } else if (branch.hasPR) {
+            prefix = "~";
+          } else {
+            prefix = " ";
+          }
+          console.log(`${prefix} ${branch.name}`);
         }
       }
     } catch {
@@ -254,13 +237,21 @@ const branchesSyncCmd = new Command()
 
 const branchesRemoveCmd = new Command()
   .description("Remove a branch")
-  .alias("delete")
   .alias("rm")
   .option("-w, --workspace <repo-slug>", "Workspace repo slug (owner/repo)")
   .option("-b, --branch <branch>", "Branch to remove", { required: true })
   .option("--force", "Force delete even if not merged")
   .action(async (opts: { workspace?: string; branch: string; force?: boolean }) => {
     const result = await app.deleteBranch(opts);
+    if (Result.isError(result)) {
+      logger.error(result.error.message);
+    }
+  });
+
+const branchesCleanupCmd = new Command()
+  .description("Clean up branches, worktrees, and sessions for merged pull requests")
+  .action(async () => {
+    const result = await app.cleanupMergedPRs();
     if (Result.isError(result)) {
       logger.error(result.error.message);
     }
@@ -273,7 +264,8 @@ const branchesCmd = new Command()
   .command("add", branchesAddCmd)
   .command("list", branchesListCmd)
   .command("sync", branchesSyncCmd)
-  .command("remove", branchesRemoveCmd);
+  .command("remove", branchesRemoveCmd)
+  .command("cleanup", branchesCleanupCmd);
 
 const daemonStartCmd = new Command()
   .description("Start the sessionizer daemon (remote sync cron, branch sync cron)")
@@ -375,7 +367,6 @@ const main = new Command()
   .command("daemon", daemonCmd)
   .command("sessions", sessionsCmd)
   .command("workspaces", workspacesCmd)
-  .command("worktrees", worktreeCmd)
   .command("branches", branchesCmd)
   .command("state", stateCmd)
   .command("config", configCmd);

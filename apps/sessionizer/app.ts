@@ -56,7 +56,9 @@ export type WorkspaceInfo = {
 
 export type BranchInfo = {
   name: string;
-  hasRemote?: boolean;
+  isActive: boolean;
+  isWorktree?: boolean;
+  hasPR?: boolean;
 };
 
 export type AppResult<T = void> = Result<T, InstanceType<typeof AppError>>;
@@ -250,7 +252,7 @@ export class App {
             path: repoPath,
             owner,
             repo,
-            isCheckedOut: !isBare,
+            isCheckedOut: true,
             isBareRepo: isBare,
             defaultBranch: await this.#resolveDefaultBranch(gitDir),
           };
@@ -265,10 +267,21 @@ export class App {
           }
 
           this.state.insertWorkspace(workspace);
-        } else if (existing.isBareRepo) {
-          this.logger.debug("syncing worktrees", { slug });
-          const current = await this.#buildWorktrees(this.#gitDir(existing));
-          this.state.syncBranches(slug, current);
+        } else {
+          if (!existing.isCheckedOut) {
+            this.logger.info("workspace now locally available, updating checkout state", { slug });
+            this.state.updateWorkspaceCheckout(slug, {
+              isCheckedOut: true,
+              isBareRepo: isBare,
+              defaultBranch: await this.#resolveDefaultBranch(gitDir),
+            });
+          }
+
+          if (existing.isBareRepo || isBare) {
+            this.logger.debug("syncing worktrees", { slug });
+            const current = await this.#buildWorktrees(this.#gitDir(existing));
+            this.state.syncBranches(slug, current);
+          }
         }
       }
     }
@@ -803,7 +816,7 @@ export class App {
 
     const branch = opts.branch;
 
-    // Create a local branch (same behavior for bare and non-bare repos)
+    // Create a local branch
     this.logger.info("creating branch", { slug, branch, startPoint: opts.startPoint ?? null });
     const result = await branchCreate({
       cwd: workspace.path,
@@ -821,13 +834,35 @@ export class App {
       );
     }
 
+    if (workspace.isBareRepo) {
+      const worktreePath = `${workspace.path}/${branch}`;
+      const gitDir = this.#gitDir(workspace);
+
+      this.logger.info("creating worktree", { slug, branch, path: worktreePath });
+      const wtResult = await worktreeCreate({
+        cwd: gitDir,
+        branch,
+        path: worktreePath,
+      });
+
+      if (Result.isError(wtResult)) {
+        this.logger.error("worktree creation failed", { slug, branch, error: wtResult.error.message });
+        return Result.err(
+          new AppError({
+            message: `Failed to create worktree for ${branch}: ${wtResult.error.message}`,
+            cause: wtResult.error,
+          }),
+        );
+      }
+    }
+
     const hasRemote = await hasRemoteTrackingBranch(workspace.path, branch);
     this.state.insertBranch(slug, {
       name: branch,
       hasRemote: Result.isOk(hasRemote) ? (hasRemote.value as boolean) : false,
-    });
+    }, workspace.isBareRepo);
 
-    this.logger.info("branch created", { slug, branch });
+    this.logger.info("branch created", { slug, branch, bare: workspace.isBareRepo });
     return Result.ok(undefined);
   }
 
@@ -848,8 +883,44 @@ export class App {
     this.logger.debug("listing branches", { slug });
 
     if (workspace.isBareRepo) {
-      const entries = this.state.listBranches(slug);
-      return entries.map((e) => ({ name: e.name, hasRemote: e.hasRemote }));
+      const entries = this.state.listBranchDetails(slug);
+      const sessionsResult = await listSessions();
+      const tmuxSessions = Result.isOk(sessionsResult) ? sessionsResult.value : [];
+      const activeBranch = workspace.activeBranch;
+
+      const items = entries.map((e) => {
+        const sessionName = `${slug}@${e.name}`;
+        const hasSession = tmuxSessions.includes(sessionName);
+        const isActive = e.name === activeBranch;
+
+        let priority: number;
+        if (isActive && e.isWorktree && hasSession) {
+          priority = 0;
+        } else if (e.isWorktree && e.hasPR) {
+          priority = 1;
+        } else if (e.isWorktree) {
+          priority = 2;
+        } else if (e.hasPR) {
+          priority = 3;
+        } else {
+          priority = 4;
+        }
+
+        return {
+          name: e.name,
+          isActive,
+          isWorktree: e.isWorktree,
+          hasPR: e.hasPR,
+          priority,
+        };
+      });
+
+      items.sort((a, b) => {
+        if (a.priority !== b.priority) return a.priority - b.priority;
+        return a.name.localeCompare(b.name);
+      });
+
+      return items.map(({ priority: _, ...rest }) => rest);
     }
 
     const result = await branchList({ cwd: workspace.path });
@@ -858,7 +929,18 @@ export class App {
       return [];
     }
 
-    return result.value.map((name) => ({ name }));
+    const activeBranch = workspace.activeBranch;
+    const items = result.value.map((name) => ({
+      name,
+      isActive: name === activeBranch,
+    }));
+
+    items.sort((a, b) => {
+      if (a.isActive !== b.isActive) return a.isActive ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+
+    return items;
   }
 
   async deleteBranch(opts: {
@@ -1122,6 +1204,99 @@ export class App {
     return Result.ok(undefined);
   }
 
+  async cleanupMergedPRs(): Promise<AppResult> {
+    this.logger.info("cleanup merged PRs started");
+
+    const merged = this.state.listMergedPRBranches();
+    this.logger.debug("found merged PR branches", { count: merged.length });
+
+    let cleaned = 0;
+    let skipped = 0;
+    let failed = 0;
+
+    for (const item of merged) {
+      const workspace = this.state.getWorkspace(item.workspace);
+      if (!workspace) {
+        this.logger.warn("workspace not found for merged PR branch", {
+          workspace: item.workspace,
+          branch: item.name,
+        });
+        skipped++;
+        continue;
+      }
+
+      if (item.name === workspace.defaultBranch) {
+        this.logger.debug("skipping default branch", {
+          workspace: item.workspace,
+          branch: item.name,
+        });
+        skipped++;
+        continue;
+      }
+
+      if (item.name === workspace.activeBranch) {
+        this.logger.debug("skipping active branch", {
+          workspace: item.workspace,
+          branch: item.name,
+        });
+        skipped++;
+        continue;
+      }
+
+      this.logger.info("cleaning up merged PR branch", {
+        workspace: item.workspace,
+        branch: item.name,
+      });
+
+      if (workspace.isBareRepo && item.isWorktree) {
+        const wtResult = await this.removeWorktree({
+          workspace: item.workspace,
+          branch: item.name,
+        });
+        if (Result.isError(wtResult)) {
+          this.logger.error("failed to remove worktree", {
+            workspace: item.workspace,
+            branch: item.name,
+            error: wtResult.error.message,
+          });
+          failed++;
+          continue;
+        }
+
+        const branchResult = await branchDelete({
+          cwd: this.#gitDir(workspace),
+          name: item.name,
+        });
+        if (Result.isError(branchResult)) {
+          this.logger.warn("failed to delete underlying branch after worktree removal", {
+            workspace: item.workspace,
+            branch: item.name,
+            error: branchResult.error.message,
+          });
+        }
+        cleaned++;
+      } else {
+        const result = await this.deleteBranch({
+          workspace: item.workspace,
+          branch: item.name,
+        });
+        if (Result.isError(result)) {
+          this.logger.error("failed to delete branch", {
+            workspace: item.workspace,
+            branch: item.name,
+            error: result.error.message,
+          });
+          failed++;
+          continue;
+        }
+        cleaned++;
+      }
+    }
+
+    this.logger.info("cleanup merged PRs complete", { cleaned, skipped, failed });
+    return Result.ok(undefined);
+  }
+
   // ─── Server PID helpers ───────────────────────────────────────────────────
 
   #pidFilePath(): string {
@@ -1206,6 +1381,17 @@ export class App {
       await this.#runBranchSyncCron();
     });
 
+    // Start merged PR cleanup cronjob (every 5 minutes)
+    const cleanupJob = schedule("*/5 * * * *", async () => {
+      this.logger.info("cron: cleaning up merged PR branches");
+      const result = await this.cleanupMergedPRs();
+      if (Result.isError(result)) {
+        this.logger.error("cron: cleanup failed", { error: result.error.message });
+      } else {
+        this.logger.info("cron: cleanup complete");
+      }
+    });
+
     this.logger.info("cron scheduled");
 
     // Keep process alive until interrupted
@@ -1214,6 +1400,7 @@ export class App {
         this.logger.info("stopping sessionizer daemon");
         remoteSyncJob.stop();
         branchSyncJob.stop();
+        cleanupJob.stop();
         await this.#removePidFile();
         resolve(Result.ok(undefined));
       };
