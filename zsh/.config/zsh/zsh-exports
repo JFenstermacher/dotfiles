@@ -29,3 +29,6 @@ export FZF_DEFAULT_COMMAND='fd --type f --hidden --exclude .git'
 # GOLANG
 export GOPATH=$HOME/workspace/go
 export PATH="$PATH:$GOPATH/bin"
+
+# MISE
+export PATH="$PATH:$HOME/.local/share/mise/shims"

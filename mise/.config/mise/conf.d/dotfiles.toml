@@ -27,6 +27,7 @@ jj = "0.40.0"
 "github:amber-lang/amber" = "0.6.0-alpha"
 "npm:@earendil-works/pi-coding-agent" = "0.79.2"
 neovim = "0.12.3"
+television = "0.15.8"
 
 [tools.tmux]
 version = "latest" 

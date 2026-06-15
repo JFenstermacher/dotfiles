@@ -1,5 +1,5 @@
 import { Result, TaggedError } from "better-result";
-import { readdir, access, rm, readFile } from "node:fs/promises";
+import { readdir, access, rm, readFile, writeFile } from "node:fs/promises";
 import type { Dirent } from "node:fs"
 import { execFile, spawn } from "node:child_process";
 import {
@@ -15,10 +15,18 @@ import {
   branchDelete,
   fetch,
 } from "@dotfiles/git";
-import { newWindow } from "@dotfiles/tmux";
+import {
+  newWindow,
+  listSessions,
+  killSession,
+  hasSession,
+  newSession,
+  switchClient,
+  startServer,
+  attachSession,
+} from "@dotfiles/tmux";
 import { schedule } from "node-cron";
-import { listSessions, killSession, hasSession, newSession, switchClient, startServer } from "@dotfiles/tmux";
-import { xdgState } from "@dotfiles/envs";
+import { xdgState, xdgData } from "@dotfiles/envs";
 import type { Logger } from "@dotfiles/logger";
 import type { Config } from "./config.ts";
 import { edit, load } from "./config.ts";
@@ -856,11 +864,180 @@ export class App {
     return Result.ok(undefined);
   }
 
-  async serverStart(): Promise<AppResult> {
-    this.logger.setFilePath(xdgState("sessionizer", "server.jsonl"));
+  // ─── Server PID helpers ───────────────────────────────────────────────────
+
+  #pidFilePath(): string {
+    return xdgState("sessionizer", "daemon.pid");
+  }
+
+  async #readPid(): Promise<number | undefined> {
+    try {
+      const content = await readFile(this.#pidFilePath(), "utf-8");
+      const pid = parseInt(content.trim(), 10);
+      if (Number.isNaN(pid)) return undefined;
+      return pid;
+    } catch {
+      return undefined;
+    }
+  }
+
+  #isProcessRunning(pid: number): boolean {
+    try {
+      process.kill(pid, 0);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async #writePidFile(): Promise<AppResult> {
+    return Result.tryPromise({
+      try: () => writeFile(this.#pidFilePath(), String(process.pid)),
+      catch: (cause) =>
+        new AppError({
+          message: "Failed to write daemon PID file",
+          cause,
+        }),
+    });
+  }
+
+  async #removePidFile(): Promise<void> {
+    try {
+      await rm(this.#pidFilePath());
+    } catch {
+      // ignore missing file
+    }
+  }
+
+  /**
+   * Start the sessionizer daemon and schedule background cronjobs.
+   * This is the long-running daemon invoked by `sessionizer daemon start`.
+   */
+  async daemonStart(): Promise<AppResult> {
+    this.logger.setFilePath(xdgData("sessionizer", "logs", "daemon.jsonl"));
     this.state.clearSessions();
     this.logger.info("starting sessionizer daemon");
 
+    const existingPid = await this.#readPid();
+    if (existingPid !== undefined && this.#isProcessRunning(existingPid)) {
+      return Result.err(
+        new AppError({
+          message: `Sessionizer daemon is already running (PID ${existingPid})`,
+        }),
+      );
+    }
+
+    const writeResult = await this.#writePidFile();
+    if (Result.isError(writeResult)) {
+      return writeResult;
+    }
+
+    // Start remote sync cronjob (every hour)
+    const remoteSyncJob = schedule("0 * * * *", async () => {
+      this.logger.info("cron: syncing remote workspaces");
+      const result = await this.workspacesSync({ mode: "remote" });
+      if (Result.isError(result)) {
+        this.logger.error("cron: remote sync failed", { error: result.error.message });
+      } else {
+        this.logger.info("cron: remote sync complete");
+      }
+    });
+
+    // Start branch sync cronjob (every minute, round-robin over active workspaces)
+    const branchSyncJob = schedule("* * * * *", async () => {
+      await this.#runBranchSyncCron();
+    });
+
+    this.logger.info("cron scheduled");
+
+    // Keep process alive until interrupted
+    return new Promise<AppResult>((resolve) => {
+      const cleanup = async () => {
+        this.logger.info("stopping sessionizer daemon");
+        remoteSyncJob.stop();
+        branchSyncJob.stop();
+        await this.#removePidFile();
+        resolve(Result.ok(undefined));
+      };
+
+      process.on("SIGINT", cleanup);
+      process.on("SIGTERM", cleanup);
+    });
+  }
+
+  async daemonStop(): Promise<AppResult> {
+    this.logger.info("stopping sessionizer daemon");
+
+    const pid = await this.#readPid();
+    if (pid === undefined) {
+      return Result.err(
+        new AppError({ message: "Sessionizer daemon is not running" }),
+      );
+    }
+
+    if (!this.#isProcessRunning(pid)) {
+      await this.#removePidFile();
+      return Result.err(
+        new AppError({ message: `Sessionizer daemon is not running (stale PID ${pid})` }),
+      );
+    }
+
+    return Result.tryPromise({
+      try: async () => {
+        process.kill(pid, "SIGTERM");
+        await this.#removePidFile();
+      },
+      catch: (cause) =>
+        new AppError({
+          message: `Failed to stop sessionizer daemon (PID ${pid})`,
+          cause,
+        }),
+    });
+  }
+
+  /**
+   * Ensure the tmux server is running and the home session exists, then attach
+   * to the home session if the current process is not already inside tmux.
+   * This is the behavior for `sessionizer` with no arguments.
+   */
+  async attach(): Promise<AppResult> {
+    const ensureResult = await this.#ensureTmuxServerAndHomeSession();
+    if (Result.isError(ensureResult)) {
+      return ensureResult;
+    }
+
+    const homeSession = process.env.USER!;
+    if (process.env.TMUX) {
+      this.logger.info("switching to home session", { session: homeSession });
+      const result = await switchClient({ session: homeSession });
+      if (Result.isError(result)) {
+        this.logger.error("failed to switch to home session", { error: result.error.message });
+        return Result.err(
+          new AppError({
+            message: `Failed to switch to home session: ${result.error.message}`,
+            cause: result.error,
+          }),
+        );
+      }
+      return result;
+    }
+
+    this.logger.info("attaching to home session", { session: homeSession });
+    const result = await attachSession({ session: homeSession });
+    if (Result.isError(result)) {
+      this.logger.error("failed to attach to home session", { error: result.error.message });
+      return Result.err(
+        new AppError({
+          message: `Failed to attach to home session: ${result.error.message}`,
+          cause: result.error,
+        }),
+      );
+    }
+
+    return result;
+  }
+
+  async #ensureTmuxServerAndHomeSession(): Promise<AppResult> {
     // Ensure tmux server is running
     const serverResult = await startServer();
     if (Result.isError(serverResult)) {
@@ -909,71 +1086,32 @@ export class App {
       this.logger.debug("home session already exists");
     }
 
-    // Switch to the home session
-    this.logger.info("switching to home session", { session: homeSession });
-    const switchResult = await switchClient({ session: homeSession });
-    if (Result.isError(switchResult)) {
-      this.logger.warn("failed to switch to home session", { error: switchResult.error.message });
-    } else {
-      this.logger.info("switched to home session", { session: homeSession });
-    }
-
-    // Start remote sync cronjob (every hour)
-    const remoteSyncJob = schedule("0 * * * *", async () => {
-      this.logger.info("cron: syncing remote workspaces");
-      const result = await this.workspacesSync({ mode: "remote" });
-      if (Result.isError(result)) {
-        this.logger.error("cron: remote sync failed", { error: result.error.message });
-      } else {
-        this.logger.info("cron: remote sync complete");
-      }
-    });
-
-    // Start branch sync cronjob (every minute, round-robin over active workspaces)
-    const branchSyncJob = schedule("* * * * *", async () => {
-      await this.#runBranchSyncCron();
-    });
-
-    this.logger.info("cron scheduled");
-
-    // Keep process alive until interrupted
-    return new Promise<AppResult>((resolve) => {
-      const cleanup = () => {
-        this.logger.info("stopping sessionizer daemon");
-        remoteSyncJob.stop();
-        branchSyncJob.stop();
-        resolve(Result.ok(undefined));
-      };
-
-      process.on("SIGINT", cleanup);
-      process.on("SIGTERM", cleanup);
-    });
+    return Result.ok(undefined);
   }
 
-  async serverStatus(): Promise<AppResult<{ running: boolean; homeSession: boolean }>> {
-    const isRunning = await new Promise<boolean>((resolve) => {
-      execFile("tmux", ["info"], (err) => resolve(!err));
-    });
-
-    if (!isRunning) {
-      return Result.ok({ running: false, homeSession: false });
+  /**
+   * Check whether the sessionizer daemon is running.
+   *
+   * @returns `Ok({ running: boolean })` — `running` is `true` when the PID
+   *          file exists and the corresponding process is alive, `false`
+   *          otherwise.
+   */
+  async daemonStatus(): Promise<AppResult<{ running: boolean }>> {
+    const pid = await this.#readPid();
+    if (pid === undefined) {
+      return Result.ok({ running: false });
     }
 
-    const homeResult = await hasSession({ session: process.env.USER! });
-    if (Result.isError(homeResult)) {
-      return Result.err(
-        new AppError({
-          message: `Failed to check home session: ${homeResult.error.message}`,
-          cause: homeResult.error,
-        }),
-      );
+    if (!this.#isProcessRunning(pid)) {
+      await this.#removePidFile();
+      return Result.ok({ running: false });
     }
 
-    return Result.ok({ running: true, homeSession: homeResult.value });
+    return Result.ok({ running: true });
   }
 
-  async serverLogs(opts: { follow?: boolean }): Promise<AppResult> {
-    const logPath = xdgState("sessionizer", "server.jsonl");
+  async daemonLogs(opts: { follow?: boolean }): Promise<AppResult> {
+    const logPath = xdgData("sessionizer", "logs", "daemon.jsonl");
 
     if (opts.follow) {
       return new Promise<AppResult>((resolve) => {
@@ -998,7 +1136,7 @@ export class App {
       },
       catch: (cause) =>
         new AppError({
-          message: "Failed to read server logs",
+          message: "Failed to read daemon logs",
           cause,
         }),
     });
@@ -1463,22 +1601,6 @@ export class App {
     const slug = `${owner}/${repo}`;
 
     return this.state.getWorkspace(slug) ?? undefined;
-  }
-
-  /** Resolve the starting directory for a new session. */
-  #resolvePath(name: string, workspace?: Workspace): string | undefined {
-    if (isHomeSession(name)) {
-      return process.env.HOME;
-    }
-
-    if (!workspace) return undefined;
-
-    const parsed = parseRepoSlug(name);
-    if (workspace.isBareRepo && parsed?.branch) {
-      return `${workspace.path}/${parsed.branch}`;
-    }
-
-    return workspace.path;
   }
 
   /** Extract unique workspace slugs from active tmux sessions. */

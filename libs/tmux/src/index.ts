@@ -1,4 +1,4 @@
-import { execFile } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
 import { Result, TaggedError } from "better-result";
 
@@ -267,6 +267,50 @@ export async function newSession(
       new TmuxError({
         message: `Failed to create session ${opts.sessionName}`,
         command: `tmux ${args.join(" ")}`,
+        cause,
+      }),
+  });
+}
+
+// ─── attachSession ─────────────────────────────────────────────────────────
+
+export interface AttachSessionOptions {
+  /** Name of the session to attach to */
+  session: string;
+}
+
+/**
+ * Attach the current terminal to the given tmux session.
+ *
+ * This function inherits stdio and blocks until the tmux client detaches.
+ *
+ * @returns `Ok(void)` on success, `Err(TmuxError)` on failure.
+ */
+export async function attachSession(
+  opts: AttachSessionOptions,
+): Promise<TmuxResult<void>> {
+  return Result.tryPromise({
+    try: () =>
+      new Promise<void>((resolve, reject) => {
+        const child = spawn("tmux", ["attach-session", "-t", opts.session], {
+          stdio: "inherit",
+        });
+
+        child.on("error", (err) => reject(err));
+        child.on("exit", (code) => {
+          if (code !== null && code !== 0) {
+            reject(
+              new Error(`tmux attach-session exited with code ${code}`),
+            );
+          } else {
+            resolve();
+          }
+        });
+      }),
+    catch: (cause) =>
+      new TmuxError({
+        message: `Failed to attach to session ${opts.session}`,
+        command: `tmux attach-session -t ${opts.session}`,
         cause,
       }),
   });

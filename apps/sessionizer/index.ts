@@ -255,50 +255,61 @@ const branchesCmd = new Command()
   .command("sync", branchesSyncCmd)
   .command("remove", branchesRemoveCmd);
 
-const serverStartCmd = new Command()
-  .description("Start the sessionizer daemon (tmux server, home session, remote sync cron)")
+const daemonStartCmd = new Command()
+  .description("Start the sessionizer daemon (remote sync cron, branch sync cron)")
   .action(async () => {
-    const result = await app.serverStart();
+    const result = await app.daemonStart();
     if (Result.isError(result)) {
       logger.error(result.error.message);
       process.exit(1);
     }
   });
 
-const serverStatusCmd = new Command()
-  .description("Check if the tmux server and home session are running")
+const daemonStopCmd = new Command()
+  .description("Stop the sessionizer daemon")
   .action(async () => {
-    const result = await app.serverStatus();
+    const result = await app.daemonStop();
+    if (Result.isError(result)) {
+      logger.error(result.error.message);
+      process.exit(1);
+    }
+    console.log("Sessionizer daemon stopped");
+  });
+
+const daemonStatusCmd = new Command()
+  .description("Check if the sessionizer daemon is running")
+  .action(async () => {
+    const result = await app.daemonStatus();
     if (Result.isError(result)) {
       logger.error(result.error.message);
       process.exit(1);
     }
     const status = result.value;
     if (status.running) {
-      console.log(status.homeSession
-        ? "Server is running, home session exists"
-        : "Server is running, home session missing");
+      console.log("Daemon is running");
     } else {
-      console.log("Server is not running");
+      console.log("Daemon is not running");
+      process.exit(2);
     }
   });
 
-const serverLogsCmd = new Command()
-  .description("Show server logs")
+const daemonLogsCmd = new Command()
+  .description("Show daemon logs")
   .option("-f, --follow", "Follow log output")
   .action(async (opts: { follow?: boolean }) => {
-    const result = await app.serverLogs(opts);
+    const result = await app.daemonLogs(opts);
     if (Result.isError(result)) {
       logger.error(result.error.message);
       process.exit(1);
     }
   });
 
-const serverCmd = new Command()
-  .description("Server management commands")
-  .command("start", serverStartCmd)
-  .command("status", serverStatusCmd)
-  .command("logs", serverLogsCmd);
+const daemonCmd = new Command()
+  .description("Daemon management commands")
+  .command("start", daemonStartCmd)
+  .command("stop", daemonStopCmd)
+  .command("status", daemonStatusCmd)
+  .command("logs", daemonLogsCmd);
 
 const initCmd = new Command()
   .description("Initialize the sessionizer database")
@@ -312,14 +323,14 @@ const main = new Command()
   .description("Tmux workspace manager — syncs repos, branches, and PRs from GitHub, manages tmux sessions and worktrees")
   .version("0.1.0")
   .action(async () => {
-    const result = await app.serverStart();
+    const result = await app.attach();
     if (Result.isError(result)) {
       logger.error(result.error.message);
       process.exit(1);
     }
   })
   .command("init", initCmd)
-  .command("server", serverCmd)
+  .command("daemon", daemonCmd)
   .command("sessions", sessionsCmd)
   .command("workspaces", workspacesCmd)
   .command("worktrees", worktreeCmd)

@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+set -e
+
+# Resolve absolute path of the script, following symlinks if necessary
+SOURCE="${BASH_SOURCE[0]}"
+while [ -L "$SOURCE" ]; do
+  DIR="$(cd -P "$(dirname "$SOURCE")" >/dev/null 2>&1 && pwd)"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$SOURCE")" >/dev/null 2>&1 && pwd)"
+
+# Define important paths
+REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+APP_DIR="$REPO_ROOT/apps/sessionizer"
+BINARY="$APP_DIR/build/index"
+HASH_CACHE="$APP_DIR/build/hash.cache"
+MIGRATIONS_SRC="$APP_DIR/db/migrations"
+MIGRATIONS_DEST="${HOME}/.local/share/sessionizer/migrations"
+
+# Define a portable hash function
+hash_cmd() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum | awk '{print $1}'
+  elif command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 | awk '{print $1}'
+  elif command -v md5sum >/dev/null 2>&1; then
+    md5sum | awk '{print $1}'
+  elif command -v md5 >/dev/null 2>&1; then
+    md5
+  else
+    echo "no-hash-tool"
+  fi
+}
+
+get_source_hash() {
+  (
+    cd "$REPO_ROOT" || exit 1
+    find apps/sessionizer libs \
+      \( -name "*.ts" -o -name "package.json" \) \
+      -not -path "*/node_modules/*" \
+      -not -path "*/dist/*" \
+      -not -path "*/build/*" \
+      -type f | sort | while read -r file; do
+      echo "=== $file ==="
+      cat "$file"
+    done
+  ) | hash_cmd
+}
+
+# Ensure build directory exists
+mkdir -p "$APP_DIR/build"
+
+# Compute the target hash of source files
+CURRENT_HASH=$(get_source_hash)
+
+# Read the cached hash
+CACHED_HASH=""
+if [ -f "$HASH_CACHE" ]; then
+  CACHED_HASH=$(cat "$HASH_CACHE")
+fi
+
+# Build if binary is missing/not-executable, or if the source hash has changed
+REBUILT=false
+if [ ! -x "$BINARY" ] || [ "$CURRENT_HASH" != "$CACHED_HASH" ]; then
+  echo "Sessionizer build is missing or source files have changed. Rebuilding..." >&2
+
+  # Run the build using pnpm from the repo root
+  if ! mise exec pnpm --cd "$REPO_ROOT" -- pnpm --filter @dotfiles/sessionizer run build >&2; then
+    echo "Error: Failed to build @dotfiles/sessionizer!" >&2
+    exit 1
+  fi
+
+  # Save the current hash to cache after a successful build
+  echo "$CURRENT_HASH" >"$HASH_CACHE"
+  REBUILT=true
+fi
+
+# Sync the db migrations to the target destination
+if [ "$REBUILT" = true ] || [ ! -d "$MIGRATIONS_DEST" ] || [ -z "$(ls -A "$MIGRATIONS_DEST" 2>/dev/null)" ]; then
+  echo "Syncing database migrations..." >&2
+  mkdir -p "$MIGRATIONS_DEST"
+  if [ -d "$MIGRATIONS_SRC" ]; then
+    cp -R "$MIGRATIONS_SRC/." "$MIGRATIONS_DEST/"
+  fi
+fi
+
+# If no arguments were given, ensure the daemon is running in the
+# background and then attach to the tmux home session.
+if [ $# -eq 0 ]; then
+  if ! "$BINARY" daemon status 2>/dev/null; then
+    echo "$STATUS_OUTPUT" >&2
+    echo "Starting sessionizer daemon in the background..." >&2
+    nohup "$BINARY" daemon start >/dev/null 2>&1 &
+  fi
+fi
+
+# Exec the compiled binary with all arguments
+exec "$BINARY" "$@"

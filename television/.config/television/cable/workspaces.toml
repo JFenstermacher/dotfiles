@@ -1,0 +1,15 @@
+[metadata]
+name = "workspaces"
+description = "Lists and interacts with workspaces"
+requirements = ["sessionizer"]
+
+[source]
+command = "sessionizer workspaces list"
+
+[keybindings]
+enter = "actions:enter"
+
+[actions.enter]
+description = "Enters workspace"
+command = "sessionizer session switch --workspace {}"
+mode = "execute"
