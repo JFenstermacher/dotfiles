@@ -6,7 +6,8 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build": "vp pack"
   },
   "dependencies": {
     "@cliffy/command": "npm:@jsr/cliffy__command@^1.2.1",
@@ -15,20 +16,19 @@
     "@dotfiles/logger": "workspace:*",
     "@dotfiles/tmux": "workspace:*",
     "better-result": "^2.9.2",
-    "better-sqlite3": "^12.10.1",
-    "drizzle-orm": "^0.45.2",
+    "drizzle-orm": "1.0.0-rc.4-273829f",
     "node-cron": "^4.2.1",
     "proper-lockfile": "^4.1.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.9.3",
     "@types/node-cron": "^3.0.11",
     "@types/proper-lockfile": "^4.1.4",
-    "drizzle-kit": "^0.31.10",
+    "drizzle-kit": "1.0.0-rc.4-273829f",
     "tsx": "^4.22.4",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vite-plus": "^0.1.24"
   },
   "engines": {
     "node": ">=20.0.0"
