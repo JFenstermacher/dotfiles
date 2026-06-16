@@ -9,9 +9,9 @@ no_sort = true
 frecency = true
 
 [keybindings]
-enter = "actions:switch"
+enter = "actions:enter"
 
-[actions.switch]
+[actions.enter]
 description = "Switch to branch, creates worktree in bare checkouts"
-command = "sessionizer actions branches-switch {}"
+command = "sessionizer actions branch-enter {split: :-1}"
 mode = "execute"

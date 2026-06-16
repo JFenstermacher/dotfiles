@@ -1791,6 +1791,7 @@ export class App {
         target: sessionName,
         name: w.name,
         command: w.command,
+        detached: true,
       });
       if (Result.isError(winResult)) {
         this.logger.warn("failed to create window", { session: sessionName, window: w.name, error: winResult.error.message });

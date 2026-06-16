@@ -12,6 +12,7 @@ frecency = false
 enter = "actions:bare"
 ctrl-b = "actions:bare"
 ctrl-o = "actions:standard"
+ctrl-k = "actions:remove"
 
 [actions.bare]
 description = "Enter workspace with bare checkout"
@@ -21,4 +22,9 @@ mode = "execute"
 [actions.standard]
 description = "Enter workspace (standard checkout)"
 command = "sessionizer actions workspace-enter {split: :-1}"
+mode = "execute"
+
+[actions.remove]
+description = "Removes a workspace"
+command = "sessionizer workspace remove {split: :-1}"
 mode = "execute"

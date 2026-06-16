@@ -370,6 +370,8 @@ export interface NewWindowOptions {
   name?: string;
   /** Command to run in the new window */
   command?: string;
+  /** Create the window without switching focus to it */
+  detached?: boolean;
 }
 
 /**
@@ -386,6 +388,7 @@ export async function newWindow(
 ): Promise<TmuxResult<void>> {
   const args = [
     "new-window",
+    ...(opts.detached ? ["-d"] : []),
     ...(opts.target ? ["-t", opts.target] : []),
     ...(opts.name ? ["-n", opts.name] : []),
     ...(opts.command ? [opts.command] : []),
