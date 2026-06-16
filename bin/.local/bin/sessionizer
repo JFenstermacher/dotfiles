@@ -66,7 +66,7 @@ if [ ! -x "$BINARY" ] || [ "$CURRENT_HASH" != "$CACHED_HASH" ]; then
   echo "Sessionizer build is missing or source files have changed. Rebuilding..." >&2
 
   # Run the build using pnpm from the repo root
-  if ! mise exec pnpm --cd "$REPO_ROOT" -- pnpm --filter @dotfiles/sessionizer run build >&2; then
+  if ! mise exec github:pnpm/pnpm --cd "$REPO_ROOT" -- pnpm --filter @dotfiles/sessionizer run build >&2; then
     echo "Error: Failed to build @dotfiles/sessionizer!" >&2
     exit 1
   fi

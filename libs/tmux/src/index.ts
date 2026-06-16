@@ -366,6 +366,8 @@ export async function currentSession(): Promise<TmuxResult<string | undefined>> 
 export interface NewWindowOptions {
   /** Target session (or full target like `session:window`) */
   target?: string;
+  /** Working directory for the new window */
+  path?: string;
   /** Name for the new window */
   name?: string;
   /** Command to run in the new window */
@@ -390,6 +392,7 @@ export async function newWindow(
     "new-window",
     ...(opts.detached ? ["-d"] : []),
     ...(opts.target ? ["-t", opts.target] : []),
+    ...(opts.path ? ["-c", opts.path] : []),
     ...(opts.name ? ["-n", opts.name] : []),
     ...(opts.command ? [opts.command] : []),
   ];

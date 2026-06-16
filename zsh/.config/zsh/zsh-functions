@@ -51,6 +51,15 @@ function zvm_config() {
   ZVM_VI_INSERT_ESCAPE_BINDKEY=jk
 }
 
+# Shift+Space arrives as a CSI-u sequence (^[[32;2u) because tmux forces
+# csi-u extended keys. Without a binding, zsh-vi-mode treats the ESC prefix
+# as a mode switch and mangles the line. Bind it to insert a plain space.
+# Must be in zvm_after_init so it survives the plugin's keymap regeneration.
+function zvm_after_init() {
+  bindkey -M viins '^[[32;2u' self-insert
+  bindkey -M vicmd '^[[32;2u' vi-insert
+}
+
 function awslp() {
   perl -n -e'/\[profile (.*)\]/ && print "$1\n"' ~/.aws/config
 }

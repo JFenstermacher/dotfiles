@@ -5,8 +5,13 @@ import * as Config from "./config.ts";
 import { State } from "./state.ts";
 import { App } from "./app.ts";
 
+const stack = new AsyncDisposableStack()
 const config = await Config.load();
 const logger = new Logger(config);
+
+stack.defer(async () => {
+  await Config.save(config);
+})
 
 const state = new State(config);
 const { dbPath } = state.init();
@@ -372,3 +377,5 @@ const main = new Command()
   .command("config", configCmd);
 
 await main.parse(process.argv.slice(2));
+
+await stack.disposeAsync()

@@ -1,12 +1,26 @@
 [metadata]
-name = "workspaces"
+name = "ws"
 description = "Lists and interacts with workspaces"
 requirements = ["sessionizer"]
+
+# UI panel visibility (individual control)
+[ui.preview_panel]
+hidden = true
+
+[ui.status_bar]
+hidden = true
+
+[ui.help_panel]
+hidden = true
+
+[ui.remote_control]
+disabled = true
 
 [source]
 command = "sessionizer workspaces list"
 no_sort = true
 frecency = false
+
 
 [keybindings]
 enter = "actions:bare"

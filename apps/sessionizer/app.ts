@@ -1789,6 +1789,7 @@ export class App {
       this.logger.debug("creating window", { session: sessionName, window: w.name });
       const winResult = await newWindow({
         target: sessionName,
+        path: sessionPath,
         name: w.name,
         command: w.command,
         detached: true,
