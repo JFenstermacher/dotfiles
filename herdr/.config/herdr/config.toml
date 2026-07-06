@@ -6,8 +6,10 @@ default_shell = "zsh"
 [keys]
 prefix = "ctrl+a"
 previous_tab = ""
-swap_pane_right = ""
-swap_pane_left = ""
+focus_pane_left = ""
+focus_pane_right = ""
+focus_pane_down = ""
+focus_pane_up = ""
 
 [[keys.command]]
 key = "prefix+p"
@@ -28,13 +30,13 @@ command = "yggdrasil.herdr.terminal"
 description = "Opens terminal or zooms pane"
 
 [[keys.command]]
-key = "prefix+shift+h"
+key = "prefix+h"
 type = "plugin_action"
 command = "yggdrasil.herdr.home"
 description = "Go to home workspace"
 
 [[keys.command]]
-key = "prefix+shift+l"
+key = "prefix+l"
 type = "plugin_action"
 command = "yggdrasil.herdr.last-workspace"
 description = "Toggle last workspace"
