@@ -1,0 +1,64 @@
+onboarding = false
+
+[terminal]
+default_shell = "zsh"
+
+[keys]
+prefix = "ctrl+a"
+previous_tab = ""
+swap_pane_right = ""
+swap_pane_left = ""
+
+[[keys.command]]
+key = "prefix+p"
+type = "pane"
+command = "tv repositories"
+description = "List workspaces"
+
+[[keys.command]]
+key = "ctrl+minus"
+type = "pane"
+command = "tv branches"
+description = "List branches"
+
+[[keys.command]]
+key = "prefix+t"
+type = "plugin_action"
+command = "yggdrasil.herdr.terminal"
+description = "Opens terminal or zooms pane"
+
+[[keys.command]]
+key = "prefix+shift+h"
+type = "plugin_action"
+command = "yggdrasil.herdr.home"
+description = "Go to home workspace"
+
+[[keys.command]]
+key = "prefix+shift+l"
+type = "plugin_action"
+command = "yggdrasil.herdr.last-workspace"
+description = "Toggle last workspace"
+
+[[keys.command]]
+key = "ctrl+h"
+type = "plugin_action"
+command = "yggdrasil.herdr.nav-left"
+description = "Smart navigate left"
+
+[[keys.command]]
+key = "ctrl+j"
+type = "plugin_action"
+command = "yggdrasil.herdr.nav-down"
+description = "Smart navigate down"
+
+[[keys.command]]
+key = "ctrl+k"
+type = "plugin_action"
+command = "yggdrasil.herdr.nav-up"
+description = "Smart navigate up"
+
+[[keys.command]]
+key = "ctrl+l"
+type = "plugin_action"
+command = "yggdrasil.herdr.nav-right"
+description = "Smart navigate right"
