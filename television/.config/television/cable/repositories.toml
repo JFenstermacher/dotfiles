@@ -1,6 +1,6 @@
 [metadata]
-name = "ws"
-description = "Lists and interacts with workspaces"
+name = "repositories"
+description = "Lists and interacts with repositories"
 requirements = ["sessionizer"]
 
 # UI panel visibility (individual control)
@@ -17,7 +17,7 @@ hidden = true
 disabled = true
 
 [source]
-command = "sessionizer workspaces list"
+command = "sessionizer list repository"
 no_sort = true
 frecency = false
 
@@ -30,15 +30,15 @@ ctrl-k = "actions:remove"
 
 [actions.bare]
 description = "Enter workspace with bare checkout"
-command = "sessionizer actions workspace-enter --bare {split: :-1}"
+command = "sessionizer switch workspace {}"
 mode = "execute"
 
 [actions.standard]
 description = "Enter workspace (standard checkout)"
-command = "sessionizer actions workspace-enter {split: :-1}"
+command = "sessionizer switch workspace --bare {}"
 mode = "execute"
 
 [actions.remove]
 description = "Removes a workspace"
-command = "sessionizer workspace remove {split: :-1}"
+command = "sessionizer remove repository {}"
 mode = "execute"

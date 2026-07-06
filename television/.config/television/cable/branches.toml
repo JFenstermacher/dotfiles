@@ -17,7 +17,7 @@ hidden = true
 disabled = true
 
 [source]
-command = "sessionizer branches list"
+command = "sessionizer list branch"
 no_sort = true
 frecency = true
 
@@ -26,5 +26,5 @@ enter = "actions:enter"
 
 [actions.enter]
 description = "Switch to branch, creates worktree in bare checkouts"
-command = "sessionizer actions branch-enter {split: :-1}"
+command = "sessionizer switch branch {}"
 mode = "execute"
