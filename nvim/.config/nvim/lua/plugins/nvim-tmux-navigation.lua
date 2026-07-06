@@ -1,11 +1,14 @@
 return {
-  "alexghergh/nvim-tmux-navigation",
-  config = true,
-  event = "BufReadPre",
+  "nvim-herdr-navigation",
+  dev = true,
+  lazy = false,
+  config = function()
+    require("nvim-herdr-navigation")
+  end,
   keys = {
-    { "<c-h>", ":NvimTmuxNavigateLeft<cr>", desc = "Navigate left window", silent = true },
-    { "<c-j>", ":NvimTmuxNavigateDown<cr>", desc = "Navigate down window", silent = true },
-    { "<c-k>", ":NvimTmuxNavigateUp<cr>", desc = "Navigate up window", silent = true },
-    { "<c-l>", ":NvimTmuxNavigateRight<cr>", desc = "Navigate right window", silent = true },
+    { "<c-h>", ":NvimHerdrNavigateLeft<cr>",  desc = "Navigate left window",  silent = true },
+    { "<c-j>", ":NvimHerdrNavigateDown<cr>",  desc = "Navigate down window",  silent = true },
+    { "<c-k>", ":NvimHerdrNavigateUp<cr>",    desc = "Navigate up window",    silent = true },
+    { "<c-l>", ":NvimHerdrNavigateRight<cr>", desc = "Navigate right window", silent = true },
   },
 }
