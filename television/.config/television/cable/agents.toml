@@ -1,0 +1,30 @@
+[metadata]
+name = "agents"
+description = "Lists agent panes and their state"
+requirements = ["sessionizer"]
+
+# UI panel visibility (individual control)
+[ui.preview_panel]
+hidden = true
+
+[ui.status_bar]
+hidden = true
+
+[ui.help_panel]
+hidden = true
+
+[ui.remote_control]
+disabled = true
+
+[source]
+command = "sessionizer list agent"
+no_sort = true
+frecency = true
+
+[keybindings]
+enter = "actions:enter"
+
+[actions.enter]
+description = "Switch to agent pane"
+command = "sessionizer switch agent {}"
+mode = "execute"
