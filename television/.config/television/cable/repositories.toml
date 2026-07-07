@@ -35,7 +35,7 @@ mode = "execute"
 
 [actions.standard]
 description = "Enter workspace (standard checkout)"
-command = "sessionizer switch workspace --bare {}"
+command = "sessionizer add repository {}"
 mode = "execute"
 
 [actions.remove]

@@ -3,6 +3,9 @@ onboarding = false
 [terminal]
 default_shell = "zsh"
 
+[ui]
+sidebar_collapsed_mode = "hidden"
+
 [keys]
 prefix = "ctrl+a"
 previous_tab = ""
@@ -10,6 +13,13 @@ focus_pane_left = ""
 focus_pane_right = ""
 focus_pane_down = ""
 focus_pane_up = ""
+next_tab = ""
+
+[[keys.command]]
+key = "prefix+j"
+type = "pane"
+command = "tv agents"
+description = "List agents"
 
 [[keys.command]]
 key = "prefix+p"
@@ -40,6 +50,12 @@ key = "prefix+l"
 type = "plugin_action"
 command = "yggdrasil.herdr.last-workspace"
 description = "Toggle last workspace"
+
+[[keys.command]]
+key = "prefix+n"
+type = "pane"
+command = "sessionizer add branch"
+description = "Create new worktree (via sessionizer)"
 
 [[keys.command]]
 key = "ctrl+h"
