@@ -34,19 +34,19 @@ command = "tv branches"
 description = "List branches"
 
 [[keys.command]]
-key = "prefix+t"
+key = "prefix+o"
 type = "plugin_action"
 command = "yggdrasil.herdr.terminal"
 description = "Opens terminal or zooms pane"
 
 [[keys.command]]
-key = "prefix+h"
+key = "prefix+H"
 type = "plugin_action"
 command = "yggdrasil.herdr.home"
 description = "Go to home workspace"
 
 [[keys.command]]
-key = "prefix+l"
+key = "prefix+L"
 type = "plugin_action"
 command = "yggdrasil.herdr.last-workspace"
 description = "Toggle last workspace"
@@ -80,3 +80,9 @@ key = "ctrl+l"
 type = "plugin_action"
 command = "yggdrasil.herdr.nav-right"
 description = "Smart navigate right"
+
+[[keys.command]]
+key = "prefix+h"
+type = "pane"
+command = "sessionizer switch branch main"
+description = "Switches to the main branch"
