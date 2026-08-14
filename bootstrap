@@ -42,6 +42,7 @@ log_error() {
 # Installs Mise if not installed
 if ! command -v mise &>/dev/null; then
   log_info "Installing Mise..."
+
   curl https://mise.run | sh
   export PATH="$HOME/.local/bin:$PATH"
 else
