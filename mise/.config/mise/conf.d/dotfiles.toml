@@ -25,10 +25,11 @@ delta = "latest"
 pulumi = "3.232.0"
 jj = "0.40.0"
 "github:amber-lang/amber" = "0.6.0-alpha"
-"npm:@earendil-works/pi-coding-agent" = "0.80.3"
-"github:ogulcancelik/herdr" = "latest"
+"npm:@earendil-works/pi-coding-agent" = "0.84.2"
+"github:ogulcancelik/herdr" = "0.8.0"
 neovim = "0.12.3"
 television = "0.15.8"
+aube = "1.26.0"
 
 [tools.tmux]
 version = "latest" 
