@@ -101,3 +101,6 @@ eval "$(starship init zsh)"
 uv_setup
 
 zsh_load_directory $PERSONAL_DIR/after
+
+# proto (moon toolchain store)
+export PROTO_HOME="$XDG_DATA_HOME/proto"
