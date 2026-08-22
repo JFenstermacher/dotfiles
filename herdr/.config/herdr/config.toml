@@ -23,13 +23,13 @@ description = "List agents"
 
 [[keys.command]]
 key = "prefix+p"
-type = "popup"
+type = "pane"
 command = "tv repositories"
 description = "List workspaces"
 
 [[keys.command]]
 key = "ctrl+minus"
-type = "popup"
+type = "pane"
 command = "tv branches"
 description = "List branches"
 
