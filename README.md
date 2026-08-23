@@ -28,9 +28,8 @@ cd ~/workspace/dotfiles
 ### What the Bootstrap Script Does:
 
 1.  **Installs Mise:** The primary tool manager.
-2.  **Installs TPM:** Tmux Plugin Manager and its plugins.
-3.  **Installs Dependencies:** Uses `mise install` to fetch all required CLI tools.
-4.  **Applies Dotfiles:** Uses `mise dotfiles apply` to symlink the entries declared under `[dotfiles]` in `mise.toml` into `$HOME`.
+2.  **Installs Dependencies:** Uses `mise install` to fetch all required CLI tools.
+3.  **Applies Dotfiles:** Uses `mise dotfiles apply` to symlink the entries declared under `[dotfiles]` in `mise.toml` into `$HOME`.
 
 ## Per-Machine Overrides
 
@@ -55,7 +54,3 @@ Managed under `[dotfiles]` in `mise.toml`:
 | `herdr/` | `~/.config/herdr` | symlink-each |
 
 Run `mise dotfiles apply` after editing any of these to sync them out.
-
-## Tmux
-
-`tmux` is installed as a tool and its plugins are managed through TPM (installed by `bootstrap`), but its config is no longer shipped in this repo.
