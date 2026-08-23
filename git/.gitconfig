@@ -2,6 +2,11 @@
 	name = Jonathan Fenstermacher
 	email = jfenstermacher123@gmail.com
 
+# Machine-local overrides (present only on the work machine). Git silently
+# skips a missing include, so this file's existence is the machine switch.
+[include]
+	path = ~/.gitconfig.work
+
 [delta]
   side-by-side = true
   line-numbers = true

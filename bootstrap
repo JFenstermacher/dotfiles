@@ -55,9 +55,9 @@ mise --cd "$SCRIPT_DIR" trust --yes
 # Install dotfile dependencies
 mise --cd "$SCRIPT_DIR" install
 
-# Link dotfiles from the dotfiles directory
-log_info "Linking all dotfiles"
-mise --cd "$SCRIPT_DIR" stow
+# Apply dotfiles from the [dotfiles] section of mise.toml
+log_info "Applying dotfiles"
+mise --cd "$SCRIPT_DIR" dotfiles apply --yes
 
 # Global mise tools now installed
 log_info "Installing all tools"

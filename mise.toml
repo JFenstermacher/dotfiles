@@ -2,7 +2,19 @@
 python = "latest"
 go     = "1.24"
 usage  = "latest"
-"go:go.bbkane.com/fling"="1d695d156a38f25486f735ebc4dc3510a3b0f479"
 node = "latest"
 vp = "latest"
 "github:pnpm/pnpm" = "latest"
+
+[dotfiles]
+"~/.config/ghostty" = "ghostty/.config/ghostty"
+"~/.config/mise" = { source = "mise/.config/mise", mode = "symlink-each" }
+"~/.gitconfig" = "git/.gitconfig"
+"~/.gitignore_global" = "git/.gitignore_global"
+"~/.config/starship.toml" = "starship/.config/starship.toml"
+"~/.config/television" = { source = "television/.config/television", mode = "symlink-each" }
+"~/.config/zsh" = "zsh/.config/zsh"
+"~/.zshenv" = "zsh/.zshenv"
+"~/.config/nvim" = "nvim/.config/nvim"
+"~/.config/nvim-writing" = "nvim/.config/nvim-writing"
+"~/.config/herdr" = { source = "herdr/.config/herdr", mode = "symlink-each" }

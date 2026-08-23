@@ -11,6 +11,7 @@ alias awsps="export AWS_PROFILE=\$( perl -n -e'/\[profile (.*)\]/ && print \"\$1
 alias awswhoami='aws sts get-caller-identity'
 
 alias tf="terraform"
+alias tfes='cd $(fd --format "{//}" backend.tf | fzf || printf ".")'
 
 alias nslookup='dig +short'
 

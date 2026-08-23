@@ -4,17 +4,16 @@ A collection of configuration files for a modern, efficient development environm
 
 ## Overview
 
-This repository uses [mise](https://mise.jdx.dev/) and [fling](https://github.com/bbkane/fling) (via mise tasks) to manage and symlink configuration files. It is designed to be a "one-command" setup for new machines.
+This repository uses [mise](https://mise.jdx.dev/) to manage runtimes and CLI tools, and links configuration files into place via the `[dotfiles]` section of `mise.toml`. It is designed to be a "one-command" setup for new machines.
 
 ### Key Components
 
 - **Shell:** `zsh` with custom functions and aliases.
 - **Editor:** `Neovim` (LazyVim based).
-- **Terminal Multiplexer:** `tmux` with a custom Tokyo Night themed status bar.
 - **Terminal Emulator:** `Ghostty`.
+- **Status Line:** `starship`.
+- **Interactive tools:** `television`, `herdr`.
 - **Tool Management:** `mise` for managing runtimes and CLI tools.
-- **Script Runtime:** `bun` for custom automation scripts in `bin/.config/bin/`.
-- **Window Management:** `xmonad` (for Linux environments).
 
 ## Getting Started
 
@@ -31,37 +30,32 @@ cd ~/workspace/dotfiles
 1.  **Installs Mise:** The primary tool manager.
 2.  **Installs TPM:** Tmux Plugin Manager and its plugins.
 3.  **Installs Dependencies:** Uses `mise install` to fetch all required CLI tools.
-4.  **Symlinks Dotfiles:** Uses `mise stow` (which calls `fling`) to link configurations to their appropriate locations in `$HOME`.
+4.  **Applies Dotfiles:** Uses `mise dotfiles apply` to symlink the entries declared under `[dotfiles]` in `mise.toml` into `$HOME`.
 
-## Custom Scripts
+## Per-Machine Overrides
 
-Custom automation scripts live in `bin/.config/bin/`. Scripts that were previously written for LuaJIT have been rewritten for [Bun](https://bun.sh/) because LuaJIT installation via mise is unreliable on some machines. Bun must be available on `PATH` for these scripts.
+Shared dotfiles live in the repo and apply to every machine. Where a machine needs to diverge, add a machine-local file that the shared config picks up conditionally:
 
-The Bun scripts share `utils.js`, which provides shell helpers, git worktree parsing, tmux integration, fzf integration, and mise trust helpers.
+- **git identity:** `git/.gitconfig` includes `~/.gitconfig.work`. Create that file only on the work machine (git silently skips a missing `[include]` path, so the file's presence is the switch). `.gitconfig.work` is gitignored, so it never gets committed.
+- **Environment-split configs:** `mise.<env>.toml` files are committed (e.g. `mise.personal.toml`) and loaded when `MISE_ENV=<env>` is set on that machine. Use these for per-machine divergence beyond git.
 
-- `utils.js`: Shared Bun utility library.
-- `sessionizer`: A smart project/session switcher for tmux.
-- `list-workspaces`: Lists standard and bare Git repositories for the session switcher.
-- `git-clone`: Clones a repository (optionally as a bare repo) and sets up a default worktree.
-- `git-worktree-add`: Creates a new git worktree and associated tmux session.
-- `git-worktree-remove`: Interactively removes worktrees and their associated tmux sessions.
-- `git-worktree-switch`: Interactively switches between worktrees and their associated tmux sessions.
-- `git-worktree-checkout`: Fuzzy-finds across all branches and either switches to an existing worktree or creates one.
-- `git-worktree-purge`: Removes merged worktrees and deletes their merged branches.
-- `home-session`: Creates or jumps to a default "home" tmux session.
-- `privatebox`: Shell wrapper that runs the Privatebox Bun app.
+## Dotfile Modules
 
-## Tmux Keybindings
+Managed under `[dotfiles]` in `mise.toml`:
 
-Note: The prefix key is configured as `Ctrl-a`.
+| Source | Target | Mode |
+|---|---|---|
+| `ghostty/` | `~/.config/ghostty` | symlink |
+| `mise/` | `~/.config/mise` | symlink-each |
+| `git/` | `~/.gitconfig`, `~/.gitignore_global` | symlink |
+| `starship/` | `~/.config/starship.toml` | symlink |
+| `television/` | `~/.config/television` | symlink-each |
+| `zsh/` | `~/.config/zsh`, `~/.zshenv` | symlink |
+| `nvim/` | `~/.config/nvim`, `~/.config/nvim-writing` | symlink |
+| `herdr/` | `~/.config/herdr` | symlink-each |
 
-- `Prefix + r`: Reload tmux configuration.
-- `Prefix + p`: Open project switcher (`sessionizer`).
-- `Prefix + j`: Jump to an existing tmux session.
-- `Prefix + k`: Kill an existing tmux session.
-- `Prefix + H`: Open home session.
-- `Prefix + w`: Enter worktree mode. From here, you can use:
-  - `c`: Create a new git worktree and session (`git-worktree-add`).
-  - `d` / `k`: Remove existing git worktrees and sessions (`git-worktree-remove`).
-  - `s` / `j`: Switch between git worktrees (`git-worktree-switch`).
-  - `b`: Browse all branches and checkout/create worktree (`git-worktree-checkout`).
+Run `mise dotfiles apply` after editing any of these to sync them out.
+
+## Tmux
+
+`tmux` is installed as a tool and its plugins are managed through TPM (installed by `bootstrap`), but its config is no longer shipped in this repo.
