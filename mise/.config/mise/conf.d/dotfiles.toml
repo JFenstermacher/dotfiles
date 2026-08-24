@@ -4,7 +4,7 @@ experimental = true
 [tools]
 awscli = "latest"
 fd = "latest"
-fzf = "latest"
+fzf = "0.74.3"
 kubectl = "latest"
 python = "latest"
 ripgrep = "latest"
@@ -26,14 +26,10 @@ jj = "0.40.0"
 "github:amber-lang/amber" = "0.6.0-alpha"
 "npm:@earendil-works/pi-coding-agent" = "0.84.2"
 "github:ogulcancelik/herdr" = "0.8.0"
-neovim = "0.12.3"
+neovim = "0.12.5"
 television = "0.15.8"
 aube = "1.26.0"
 "github:can1357/oh-my-pi" = "18.0.3"
 "mimiskelda:sessionizer" = { version = "latest" }
 "aqua:ogulcancelik/herdr" = "latest"
 "mimiskelda:herdr-plugin" = "latest"
-
-[tools.tmux]
-version = "latest" 
-install_env = { TEST = "what", TMUX_EXTRA_CONFIGURE_OPTIONS = "--enable-utf8proc" }

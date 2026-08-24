@@ -1,8 +1,5 @@
 onboarding = false
 
-[terminal]
-default_shell = "zsh"
-
 [ui]
 sidebar_collapsed_mode = "hidden"
 
