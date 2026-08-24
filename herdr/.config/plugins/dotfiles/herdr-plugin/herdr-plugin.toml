@@ -1,0 +1,56 @@
+id = "yggdrasil.herdr"
+name = "Yggdrasil Herdr Plugin"
+version = "0.1.0"
+min_herdr_version = "0.7.0"
+description = "Workspace terminal and tooling actions for the yggdrasil monorepo"
+platforms = ["macos", "linux"]
+
+[[actions]]
+id = "home"
+title = "Home"
+contexts = ["global"]
+command = ["herdr-plugin", "home"]
+
+[[actions]]
+id = "terminal"
+title = "Terminal"
+contexts = ["workspace"]
+command = ["herdr-plugin"]
+
+[[actions]]
+id = "last-workspace"
+title = "Last workspace"
+contexts = ["global", "workspace"]
+command = ["herdr-plugin", "last-workspace", "toggle"]
+
+[[events]]
+on = "workspace.focused"
+command = ["herdr-plugin", "last-workspace", "focused"]
+
+[[events]]
+on = "workspace.closed"
+command = ["herdr-plugin", "last-workspace", "closed"]
+
+[[actions]]
+id = "nav-left"
+title = "Navigate left"
+contexts = ["workspace"]
+command = ["herdr-plugin", "nav", "left"]
+
+[[actions]]
+id = "nav-right"
+title = "Navigate right"
+contexts = ["workspace"]
+command = ["herdr-plugin", "nav", "right"]
+
+[[actions]]
+id = "nav-up"
+title = "Navigate up"
+contexts = ["workspace"]
+command = ["herdr-plugin", "nav", "up"]
+
+[[actions]]
+id = "nav-down"
+title = "Navigate down"
+contexts = ["workspace"]
+command = ["herdr-plugin", "nav", "down"]

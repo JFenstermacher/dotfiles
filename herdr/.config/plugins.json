@@ -1,0 +1,121 @@
+[
+  {
+    "plugin_id": "yggdrasil.herdr",
+    "name": "Yggdrasil Herdr Plugin",
+    "version": "0.1.0",
+    "min_herdr_version": "0.7.0",
+    "description": "Workspace terminal and tooling actions for the yggdrasil monorepo",
+    "manifest_path": "{{ env.HOME }}/.config/herdr/plugins/dotfiles/herdr-plugin/herdr-plugin.toml",
+    "plugin_root": "{{ env.HOME }}/.config/herdr/plugins/dotfiles/herdr-plugin",
+    "enabled": true,
+    "platforms": [
+      "macos",
+      "linux"
+    ],
+    "actions": [
+      {
+        "id": "home",
+        "title": "Home",
+        "contexts": [
+          "global"
+        ],
+        "command": [
+          "herdr-plugin",
+          "home"
+        ]
+      },
+      {
+        "id": "last-workspace",
+        "title": "Last workspace",
+        "contexts": [
+          "global",
+          "workspace"
+        ],
+        "command": [
+          "herdr-plugin",
+          "last-workspace",
+          "toggle"
+        ]
+      },
+      {
+        "id": "nav-down",
+        "title": "Navigate down",
+        "contexts": [
+          "workspace"
+        ],
+        "command": [
+          "herdr-plugin",
+          "nav",
+          "down"
+        ]
+      },
+      {
+        "id": "nav-left",
+        "title": "Navigate left",
+        "contexts": [
+          "workspace"
+        ],
+        "command": [
+          "herdr-plugin",
+          "nav",
+          "left"
+        ]
+      },
+      {
+        "id": "nav-right",
+        "title": "Navigate right",
+        "contexts": [
+          "workspace"
+        ],
+        "command": [
+          "herdr-plugin",
+          "nav",
+          "right"
+        ]
+      },
+      {
+        "id": "nav-up",
+        "title": "Navigate up",
+        "contexts": [
+          "workspace"
+        ],
+        "command": [
+          "herdr-plugin",
+          "nav",
+          "up"
+        ]
+      },
+      {
+        "id": "terminal",
+        "title": "Terminal",
+        "contexts": [
+          "workspace"
+        ],
+        "command": [
+          "herdr-plugin"
+        ]
+      }
+    ],
+    "events": [
+      {
+        "on": "workspace.closed",
+        "command": [
+          "herdr-plugin",
+          "last-workspace",
+          "closed"
+        ]
+      },
+      {
+        "on": "workspace.focused",
+        "command": [
+          "herdr-plugin",
+          "last-workspace",
+          "focused"
+        ]
+      }
+    ],
+    "source": {
+      "kind": "local"
+    }
+  }
+]

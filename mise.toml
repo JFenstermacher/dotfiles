@@ -1,11 +1,3 @@
-[tools]
-python = "latest"
-go     = "1.24"
-usage  = "latest"
-node = "latest"
-vp = "latest"
-"github:pnpm/pnpm" = "latest"
-
 [dotfiles]
 "~/.config/ghostty" = "ghostty/.config/ghostty"
 "~/.config/mise" = { source = "mise/.config/mise", mode = "symlink-each" }
@@ -18,3 +10,6 @@ vp = "latest"
 "~/.config/nvim" = "nvim/.config/nvim"
 "~/.config/nvim-writing" = "nvim/.config/nvim-writing"
 "~/.config/herdr" = { source = "herdr/.config/herdr", mode = "symlink-each" }
+"~/.config/herdr/plugins.json" = { source = "herdr/.config/plugins.json", mode = "template" }
+"~/.config/herdr/plugins/dotfiles/herdr-plugin/herdr-plugin.toml" = "herdr/.config/plugins/dotfiles/herdr-plugin/herdr-plugin.toml"
+"~/.local/share/mise/plugins/mimiskelda" = { source = "mise/.local/share/plugins/mimiskelda", mode = "symlink" }
