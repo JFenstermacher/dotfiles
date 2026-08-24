@@ -57,7 +57,7 @@ mise --cd "$SCRIPT_DIR" install
 
 # Apply dotfiles from the [dotfiles] section of mise.toml
 log_info "Applying dotfiles"
-mise --cd "$SCRIPT_DIR" dotfiles apply --yes
+mise --cd "$SCRIPT_DIR" bootstrap dotfiles apply --yes
 
 # Global mise tools now installed
 log_info "Installing all tools"

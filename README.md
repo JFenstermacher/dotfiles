@@ -29,7 +29,7 @@ cd ~/workspace/dotfiles
 
 1.  **Installs Mise:** The primary tool manager.
 2.  **Installs Dependencies:** Uses `mise install` to fetch all required CLI tools.
-3.  **Applies Dotfiles:** Uses `mise dotfiles apply` to symlink the entries declared under `[dotfiles]` in `mise.toml` into `$HOME`.
+3.  **Applies Dotfiles:** Uses `mise bootstrap dotfiles apply` to symlink the entries declared under `[dotfiles]` in `mise.toml` into `$HOME`.
 
 ## Per-Machine Overrides
 
@@ -53,4 +53,4 @@ Managed under `[dotfiles]` in `mise.toml`:
 | `nvim/` | `~/.config/nvim`, `~/.config/nvim-writing` | symlink |
 | `herdr/` | `~/.config/herdr` | symlink-each |
 
-Run `mise dotfiles apply` after editing any of these to sync them out.
+Run `mise bootstrap dotfiles apply` after editing any of these to sync them out.
