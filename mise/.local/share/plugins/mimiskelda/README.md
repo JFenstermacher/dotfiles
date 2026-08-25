@@ -1,7 +1,7 @@
-# mimiskelda — shipyard binary release backend for mise
+# mimiskelda — nidavellir binary release backend for mise
 
 A [mise](https://mise.jdx.dev) **backend plugin** that installs binary
-releases published to the [shipyard](https://github.com/mimiskelda/yggdrasil/tree/main/apps/shipyard)
+releases published to the [nidavellir](https://github.com/mimiskelda/yggdrasil/tree/main/apps/nidavellir)
 artifact store. Tools are referenced as `mimiskelda:<tool>` (e.g.
 `mimiskelda:sessionizer`).
 
@@ -10,7 +10,7 @@ per-arch executable. It does not build anything.
 
 ## How it works
 
-shipyard stores each artifact at a public, keyless R2 read URL under the
+nidavellir stores each artifact at a public, keyless R2 read URL under the
 deterministic key:
 
 ```
@@ -55,9 +55,9 @@ mise exec  -- sessionizer --version
 
 | Option | Type | Default | Purpose |
 |---|---|---|---|
-| `base_url` | string | `MIMISKELDA_PUBLIC_BASE_URL` env, else the production shipyard r2.dev domain | shipyard public read base URL (no trailing slash) |
+| `base_url` | string | `MIMISKELDA_PUBLIC_BASE_URL` env, else the production nidavellir r2.dev domain | nidavellir public read base URL (no trailing slash) |
 | `os` / `arch` | string | derived from the runtime (`darwin`, `arm64`, …) | platform tokens used in the default artifact filename |
-| `filename` | string | `<tool>_<version>_<os>_<arch>.zip` | exact artifact filename on shipyard |
+| `filename` | string | `<tool>_<version>_<os>_<arch>.zip` | exact artifact filename on nidavellir |
 | `binary_name` | string | `<tool>` | the executable's on-disk (and in-archive) name |
 | `verify` | bool | `true` | verify bytes against the published `<filename>.sha256` sidecar |
 | `strip` | number | `1` | `archiver.decompress` strip_components guess |

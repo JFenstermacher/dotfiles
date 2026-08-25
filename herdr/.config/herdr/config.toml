@@ -43,6 +43,12 @@ command = "yggdrasil.herdr.home"
 description = "Go to home workspace"
 
 [[keys.command]]
+key = "prefix+d"
+type = "plugin_action"
+command = "yggdrasil.herdr.dotfiles"
+description = "Go to dotfiles workspace"
+
+[[keys.command]]
 key = "prefix+L"
 type = "plugin_action"
 command = "yggdrasil.herdr.last-workspace"
@@ -83,3 +89,6 @@ key = "prefix+h"
 type = "pane"
 command = "sessionizer switch branch main"
 description = "Switches to the main branch"
+
+[experimental]
+kitty_graphics = true

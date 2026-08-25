@@ -29,7 +29,7 @@ jj = "0.40.0"
 neovim = "0.12.5"
 television = "0.15.8"
 aube = "1.26.0"
-"github:can1357/oh-my-pi" = "18.0.3"
+"github:can1357/oh-my-pi" = "18.0.5"
 "mimiskelda:sessionizer" = { version = "latest" }
 "aqua:ogulcancelik/herdr" = "latest"
 "mimiskelda:herdr-plugin" = "latest"

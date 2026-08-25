@@ -1,7 +1,7 @@
 -- hooks/backend_install.lua
--- BackendInstall: downloads, verifies, and extracts a shipyard binary release.
+-- BackendInstall: downloads, verifies, and extracts a nidavellir binary release.
 --
--- shipyard stores each artifact at the public R2 read URL under the
+-- nidavellir stores each artifact at the public R2 read URL under the
 -- deterministic key `artifacts/<tool>/<version>/<filename>`, with a
 -- `<filename>.sha256` sidecar publishing its digest. Published binaries (see
 -- terraform-provider-mimiskelda) follow `<tool>_<version>_<os>_<arch>.zip`:
@@ -9,9 +9,9 @@
 --   <base_url>/artifacts/<tool>/<version>/<tool>_<version>_<os>_<arch>.zip
 --
 -- Configuration (ctx.options, as declared per tool in mise.toml):
---   * base_url    — shipyard public read base URL (no trailing slash).
+--   * base_url    — nidavellir public read base URL (no trailing slash).
 --     Defaults to `MIMISKELDA_PUBLIC_BASE_URL` env, else the production
---     shipyard r2.dev domain.
+--     nidavellir r2.dev domain.
 --   * os / arch   — override the platform tokens used in the artifact
 --     filename (default derives from the runtime, e.g. "darwin" / "arm64").
 --   * filename    — exact artifact filename, bypassing the default
@@ -34,9 +34,9 @@ local http = require("http")
 local log = require("log")
 local strings = require("strings")
 
--- Production public read base URL for the shipyard bucket (r2.dev managed
--- domain; matches rig's DefaultPublicBaseURL).
-local DEFAULT_BASE_URL = "https://pub-190648604aa244df91d83ed8417a33ba.r2.dev"
+-- Production public read base URL for the nidavellir bucket (r2.dev managed
+-- domain; matches mjolnir's DefaultPublicBaseURL).
+local DEFAULT_BASE_URL = "https://pub-94bb15d0dab64ef88c2edb5d166cbe48.r2.dev"
 
 --- Lowers a runtime platform token to a stable artifact-name token.
 local function normalize_os(raw)
@@ -110,7 +110,7 @@ function PLUGIN:BackendInstall(ctx)
     local arch_token = opts.arch or RUNTIME.archType
     local binary_name = opts.binary_name or tool
 
-    -- Artifact filename (explicit override else the established shipyard
+    -- Artifact filename (explicit override else the established nidavellir
     -- convention `<tool>_<version>_<os>_<arch>.zip`, matching published
     -- terraform-provider-mimiskelda binaries).
     local filename = opts.filename

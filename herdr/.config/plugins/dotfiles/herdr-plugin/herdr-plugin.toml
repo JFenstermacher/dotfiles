@@ -12,6 +12,12 @@ contexts = ["global"]
 command = ["herdr-plugin", "home"]
 
 [[actions]]
+id = "dotfiles"
+title = "Dotfiles"
+contexts = ["global"]
+command = ["herdr-plugin", "dotfiles"]
+
+[[actions]]
 id = "terminal"
 title = "Terminal"
 contexts = ["workspace"]

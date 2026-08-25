@@ -1,7 +1,7 @@
 -- hooks/backend_list_versions.lua
--- BackendListVersions: lists the released versions of `tool` from shipyard.
+-- BackendListVersions: lists the released versions of `tool` from nidavellir.
 --
--- shipyard has no "list API" endpoint (downloads are direct, keyless reads
+-- nidavellir has no "list API" endpoint (downloads are direct, keyless reads
 -- off R2). Versions are instead resolved from the owning repository's GitHub
 -- releases, where each tool is a component with a release tag of the shape
 -- `<tool>-v<version>` (e.g. `sessionizer-v1.0.0`). This hook queries the

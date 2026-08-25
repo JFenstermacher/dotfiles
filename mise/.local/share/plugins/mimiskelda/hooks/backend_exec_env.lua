@@ -1,5 +1,5 @@
 -- hooks/backend_exec_env.lua
--- BackendExecEnv: exposes an installed shipyard binary on the PATH.
+-- BackendExecEnv: exposes an installed nidavellir binary on the PATH.
 --
 -- Each installed tool lives directly in `ctx.install_path` as a single
 -- executable named after the tool (e.g. `sessionizer`). This hook prepends
