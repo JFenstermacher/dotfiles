@@ -25,6 +25,12 @@ command = "tv repositories"
 description = "List workspaces"
 
 [[keys.command]]
+key = "prefix+k"
+type = "popup"
+command = "tv ws"
+description = "Kill a workspace"
+
+[[keys.command]]
 key = "ctrl+minus"
 type = "pane"
 command = "tv branches"

@@ -46,6 +46,6 @@ alias m="mise"
 alias mr="mise run"
 
 # TMUX
-alias ts="sessionizer"
+alias s="sessionizer"
 
 alias nvw="cd ~/.journal && NVIM_APPNAME=nvim-writing nvim"

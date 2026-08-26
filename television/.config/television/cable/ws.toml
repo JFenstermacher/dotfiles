@@ -1,0 +1,29 @@
+[metadata]
+name = "ws"
+description = "Lists herdr workspaces and closes them"
+requirements = ["sessionizer"]
+
+# UI panel visibility (individual control)
+[ui.preview_panel]
+hidden = true
+
+[ui.status_bar]
+hidden = true
+
+[ui.help_panel]
+hidden = true
+
+[ui.remote_control]
+disabled = true
+
+[source]
+command = "sessionizer ls workspaces"
+
+[keybindings]
+enter = "actions:kill"
+ctrl-k = "actions:kill"
+
+[actions.kill]
+description = "Close workspace"
+command = "sessionizer rm workspace {}"
+mode = "execute"
