@@ -17,6 +17,7 @@ hidden = true
 disabled = true
 
 [source]
+frecency = false
 command = "sessionizer list branch"
 
 [keybindings]
