@@ -60,7 +60,7 @@ mise exec  -- sessionizer --version
 | `filename` | string | `<tool>_<version>_<os>_<arch>.zip` | exact artifact filename on nidavellir |
 | `binary_name` | string | `<tool>` | the executable's on-disk (and in-archive) name |
 | `verify` | bool | `true` | verify bytes against the published `<filename>.sha256` sidecar |
-| `strip` | number | `1` | `archiver.decompress` strip_components guess |
+| `strip` | number | `0` | `archiver.decompress` strip_components guess (falls back to the other of `0`/`1`) |
 
 `base_url` can also be set process-wide with `MIMISKELDA_PUBLIC_BASE_URL`.
 

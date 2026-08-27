@@ -15,6 +15,7 @@
 
 local json = require("json")
 local http = require("http")
+local log = require("log")
 local semver = require("semver")
 
 -- Default repository hosting the tool components' release tags.
@@ -24,6 +25,7 @@ local DEFAULT_REPO = "mimiskelda/yggdrasil"
 -- Returns the decoded release array, or raises on transport/HTTP error.
 local function fetch_releases(repo)
     local url = "https://api.github.com/repos/" .. repo .. "/releases?per_page=100"
+    log.debug("mimiskelda: fetching releases from", url)
     local resp, err = http.try_get({
         url = url,
         headers = { ["User-Agent"] = "mise-mimiskelda-plugin" },
@@ -43,6 +45,7 @@ local function fetch_releases(repo)
     if not ok then
         error("mimiskelda: failed to parse releases JSON: " .. tostring(releases))
     end
+    log.debug("mimiskelda: fetched", tostring(#releases), "releases from", repo)
     return releases
 end
 
@@ -85,5 +88,12 @@ function PLUGIN:BackendListVersions(ctx)
         error("mimiskelda: no releases found for tool '" .. tool .. "' in " .. repo)
     end
 
+    log.debug(
+        "mimiskelda: matched",
+        tostring(#versions),
+        "versions for",
+        tool,
+        "(latest " .. versions[#versions] .. ")"
+    )
     return { versions = versions }
 end

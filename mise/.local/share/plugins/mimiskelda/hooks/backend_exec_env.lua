@@ -8,10 +8,14 @@
 -- @param ctx {install_path: string, tool: string}
 -- @return {env_vars} Environment additions
 
+local log = require("log")
+
 function PLUGIN:BackendExecEnv(ctx)
     if not ctx.install_path or ctx.install_path == "" then
         error("mimiskelda: install_path cannot be empty")
     end
+
+    log.debug("mimiskelda: prepending to PATH", ctx.install_path)
 
     -- Prepend the install dir (containing the tool binary) to PATH.
     local path_entries = { ctx.install_path }

@@ -21,8 +21,9 @@
 --   * verify      — verify the bytes against the published `.sha256` sidecar
 --     (default true; warn and continue when no checksum tool/sidecar is
 --     available).
---   * strip       — `archiver.decompress` strip_components guess (default 1,
---     then falls back to 0).
+--   * strip       — `archiver.decompress` strip_components guess (default 0
+--     for the flat published archives, then falls back to 1 for archives
+--     that wrap the binary in a directory).
 --
 -- @param ctx {tool, version, install_path, download_path, options}
 -- @return {} on success; raises on unrecoverable failure.
@@ -44,40 +45,48 @@ local function normalize_os(raw)
     return (raw or ""):lower()
 end
 
---- Finds the first file named `name` under `root` using the platform `find`
--- CLI (the file module at this mise version exposes no list/glob).
--- Returns the full path (first match, line-trimmed) or nil.
-local function find_named_file(root, name)
-    local ok, out = pcall(cmd.exec, 'find "' .. root .. '" -type f -name "' .. name .. '"')
-    if not ok or type(out) ~= "string" or out == "" then
-        return nil
-    end
-    local first = out:match("^%s*([^\n]-)%s*$")
-    if not first or first == "" then
-        return nil
-    end
-    return first
-end
-
---- Decompresses `archive` into `stage`, trying strip_components = `preferred`
--- then 0, and returns the full path of the named binary.
-local function extract_up_to_binary(archive, stage, binary_name, preferred)
-    os.execute("mkdir -p '" .. stage .. "'")
-    for _, components in ipairs({ preferred or 1, 0 }) do
-        local ok = pcall(archiver.decompress, archive, stage, { strip_components = components })
-        if ok then
-            local found = find_named_file(stage, binary_name)
-            if found then
-                return found
-            end
+--- Extracts `archive` directly into `dest_dir` with the native `archiver`,
+-- trying strip_components = `preferred` then the other of {0, 1}, and returns
+-- the full path of `binary_name` once it lands directly in `dest_dir`.
+--
+-- This deliberately avoids shelling out (mkdir/find/mv/chmod): mise runs
+-- plugin shell commands with a working directory that does not exist during
+-- BackendInstall, so any `sh -c` spawn fails with ENOENT ("os error 2"). The
+-- archiver runs natively (no cwd dependency), creates the destination, and
+-- preserves the archived file mode — published zips carry the executable bit,
+-- so no chmod is needed.
+local function extract_binary(archive, dest_dir, binary_name, preferred)
+    local dest = file.join_path(dest_dir, binary_name)
+    -- Published artifacts are flat (binary at the archive root → strip 0);
+    -- try the caller's preference first, then the alternative for archives
+    -- that wrap the binary in a single directory.
+    local first = preferred or 0
+    local second = first == 0 and 1 or 0
+    for _, components in ipairs({ first, second }) do
+        log.debug(
+            "mimiskelda: decompressing",
+            archive,
+            "into",
+            dest_dir,
+            "strip_components=" .. tostring(components)
+        )
+        local ok, derr = pcall(archiver.decompress, archive, dest_dir, { strip_components = components })
+        if ok and file.exists(dest) then
+            log.debug("mimiskelda: extracted binary to", dest)
+            return dest
         end
+        log.debug(
+            "mimiskelda: strip_components=" .. tostring(components) .. " did not yield " .. dest,
+            ok and "" or ("error: " .. tostring(derr))
+        )
     end
     error(
         "mimiskelda: extracted "
             .. binary_name
             .. " but no file named '"
             .. binary_name
-            .. "' was found in the archive"
+            .. "' was found at "
+            .. dest
     )
 end
 
@@ -119,6 +128,15 @@ function PLUGIN:BackendInstall(ctx)
         filename = tool .. "_" .. version .. "_" .. os_token .. "_" .. arch_token .. ".zip"
     end
 
+    log.debug(
+        "mimiskelda: resolved config",
+        "base_url=" .. base_url,
+        "os=" .. os_token,
+        "arch=" .. arch_token,
+        "binary_name=" .. binary_name,
+        "filename=" .. filename
+    )
+
     local key = "artifacts/" .. tool .. "/" .. version .. "/" .. filename
     local download_url = base_url .. "/" .. key
     local archive_path = file.join_path(ctx.download_path, filename)
@@ -140,19 +158,36 @@ function PLUGIN:BackendInstall(ctx)
     if opts.verify ~= nil then
         verify = opts.verify
     end
+    log.debug("mimiskelda: verify =", tostring(verify))
     if verify then
+        log.debug("mimiskelda: fetching sha256 sidecar", download_url .. ".sha256")
         local sresp, serr = http.try_get({ url = download_url .. ".sha256" })
         local expected = nil
         if serr == nil and sresp.status_code == 200 then
-            expected = strings.trim_space(sresp.body or "")
+            -- Sidecars may be `<digest>` or `<digest>  <filename>`; keep the hex.
+            expected = strings.trim_space(sresp.body or ""):match("%x+")
+        else
+            log.debug(
+                "mimiskelda: sidecar fetch returned",
+                serr == nil and tostring(sresp.status_code) or tostring(serr)
+            )
         end
         if expected and expected ~= "" then
+            log.debug("mimiskelda: expected sha256", expected:lower())
             local ok, out = pcall(cmd.exec, 'shasum -a 256 "' .. archive_path .. '"')
             if not ok then
+                log.debug("mimiskelda: shasum failed, trying sha256sum:", tostring(out))
                 ok, out = pcall(cmd.exec, 'sha256sum "' .. archive_path .. '"')
             end
             local actual = type(out) == "string" and out:match("%x+") or nil
-            if actual and actual:lower() ~= expected:lower() then
+            if not actual then
+                -- No local checksum tool produced a digest; can't verify, but
+                -- the download itself succeeded — warn and continue rather
+                -- than fail the install.
+                log.warn(
+                    "mimiskelda: could not compute local sha256 (no usable checksum tool); verification skipped"
+                )
+            elseif actual:lower() ~= expected:lower() then
                 error(
                     "mimiskelda: SHA-256 mismatch for "
                         .. filename
@@ -162,21 +197,19 @@ function PLUGIN:BackendInstall(ctx)
                         .. actual:lower()
                         .. ")"
                 )
+            else
+                log.info("mimiskelda: sha256 verified", actual:lower())
             end
-            log.info("mimiskelda: sha256 verified", actual:lower())
         else
             log.warn("mimiskelda: no sha256 sidecar found; verification skipped")
         end
     end
 
-    -- Extract the binary into install_path and make it executable. The file
-    -- module at runtime has no move API at this mise version; use the shell.
-    os.execute("mkdir -p '" .. install_path .. "'")
-    local stage = file.join_path(ctx.download_path, "extract")
-    local binary = extract_up_to_binary(archive_path, stage, binary_name, opts.strip or 1)
-    local dest = file.join_path(install_path, binary_name)
-    os.execute("mv -f '" .. binary .. "' '" .. dest .. "'")
-    os.execute("chmod +x '" .. dest .. "'")
+    -- Extract the binary straight into install_path with the native archiver.
+    -- No shell is used here (see extract_binary): mise runs plugin shell
+    -- commands with an unavailable working directory during install, and the
+    -- archiver both creates install_path and preserves the executable bit.
+    local dest = extract_binary(archive_path, install_path, binary_name, opts.strip)
 
     log.info("mimiskelda: installed", tool, version, "to", dest)
     return {}
