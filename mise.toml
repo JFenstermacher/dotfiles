@@ -1,3 +1,6 @@
+[bootstrap.repos]
+"~/workspaces/JFenstermacher/herdr-plugin" = { url = "git@github.com:JFenstermacher/herdr-plugin.git", ref = "main" }
+
 [dotfiles]
 "~/.config/ghostty" = "ghostty/.config/ghostty"
 "~/.config/mise" = { source = "mise/.config/mise", mode = "symlink-each" }

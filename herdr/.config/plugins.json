@@ -5,8 +5,8 @@
     "version": "0.1.0",
     "min_herdr_version": "0.7.0",
     "description": "Workspace terminal and tooling actions for the yggdrasil monorepo",
-    "manifest_path": "{{ env.HOME }}/.config/herdr/plugins/dotfiles/herdr-plugin/herdr-plugin.toml",
-    "plugin_root": "{{ env.HOME }}/.config/herdr/plugins/dotfiles/herdr-plugin",
+    "manifest_path": "{{ env.HOME }}/workspaces/JFenstermacher/herdr-plugin/herdr-plugin.toml",
+    "plugin_root": "{{ env.HOME }}/workspaces/JFenstermacher/herdr-plugin",
     "enabled": true,
     "platforms": [
       "macos",
@@ -14,12 +14,25 @@
     ],
     "actions": [
       {
+        "id": "dotfiles",
+        "title": "Dotfiles",
+        "contexts": [
+          "global"
+        ],
+        "command": [
+          "perl",
+          "herdr-plugin",
+          "dotfiles"
+        ]
+      },
+      {
         "id": "home",
         "title": "Home",
         "contexts": [
           "global"
         ],
         "command": [
+          "perl",
           "herdr-plugin",
           "home"
         ]
@@ -32,6 +45,7 @@
           "workspace"
         ],
         "command": [
+          "perl",
           "herdr-plugin",
           "last-workspace",
           "toggle"
@@ -44,6 +58,7 @@
           "workspace"
         ],
         "command": [
+          "perl",
           "herdr-plugin",
           "nav",
           "down"
@@ -56,6 +71,7 @@
           "workspace"
         ],
         "command": [
+          "perl",
           "herdr-plugin",
           "nav",
           "left"
@@ -68,6 +84,7 @@
           "workspace"
         ],
         "command": [
+          "perl",
           "herdr-plugin",
           "nav",
           "right"
@@ -80,6 +97,7 @@
           "workspace"
         ],
         "command": [
+          "perl",
           "herdr-plugin",
           "nav",
           "up"
@@ -88,11 +106,10 @@
       {
         "id": "terminal",
         "title": "Terminal",
-        "contexts": [
-          "workspace"
-        ],
         "command": [
-          "herdr-plugin"
+          "perl",
+          "herdr-plugin",
+          "terminal"
         ]
       }
     ],
@@ -100,6 +117,7 @@
       {
         "on": "workspace.closed",
         "command": [
+          "perl",
           "herdr-plugin",
           "last-workspace",
           "closed"
@@ -108,6 +126,7 @@
       {
         "on": "workspace.focused",
         "command": [
+          "perl",
           "herdr-plugin",
           "last-workspace",
           "focused"
