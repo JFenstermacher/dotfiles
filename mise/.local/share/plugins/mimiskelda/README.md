@@ -55,7 +55,7 @@ mise exec  -- sessionizer --version
 
 | Option | Type | Default | Purpose |
 |---|---|---|---|
-| `base_url` | string | `MIMISKELDA_PUBLIC_BASE_URL` env, else the production nidavellir r2.dev domain | nidavellir public read base URL (no trailing slash) |
+| `base_url` | string | `MIMISKELDA_PUBLIC_BASE_URL` env, else the production nidavellir custom domain `nidavellir.mimiskelda.dev` | nidavellir public read base URL (no trailing slash) |
 | `os` / `arch` | string | derived from the runtime (`darwin`, `arm64`, …) | platform tokens used in the default artifact filename |
 | `filename` | string | `<tool>_<version>_<os>_<arch>.zip` | exact artifact filename on nidavellir |
 | `binary_name` | string | `<tool>` | the executable's on-disk (and in-archive) name |

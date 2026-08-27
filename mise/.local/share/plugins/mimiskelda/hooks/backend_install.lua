@@ -11,7 +11,7 @@
 -- Configuration (ctx.options, as declared per tool in mise.toml):
 --   * base_url    — nidavellir public read base URL (no trailing slash).
 --     Defaults to `MIMISKELDA_PUBLIC_BASE_URL` env, else the production
---     nidavellir r2.dev domain.
+--     nidavellir.mimiskelda.dev custom domain.
 --   * os / arch   — override the platform tokens used in the artifact
 --     filename (default derives from the runtime, e.g. "darwin" / "arm64").
 --   * filename    — exact artifact filename, bypassing the default
@@ -34,9 +34,10 @@ local http = require("http")
 local log = require("log")
 local strings = require("strings")
 
--- Production public read base URL for the nidavellir bucket (r2.dev managed
--- domain; matches mjolnir's DefaultPublicBaseURL).
-local DEFAULT_BASE_URL = "https://pub-94bb15d0dab64ef88c2edb5d166cbe48.r2.dev"
+-- Production public read base URL for the nidavellir bucket (custom domain
+-- nidavellir.mimiskelda.dev on the mimiskelda.dev zone; matches mjolnir's
+-- DefaultPublicBaseURL).
+local DEFAULT_BASE_URL = "https://nidavellir.mimiskelda.dev"
 
 --- Lowers a runtime platform token to a stable artifact-name token.
 local function normalize_os(raw)
