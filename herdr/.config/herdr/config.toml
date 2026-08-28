@@ -63,7 +63,7 @@ description = "Toggle last workspace"
 [[keys.command]]
 key = "prefix+n"
 type = "pane"
-command = "sessionizer add branch"
+command = "sessionizer add branch --switch"
 description = "Create new worktree (via sessionizer)"
 
 [[keys.command]]
