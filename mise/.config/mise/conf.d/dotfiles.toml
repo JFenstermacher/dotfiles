@@ -32,3 +32,4 @@ aube = "1.26.0"
 "github:can1357/oh-my-pi" = "18.0.5"
 "mimiskelda:sessionizer" = { version = "latest" }
 "aqua:ogulcancelik/herdr" = "latest"
+watchexec = "latest"
