@@ -52,5 +52,6 @@ alias mnr="moon run"
 
 # TMUX
 alias s="sessionizer"
+alias sp="sessionizer pull"
 
 alias nvw="cd ~/.journal && NVIM_APPNAME=nvim-writing nvim"
