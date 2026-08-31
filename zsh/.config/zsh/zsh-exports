@@ -34,3 +34,6 @@ export PATH="$PATH:$GOPATH/bin"
 export PATH="$PATH:$HOME/.local/share/mise/shims"
 # Auto-trust mise configs under repo main branches and herdr worktrees
 export MISE_TRUSTED_CONFIG_PATHS="$HOME/workspaces:$HOME/.local/share/herdr/worktrees"
+
+# Terraform
+export TF_PLUGIN_CACHE_DIR="$XDG_CACHE_HOME/terraform/plugin-cache"
