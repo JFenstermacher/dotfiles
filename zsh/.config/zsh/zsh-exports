@@ -31,7 +31,7 @@ export GOPATH=$HOME/workspace/go
 export PATH="$PATH:$GOPATH/bin"
 
 # MISE
-export PATH="$PATH:$HOME/.local/share/mise/shims"
+eval "$(mise activate zsh --shims)"
 # Auto-trust mise configs under repo main branches and herdr worktrees
 export MISE_TRUSTED_CONFIG_PATHS="$HOME/workspaces:$HOME/.local/share/herdr/worktrees"
 
