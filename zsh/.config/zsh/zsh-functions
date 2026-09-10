@@ -115,6 +115,7 @@ function mise_setup() {
   installed "mise" || return
 
   eval "$(mise activate zsh)"
+  path=("${(@)path:#$HOME/.local/share/mise/shims}")
 }
 
 function dm() {
