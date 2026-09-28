@@ -1,4 +1,5 @@
 #!/usr/bin/env zsh
+# Safe to re-source (`sz`): every step below is idempotent.
 
 # PERSONAL_DIR contains computer specific configurations
 PERSONAL_DIR=$HOME/.personal/zsh
@@ -11,7 +12,7 @@ source $ZDOTDIR/zsh-exports
 # Otherwise, native install is available via $PATH update in the zsh-exports
 brew_setup
 
-# Mise
+# Mise (lazy: shims now, full activation after the first prompt)
 mise_setup
 
 source $ZDOTDIR/zsh-aliases
@@ -24,18 +25,15 @@ zsh_load_directory $PERSONAL_DIR/before
 ##################################################################
 
 # === History Configuration ===
-# Your Existing Options:
 setopt extended_history  # Write history in the ':start:elapsed;command' format (with timestamps).
 setopt append_history    # Append new history to the file rather than replacing it.
 setopt share_history     # Immediately synchronize history among all active shell sessions.
 
 # === General Usability & Navigation ===
-# Your Existing Options:
 setopt autocd               # Allows typing just a directory name to 'cd' into it.
 setopt interactive_comments # Allows using '#' for comments in an interactive session.
 
 # === Completion and Correction ===
-# Your Existing Option (for Globbing):
 setopt extendedglob      # Enables powerful pattern matching (globbing) features.
 setopt nomatch           # Output an error if a glob pattern finds no matches (safer than passing unexpanded pattern).
 
@@ -45,36 +43,37 @@ setopt complete_in_word  # Allow completion anywhere within a word, not just at 
 setopt correct           # Offer to correct typos in command names (e.g., 'dco' -> 'doc').
 
 # === Disabling Shell Features (unsetopt) ===
-# Your Existing Option:
 unsetopt beep            # Shut off the annoying terminal bell.
 
 ##################################################################
 # COMPLETIONS
 ##################################################################
 
-# 1. Define custom paths BEFORE using them
 CUSTOM_ZFUNC_DIR="$ZDATADIR/.zfunc"
-# Recommended location for the completion dump file (cache)
-export ZCOMPDUMP_FILE="$HOME/.cache/zsh/zcompdump-$ZSH_VERSION"
+ZCOMPDUMP_FILE="$ZCACHEDIR/zcompdump-$ZSH_VERSION"
 
-# 2. Setup paths and autoload functions
-mkdir -p "$CUSTOM_ZFUNC_DIR"
-mkdir -p "$(dirname $ZCOMPDUMP_FILE)" # Ensure the cache directory exists
+[[ -d $CUSTOM_ZFUNC_DIR ]] || mkdir -p "$CUSTOM_ZFUNC_DIR"
 
-# Set the function path (add your custom path first)
-fpath=( "$CUSTOM_ZFUNC_DIR" "${fpath[@]}" )
+# fpath is unique (typeset -U in .zshenv), so this never duplicates.
+fpath=("$CUSTOM_ZFUNC_DIR" $fpath)
 
-# Autoload required functions
-autoload bashcompinit && bashcompinit
-autoload -Uz compinit
-
-# 3. Load completions and modules
+autoload -Uz bashcompinit compinit
 zmodload zsh/complist
-_comp_options+=(globdots)
 
-# 4. Final, SINGLE compinit call using the -d option
-# This is the ONLY time compinit should be called!
-compinit -u -d "$ZCOMPDUMP_FILE"
+# Full fpath rescan at most once a day; otherwise trust the existing dump
+# (-C), which skips a lot of filesystem work. The compiled .zwc doubles as
+# the "last full rescan" timestamp, since compinit doesn't rewrite an
+# unchanged dump.
+if [[ -n $ZCOMPDUMP_FILE.zwc(#qN.mh-24) ]]; then
+  compinit -C -d "$ZCOMPDUMP_FILE"
+else
+  compinit -u -d "$ZCOMPDUMP_FILE"
+  [[ -s $ZCOMPDUMP_FILE ]] && zcompile "$ZCOMPDUMP_FILE"
+fi
+bashcompinit
+
+# compinit resets _comp_options, so this must come after it.
+(( ${_comp_options[(Ie)globdots]} )) || _comp_options+=(globdots)
 
 zsh_load_directory $PERSONAL_DIR
 
@@ -95,12 +94,14 @@ zsh_add_plugins "${PLUGINS[@]}"
 # TOOL SETUPS
 ##################################################################
 
-eval "$(starship init zsh)"
+starship_setup
 
 # UV
 uv_setup
 
 zsh_load_directory $PERSONAL_DIR/after
 
-# proto (moon toolchain store)
-export PROTO_HOME="$XDG_DATA_HOME/proto"
+# -U only dedupes array assignments; scalar `export PATH="$PATH:..."` (as in
+# personal files and tool init scripts) bypasses it. Re-applying the flag
+# collapses any duplicates, keeping each entry's first position.
+typeset -U path fpath manpath

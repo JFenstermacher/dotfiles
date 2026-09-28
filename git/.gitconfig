@@ -37,6 +37,7 @@
   ap    = add -p
   ac    = !git add . && git commit -m
   undo  = reset --soft HEAD~1
+  re    = rebase origin/main
 
 [init]
 	defaultBranch = main

@@ -1,48 +1,105 @@
-# Function to source files if they exist
-
+# Source every regular file in a directory, if it exists.
 function zsh_load_directory() {
-  if [ -d $1 ]; then
-    for filename in $1/*; do
-      if [ -f $filename ]; then
-        source $filename > /dev/null 2>&1
-      fi
-    done
-  fi
+  [[ -d $1 ]] || return 0
+
+  local filename
+  for filename in "$1"/*(N.); do
+    source "$filename" > /dev/null 2>&1
+  done
 }
+
+# Source the output of a command, cached in $ZCACHEDIR/<name>.zsh. Avoids
+# exec'ing tools like brew/starship on every startup just to print static
+# init code. Regenerated when missing or older than <binary> (so upgrades
+# and `mise reshim` invalidate it). `zsh_clear_cache` forces a rebuild.
+#   zsh_cached_source <name> <binary> <cmd...>
+function zsh_cached_source() {
+  local name=$1 bin=$2
+  shift 2
+  local cache="$ZCACHEDIR/$name.zsh"
+
+  if [[ ! -s $cache || $bin -nt $cache ]]; then
+    "$@" >| "$cache" 2>/dev/null || { command rm -f "$cache"; return 1; }
+  fi
+
+  source "$cache"
+}
+
+function zsh_clear_cache() {
+  command rm -f "$ZCACHEDIR"/*.zsh(N) "$ZCACHEDIR"/zcompdump-*(N)
+}
+
+# Run commands once the prompt is drawn and zle is idle, rather than during
+# startup. A /dev/null fd is always readable, so zle fires the handler on its
+# first wait for input -- no fork required.
+typeset -ga _zsh_defer_queue
+typeset -gi _zsh_defer_fd
+
+function zsh_defer() {
+  # No line editor will ever run (e.g. `zsh -ic cmd`): run immediately.
+  if [[ ! -o zle || -n $ZSH_EXECUTION_STRING ]]; then
+    eval "$*"
+    return
+  fi
+
+  _zsh_defer_queue+=("$*")
+  (( _zsh_defer_fd )) && return
+
+  exec {_zsh_defer_fd}</dev/null
+  zle -N _zsh_defer_run
+  zle -F -w $_zsh_defer_fd _zsh_defer_run
+}
+
+function _zsh_defer_run() {
+  zle -F $_zsh_defer_fd
+  exec {_zsh_defer_fd}<&-
+  _zsh_defer_fd=0
+
+  local cmd queue=("${_zsh_defer_queue[@]}")
+  _zsh_defer_queue=()
+  for cmd in "${queue[@]}"; do
+    eval "$cmd"
+  done
+
+  # Deferred work may change the env the prompt depends on (e.g. mise tools).
+  zle reset-prompt
+}
+
+typeset -gA _zsh_loaded_plugins
 
 function zsh_add_plugin() {
-  local plugin_name=$(echo $1 | cut -d "/" -f 2)
+  local plugin_name=${1:t}
   local plugin_dir="$ZDATADIR/plugins/$plugin_name"
 
-  if [ ! -d $plugin_dir ]; then
-    git clone "https://github.com/$1.git" --depth=1 $plugin_dir
+  # Plugins wrap zle widgets on load; sourcing them twice double-wraps.
+  (( ${+_zsh_loaded_plugins[$plugin_name]} )) && return
+
+  if [[ ! -d $plugin_dir ]]; then
+    git clone "https://github.com/$1.git" --depth=1 "$plugin_dir" || return
   fi
 
-  source $plugin_dir/$plugin_name.plugin.zsh || source $plugin_dir/$plugin_name.zsh
-}
-
-function zsh_load_theme() {
-  THEME_NAME=$(echo $1 | cut -d "/" -f 2)
-  
-  if [ ! -d $ZDOTDIR/themes/$THEME_NAME ]; then
-    git clone "https://github.com/$1.git" --depth=1 $ZDOTDIR/themes/$THEME_NAME
-  fi
-
-  source $ZDOTDIR/themes/$THEME_NAME/$THEME_NAME.zsh-theme
+  local file
+  for file in "$plugin_dir/$plugin_name.plugin.zsh" "$plugin_dir/$plugin_name.zsh"; do
+    if [[ -f $file ]]; then
+      source "$file"
+      _zsh_loaded_plugins[$plugin_name]=1
+      return
+    fi
+  done
 }
 
 function zsh_add_plugins() {
-  local plugins=($@)
-  
-  for plugin in "${plugins[@]}"; do
-    zsh_add_plugin $plugin
+  local plugin
+  for plugin in "$@"; do
+    zsh_add_plugin "$plugin"
   done
 }
 
 function zsh_refresh_plugins() {
-  for f in $ZDOTDIR/plugins/*; do
-    echo "[INFO] Refreshing: $( basename $f )"
-    $( cd $f && git pull -q )
+  local f
+  for f in "$ZDATADIR"/plugins/*(N/); do
+    echo "[INFO] Refreshing: ${f:t}"
+    git -C "$f" pull -q
   done
 }
 
@@ -65,57 +122,72 @@ function awslp() {
 }
 
 function installed() {
-  command -v $1 > /dev/null && return 0 || return 1
-}
-
-function asdf_setup() {
-  installed "asdf" || return
-
-  if alias | grep asdf > /dev/null; then
-    unalias asdf
-  fi
-
-  local setup_file=
-  case $OSTYPE in
-    darwin*)
-      setup_file=/opt/homebrew/opt/asdf/libexec/asdf.sh
-      ;;
-    *)
-      setup_file=/opt/asdf-vm/asdf.sh
-      ;;
-  esac
-
-  [ -f "$setup_file" ] && source "$setup_file"
-
-  alias asdf=asdfzf
+  (( ${+commands[$1]} ))
 }
 
 function uv_setup() {
   installed "uv" || return
 
   local uv_comp=$CUSTOM_ZFUNC_DIR/_uv
-  [ -f $uv_comp ] || uv generate-shell-completion zsh > $uv_comp
-}
-
-function brew_setup() {
-  local brew_path="/opt/homebrew/bin/brew"
-
-  if [ -f "$brew_path" ]; then
-    eval $($brew_path shellenv)
+  if [[ ! -f $uv_comp ]]; then
+    uv generate-shell-completion zsh >| "$uv_comp"
+    # Force the next compinit to rebuild both forms of the dump and pick up _uv.
+    command rm -f "$ZCOMPDUMP_FILE" "$ZCOMPDUMP_FILE.zwc"
   fi
 }
 
-function plz_setup() {
-  installed "plz" || return
+function brew_setup() {
+  local prefix="/opt/homebrew"
+  [[ -x $prefix/bin/brew ]] || return
 
-  source <(plz --completion_script)
+  # Already on PATH (re-source, or inherited from a parent shell): only the
+  # non-exported fpath needs setting. Re-running shellenv would move brew in
+  # front of mise's tool paths.
+  if (( ${path[(Ie)$prefix/bin]} )); then
+    fpath[1,0]="$prefix/share/zsh/site-functions"
+    return
+  fi
+
+  # brew shellenv prepends to INFOPATH as a plain string; tie it to a unique
+  # array so it can't accumulate duplicates.
+  (( ${+infopath} )) || typeset -gxTU INFOPATH infopath
+
+  zsh_cached_source brew-shellenv "$prefix/bin/brew" "$prefix/bin/brew" shellenv zsh
 }
 
+function starship_setup() {
+  installed "starship" || return
+  # Re-running init would wrap its own zle-keymap-select widget again.
+  (( ${+functions[prompt_starship_precmd]} )) && return
+
+  # --print-full-init embeds the resolved binary path, so the prompt never
+  # goes through the mise shim.
+  zsh_cached_source starship-init "$commands[starship]" starship init zsh --print-full-init
+}
+
+# mise is lazy: shims go on PATH immediately (no exec, tools just work), and
+# the real `mise activate` runs deferred once the first prompt is on screen.
 function mise_setup() {
   installed "mise" || return
+  # Already active in this shell (e.g. re-sourcing .zshrc).
+  (( ${+functions[_mise_hook]} )) && return
 
-  eval "$(mise activate zsh)"
-  path=("${(@)path:#$HOME/.local/share/mise/shims}")
+  path=("$(_mise_shims_dir)" $path)
+  zsh_defer _mise_activate
+}
+
+function _mise_shims_dir() {
+  print -r -- "${MISE_DATA_DIR:-$XDG_DATA_HOME/mise}/shims"
+}
+
+function _mise_activate() {
+  local shims=$(_mise_shims_dir)
+
+  # Drop the bootstrap shims first so mise records a clean __MISE_ORIG_PATH,
+  # then drop the shims `mise activate` itself prepends.
+  path=("${(@)path:#$shims}")
+  eval "$(command mise activate zsh)"
+  path=("${(@)path:#$shims}")
 }
 
 function dm() {

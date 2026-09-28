@@ -1,23 +1,21 @@
-# General Config
-export XDG_CONFIG_HOME=$HOME/.config
-export XDG_DATA_HOME=$HOME/.local/share
-export XDG_CACHE_HOME=$HOME/.cache
-export XDG_STATE_HOME="$HOME/.local/state"
+# XDG_*, ZDOTDIR, and Z*DIR are set in ~/.zshenv, which always runs first.
 
-# ZSH
-export ZDOTDIR=$XDG_CONFIG_HOME/zsh
-
-# History handling
-export HISTFILE="$XDG_STATE_HOME/zsh/.zsh_history"
-export HISTSIZE=50000
-export SAVEHIST=50000
+# History handling. Not exported: child shells (e.g. bash) would otherwise
+# inherit HISTFILE and write their own history into the zsh file.
+HISTFILE="$ZSTATEDIR/.zsh_history"
+HISTSIZE=50000
+SAVEHIST=50000
 
 export EDITOR=nvim
 export VISUAL=nvim
 
 export LANG="en_US.UTF-8"
 
-export PATH="$PATH:$HOME/.config/bin:$HOME/.local/bin"
+# GOLANG
+export GOPATH=$HOME/workspace/go
+
+# `path` is unique (typeset -U in .zshenv), so appending is idempotent.
+path+=("$HOME/.config/bin" "$HOME/.local/bin" "$GOPATH/bin")
 
 # AWS
 export AWS_REGION=us-east-1
@@ -26,13 +24,12 @@ export AWS_SDK_LOAD_CONFIG=1
 # FZF
 export FZF_DEFAULT_COMMAND='fd --type f --hidden --exclude .git'
 
-# GOLANG
-export GOPATH=$HOME/workspace/go
-export PATH="$PATH:$GOPATH/bin"
-
 # MISE
 # Auto-trust mise configs under repo main branches and herdr worktrees
 export MISE_TRUSTED_CONFIG_PATHS="$HOME/workspaces:$HOME/.local/share/herdr/worktrees"
 
 # Terraform
 export TF_PLUGIN_CACHE_DIR="$XDG_CACHE_HOME/terraform/plugin-cache"
+
+# proto (moon toolchain store)
+export PROTO_HOME="$XDG_DATA_HOME/proto"
