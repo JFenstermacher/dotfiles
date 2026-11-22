@@ -10,7 +10,7 @@ This repository uses [mise](https://mise.jdx.dev/) to manage runtimes and CLI to
 
 - **Shell:** `zsh` with custom functions and aliases.
 - **Editor:** `Neovim` (LazyVim based).
-- **Terminal Emulator:** `Ghostty`.
+- **Terminal Emulators:** `Ghostty`, `Rex`.
 - **Status Line:** `starship`.
 - **Interactive tools:** `television`, `herdr`.
 - **Tool Management:** `mise` for managing runtimes and CLI tools.
@@ -20,8 +20,8 @@ This repository uses [mise](https://mise.jdx.dev/) to manage runtimes and CLI to
 To set up a new machine, clone this repository and run the bootstrap script:
 
 ```bash
-git clone https://github.com/yourusername/dotfiles.git ~/workspace/dotfiles
-cd ~/workspace/dotfiles
+git clone https://github.com/JFenstermacher/dotfiles.git ~/.dotfiles
+cd ~/.dotfiles
 ./bootstrap
 ```
 
@@ -30,6 +30,20 @@ cd ~/workspace/dotfiles
 1.  **Installs Mise:** The primary tool manager.
 2.  **Installs Dependencies:** Uses `mise install` to fetch all required CLI tools.
 3.  **Applies Dotfiles:** Uses `mise bootstrap dotfiles apply` to symlink the entries declared under `[dotfiles]` in `mise.toml` into `$HOME`.
+
+## Rex Copy Mode
+
+Press `Ctrl-a`, then `[` to open the focused pane's screen and retained scrollback in a read-only Neovim overlay with the terminal colors preserved. It starts at the newest output and uses standard Neovim motions and `/` search. Select with `v`, `V`, or `Ctrl-v`; yanking (`y`, `yy`, or `y{motion}`) copies plain text to the Rex client's clipboard without color codes and closes the overlay. Press `q` to close it without copying.
+
+Copy mode loads at most the newest 5,000 lines or 128 KiB of styled output, whichever limit it hits first. The status line shows `[capped]` when older output was omitted. This only limits the Neovim view; Rex keeps its own scrollback.
+
+If the pane is running a full-screen app on the alternate screen, Rex captures only that screen. Run `rex config reload` after changing the Rex bindings.
+
+## Rex Repository Picker
+
+Press `Ctrl-a`, then `p` to open Regent’s repository inventory in a floating picker. Each row shows `owner/repo`, prefixed with 🟢 for a local checkout or ⚪ when not checked out. Type to filter, press `Enter` to switch to the selected repository’s session, or `Esc` to dismiss. The picker reads Regent’s inventory; use `regent repo sync --owner <owner>` to populate it from GitHub without cloning repositories.
+
+When creating a session, Regent clones a missing checkout using GitHub SSH. To let the picker switch the visible session, enable **Remote Control** in Rex Settings → **Rex Server**. If checkout or switching fails, the picker keeps the error visible until you press `Enter`.
 
 ## Per-Machine Overrides
 
@@ -45,6 +59,7 @@ Managed under `[dotfiles]` in `mise.toml`:
 | Source | Target | Mode |
 |---|---|---|
 | `ghostty/` | `~/.config/ghostty` | symlink |
+| `rex/` | `~/.config/rex` | symlink |
 | `mise/` | `~/.config/mise` | symlink-each |
 | `git/` | `~/.gitconfig`, `~/.gitignore_global` | symlink |
 | `starship/` | `~/.config/starship.toml` | symlink |

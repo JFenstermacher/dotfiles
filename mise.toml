@@ -3,6 +3,7 @@
 
 [dotfiles]
 "~/.config/ghostty" = "ghostty/.config/ghostty"
+"~/.config/rex" = "rex/.config/rex"
 "~/.config/mise" = { source = "mise/.config/mise", mode = "symlink-each" }
 "~/.gitconfig" = "git/.gitconfig"
 "~/.gitignore_global" = "git/.gitignore_global"
