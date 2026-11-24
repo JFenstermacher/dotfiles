@@ -39,6 +39,12 @@ Copy mode loads at most the newest 5,000 lines or 128 KiB of styled output, whic
 
 If the pane is running a full-screen app on the alternate screen, Rex captures only that screen. Run `rex config reload` after changing the Rex bindings.
 
+## Rex Repository Picker
+
+Press `Ctrl-a`, then `p` to open Regent’s repository inventory in a floating picker. Each row shows `owner/repo`, prefixed with 🟢 for a local checkout or ⚪ when not checked out. Type to filter, press `Enter` to switch to the selected repository’s session, or `Esc` to dismiss. The picker reads Regent’s inventory; use `regent repo sync --owner <owner>` to populate it from GitHub without cloning repositories.
+
+When creating a session, Regent clones a missing checkout using GitHub SSH. To let the picker switch the visible session, enable **Remote Control** in Rex Settings → **Rex Server**. If checkout or switching fails, the picker keeps the error visible until you press `Enter`.
+
 ## Per-Machine Overrides
 
 Shared dotfiles live in the repo and apply to every machine. Where a machine needs to diverge, add a machine-local file that the shared config picks up conditionally:
