@@ -28,6 +28,7 @@ neovim = "0.12.5"
 television = "0.15.8"
 aube = "1.26.0"
 "github:can1357/oh-my-pi" = "19.0.1"
+"github:mimiskelda/hoddmimir" = { version = "2.2.0", version_prefix = "regent-cli-v", matching_regex = '^regent-(darwin-arm64|linux-(arm64|x64))$', bin = "regent", os = ["macos", "linux"] }
 "mimiskelda:sessionizer" = { version = "latest" }
 "aqua:ogulcancelik/herdr" = "0.9.0"
 watchexec = "latest"
