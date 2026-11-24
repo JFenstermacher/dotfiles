@@ -1,6 +1,6 @@
-local function regent(ctx, command, session)
-  if not ctx.client_id or not session then
-    error("Session history requires a client and a session", 0)
+local function regent(ctx, subcommand, extra_args)
+  if not ctx.client_id then
+    error("Regent commands require a client", 0)
   end
 
   local data_home = os.getenv("MISE_DATA_DIR")
@@ -18,20 +18,85 @@ local function regent(ctx, command, session)
     if cli then cli:close(); rex_bin = bundled end
   end
   if rex_bin and rex_bin ~= "" then path = rex_bin .. ":" .. path end
-  local args = { "env", "PATH=" .. path, "regent", "session", command, "--client", ctx.client_id }
-  if command == "last" then args[#args + 1] = "--current-session" end
-  args[#args + 1] = session
+
+  local args = { "env", "PATH=" .. path, "regent" }
+  for _, part in ipairs(subcommand) do args[#args + 1] = part end
+  args[#args + 1] = "--client"
+  args[#args + 1] = ctx.client_id
+  for _, arg in ipairs(extra_args or {}) do args[#args + 1] = arg end
+
   local result, err = rex.exec(args)
   if not result then error(err, 0) end
-  if not result.ok then error(result.stderr ~= "" and result.stderr or "Regent session command failed", 0) end
+  if not result.ok then error(result.stderr ~= "" and result.stderr or "Regent command failed", 0) end
+end
+
+local function regent_picker(ctx, label, tag, subcommand)
+  if not ctx.client_id or not ctx.session_id then
+    error(label .. " requires a client and a session", 0)
+  end
+
+  local cmd = {
+    "sh", "-c", [[
+      "$@" || {
+        status=$?
+        printf '\nPress Enter to close the picker.\n' >&2
+        read -r _
+        exit "$status"
+      }
+    ]], tag,
+    "regent",
+  }
+  for _, part in ipairs(subcommand) do cmd[#cmd + 1] = part end
+  cmd[#cmd + 1] = "--client"
+  cmd[#cmd + 1] = ctx.client_id
+  cmd[#cmd + 1] = "--current-session"
+  cmd[#cmd + 1] = ctx.session_id
+
+  local picker, err = rex.session.new_layer{
+    bounds = { 0.1, 0.1, 0.8, 0.8 },
+    focus = true,
+    layout = rex.layout.block{
+      flavor = "com.superlogical.terminal.shell",
+      label = label,
+      options = {
+        interactive = true,
+        command = cmd,
+      },
+    },
+  }
+  if err then error(err, 0) end
+  return picker
 end
 
 rex.action{
   name = "switch_session",
-  title = "Change Session",
+  title = "Switch Session…",
   run = function(ctx)
-    regent(ctx, "record", ctx.session_id)
-    rex.client.queue("session.switch")
+    return regent_picker(ctx, "Sessions", "session-picker", { "session", "switch", "--interactive" })
+  end,
+}
+
+rex.action{
+  name = "kill_session",
+  title = "Kill Session…",
+  run = function(ctx)
+    return regent_picker(ctx, "Kill Sessions", "session-remove-picker", { "session", "rm", "--interactive" })
+  end,
+}
+
+rex.action{
+  name = "branch_picker",
+  title = "Switch Branch…",
+  run = function(ctx)
+    return regent_picker(ctx, "Branches", "branch-picker", { "branch", "switch", "--interactive" })
+  end,
+}
+
+rex.action{
+  name = "branch_home",
+  title = "Go to Branch Home Session",
+  run = function(ctx)
+    regent(ctx, { "branch", "switch", "--home" }, ctx.session_id and { "--current-session", ctx.session_id } or nil)
   end,
 }
 
@@ -39,7 +104,7 @@ rex.action{
   name = "last_session",
   title = "Go to Last Session",
   run = function(ctx)
-    regent(ctx, "last", ctx.session_id)
+    regent(ctx, { "session", "last" }, ctx.session_id and { "--current-session", ctx.session_id } or nil)
   end,
 }
 
@@ -47,42 +112,15 @@ rex.action{
   name = "home_session",
   title = "Go to Home Session",
   run = function(ctx)
-    local user = os.getenv("USER")
-    local home = os.getenv("HOME")
-    if not user or user == "" or not home or home == "" then
-      error("USER and HOME must be set", 0)
-    end
+    regent(ctx, { "home" }, ctx.session_id and { "--current-session", ctx.session_id } or nil)
+  end,
+}
 
-    local result, err = rex.call("session.list")
-    if err then error(err, 0) end
-
-    local session_id
-    for _, session in ipairs(result.sessions or {}) do
-      if session.label == user then
-        session_id = session.session_id
-        break
-      end
-    end
-
-    if not session_id then
-      result, err = rex.call("session.create", {
-        label = user,
-        initial_windows = {{
-          layout = rex.layout.block{
-            flavor = "com.superlogical.terminal.shell",
-            options = { cwd = home },
-          },
-        }},
-      })
-      if err then error(err, 0) end
-      session_id = result.session_id
-    end
-
-    if session_id ~= ctx.session_id then
-      regent(ctx, "record", ctx.session_id)
-      regent(ctx, "record", session_id)
-    end
-    rex.client.queue("session.select", { session_id = session_id })
+rex.action{
+  name = "dotfiles_session",
+  title = "Go to Dotfiles Session",
+  run = function(ctx)
+    regent(ctx, { "dotfiles" }, ctx.session_id and { "--current-session", ctx.session_id } or nil)
   end,
 }
 
@@ -127,35 +165,7 @@ rex.action{
   name = "repository_picker",
   title = "Switch Repository…",
   run = function(ctx)
-    if not ctx.client_id or not ctx.session_id then
-      error("Repository picker requires a client and a session", 0)
-    end
-
-    local picker, err = rex.session.new_layer{
-      bounds = { 0.1, 0.1, 0.8, 0.8 },
-      focus = true,
-      layout = rex.layout.block{
-        flavor = "com.superlogical.terminal.shell",
-        label = "Repositories",
-        options = {
-          interactive = true, -- Put mise's Regent and fzf on PATH.
-          command = {
-            "sh", "-c", [[
-              "$@" || {
-                status=$?
-                printf '\nPress Enter to close the picker.\n' >&2
-                read -r _
-                exit "$status"
-              }
-            ]], "repository-picker",
-            "regent", "repo", "switch", "--interactive",
-            "--client", ctx.client_id, "--current-session", ctx.session_id,
-          },
-        },
-      },
-    }
-    if err then error(err, 0) end
-    return picker
+    return regent_picker(ctx, "Repositories", "repository-picker", { "repo", "switch", "--interactive" })
   end,
 }
 
@@ -163,17 +173,21 @@ rex.bind("ctrl+a>[", "copy_mode")
 rex.bind("ctrl+a>c", "client.tab.new")
 rex.bind("ctrl+a>v", "pane.split", { direction = "right" })
 rex.bind("ctrl+a>s", "pane.split", { direction = "down" })
+rex.bind("ctrl+a>h", "branch_home")
 rex.bind("ctrl+a>shift+h", "home_session")
+rex.bind("ctrl+a>shift+d", "dotfiles_session")
 rex.bind("ctrl+a>j", "switch_session")
 rex.bind("ctrl+a>p", "repository_picker")
 rex.bind("ctrl+a>shift+l", "last_session")
 rex.bind("ctrl+a>ctrl+a", "pane.send_key", { key = "ctrl+a" })
-
+rex.bind("ctrl+-", "branch_picker")
+rex.bind("ctrl+k", "kill_session")
+rex.bind("ctrl+j", "switch_session")
 for index = 1, 9 do
   rex.bind("ctrl+a>" .. index, "client.tab.goto", { index = index })
 end
 
-for key, direction in pairs({ h = "left", j = "down", k = "up", l = "right" }) do
+for key, direction in pairs({ h = "left", l = "right" }) do
   rex.bind("ctrl+" .. key, function(ctx)
     local process = rex.block.call("com.superlogical.terminal", "process", { block_id = ctx.block_id })
     if process and process.foreground and process.foreground.name == "nvim" then
