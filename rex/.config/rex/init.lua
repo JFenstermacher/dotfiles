@@ -83,64 +83,72 @@ local function regent(ctx, subcommand, extra_args, opts)
 	if not result.ok then
 		error(result.stderr ~= "" and result.stderr or "Regent command failed", 0)
 	end
+	return result.stdout
 end
 
-local function regent_picker(ctx, label, tag, subcommand)
+local function regent_ui_pick(ctx, title, placeholder, list_cmd, on_select, opts)
 	if not ctx.client_id or not ctx.session_id then
-		error(label .. " requires a client and a session", 0)
+		error(title .. " requires a client and a session", 0)
 	end
-
-	local cmd = {
-		"sh",
-		"-c",
-		[[
-      "$@" || {
-        status=$?
-        printf '\nPress Enter to close the picker.\n' >&2
-        read -r _
-        exit "$status"
-      }
-    ]],
-		tag,
-		"regent",
-	}
-	for _, part in ipairs(subcommand) do
-		cmd[#cmd + 1] = part
+	local stdout = regent(ctx, list_cmd, nil, { client = false })
+	local items, decode_err = rex.json.decode(stdout)
+	if not items then
+		error(decode_err or "Failed to decode Regent output", 0)
 	end
-	cmd[#cmd + 1] = "--client"
-	cmd[#cmd + 1] = ctx.client_id
-	cmd[#cmd + 1] = "--current-session"
-	cmd[#cmd + 1] = ctx.session_id
-
-	local options = {
-		interactive = true,
-		command = cmd,
-	}
-	local cwd = block_cwd(ctx)
-	if cwd then
-		options.cwd = cwd
-	end
-
-	local picker, err = rex.session.new_layer({
-		bounds = { 0.1, 0.1, 0.8, 0.8 },
-		focus = true,
-		layout = rex.layout.block({
-			flavor = "com.superlogical.terminal.shell",
-			label = label,
-			options = options,
-		}),
+	local multiple = opts and opts.multiple == true
+	local picked, err = rex.ui.pick({
+		title = title,
+		placeholder = placeholder,
+		items = items,
+		multiple = multiple,
 	})
 	if err then
+		if err == "cancelled" then
+			return
+		end
 		error(err, 0)
 	end
-	return picker
+	if multiple then
+		local ids = {}
+		if type(picked) == "string" and picked ~= "" then
+			ids[1] = picked
+		elseif type(picked) == "table" then
+			local list = type(picked.ids) == "table" and picked.ids or picked
+			for _, item in ipairs(list) do
+				local id = type(item) == "table" and item.id or item
+				if type(id) == "string" and id ~= "" then
+					ids[#ids + 1] = id
+				end
+			end
+			if #ids == 0 and type(picked.id) == "string" and picked.id ~= "" then
+				ids[1] = picked.id
+			end
+		end
+		if #ids == 0 then
+			return
+		end
+		on_select(ids)
+		return
+	end
+	local id
+	if type(picked) == "string" then
+		id = picked
+	elseif type(picked) == "table" then
+		id = picked.id or (picked.ids and picked.ids[1]) or picked[1]
+	end
+	if not id or id == "" then
+		return
+	end
+	on_select(id)
 end
 
 rex.action({
 	name = "switch_session",
 	title = "Switch Session…",
 	run = function(ctx)
-		return regent_picker(ctx, "Sessions", "session-picker", { "session", "switch", "--interactive" })
+		regent_ui_pick(ctx, "Switch Session", "Filter sessions…", { "session", "list", "--json" }, function(id)
+			regent(ctx, { "session", "switch", id }, { "--current-session", ctx.session_id })
+		end)
 	end,
 })
 
@@ -148,7 +156,11 @@ rex.action({
 	name = "kill_session",
 	title = "Kill Session…",
 	run = function(ctx)
-		return regent_picker(ctx, "Kill Sessions", "session-remove-picker", { "session", "rm", "--interactive" })
+		regent_ui_pick(ctx, "Kill Sessions", "Filter sessions…", { "session", "list", "--json" }, function(ids)
+			for _, id in ipairs(ids) do
+				regent(ctx, { "session", "rm", id })
+			end
+		end, { multiple = true })
 	end,
 })
 
@@ -156,7 +168,9 @@ rex.action({
 	name = "branch_picker",
 	title = "Switch Branch…",
 	run = function(ctx)
-		return regent_picker(ctx, "Branches", "branch-picker", { "branch", "switch", "--interactive" })
+		regent_ui_pick(ctx, "Switch Branch", "Filter branches…", { "branch", "list", "--json" }, function(id)
+			regent(ctx, { "branch", "switch", "--name", id }, { "--current-session", ctx.session_id })
+		end)
 	end,
 })
 
@@ -249,7 +263,13 @@ rex.action({
 	name = "repository_picker",
 	title = "Switch Repository…",
 	run = function(ctx)
-		return regent_picker(ctx, "Repositories", "repository-picker", { "repo", "switch", "--interactive" })
+		regent_ui_pick(ctx, "Switch Repository", "Filter repositories…", { "repo", "list", "--json" }, function(id)
+			local owner, repo = id:match("^([^/]+)/(.+)$")
+			if not owner or not repo then
+				error("Invalid repository selection: " .. tostring(id), 0)
+			end
+			regent(ctx, { "repo", "switch", "--owner", owner, "--repo", repo }, { "--current-session", ctx.session_id })
+		end)
 	end,
 })
 
@@ -261,6 +281,22 @@ rex.action({
 			error("Toggle terminal requires a session", 0)
 		end
 		regent(ctx, { "terminal" }, { "--session", ctx.session_id }, { client = false })
+	end,
+})
+
+rex.action({
+	name = "test_ui_pick",
+	title = "Test UI Pick…",
+	run = function()
+		return rex.ui.pick({
+			title = "Test Picker",
+			placeholder = "Type to filter…",
+			items = {
+				{ id = "alpha", label = "Alpha", detail = "First test item" },
+				{ id = "beta", label = "Beta", detail = "Second test item" },
+				{ id = "gamma", label = "Gamma", detail = "Third test item" },
+			},
+		})
 	end,
 })
 
@@ -278,6 +314,8 @@ rex.bind("ctrl+a>shift+l", "last_session")
 rex.bind("ctrl+a>ctrl+a", "pane.send_key", { key = "ctrl+a" })
 rex.bind("ctrl+-", "branch_picker")
 rex.bind("ctrl+a>k", "kill_session")
+rex.bind("ctrl+a>t", "test_ui_pick")
+rex.bind("ctrl+a>b", "client.sidebar.toggle")
 for index = 1, 9 do
 	rex.bind("ctrl+a>" .. index, "client.tab.goto", { index = index })
 end
