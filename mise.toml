@@ -17,3 +17,6 @@
 "~/.config/herdr/plugins.json" = { source = "herdr/.config/plugins.json", mode = "template" }
 "~/.config/herdr/plugins/dotfiles/herdr-plugin/herdr-plugin.toml" = "herdr/.config/plugins/dotfiles/herdr-plugin/herdr-plugin.toml"
 "~/.local/share/mise/plugins/mimiskelda" = { source = "mise/.local/share/plugins/mimiskelda", mode = "symlink" }
+"~/.omp/agent/commands" = "omp/.omp/agent/commands"
+"~/.omp/agent/skills" = "omp/.omp/agent/skills"
+"~/.omp/agent/extensions" = { source = "omp/.omp/agent/extensions", mode = "symlink-each" }
