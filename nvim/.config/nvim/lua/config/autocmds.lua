@@ -9,3 +9,13 @@ vim.api.nvim_create_autocmd("FileType", {
     vim.opt_local.breakindent = true
   end,
 })
+
+-- Auto-reload buffers modified externally by coding agents
+vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold", "CursorHoldI" }, {
+  group = vim.api.nvim_create_augroup("review_checktime", { clear = true }),
+  callback = function()
+    if vim.fn.mode() ~= "c" and vim.bo.buftype == "" then
+      vim.cmd("silent! checktime")
+    end
+  end,
+})
