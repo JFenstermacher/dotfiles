@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# Create a Regent branch worktree, start its Rex session (without switching
+# focus) with an `agent` pane running a Claude worker on Opus, and hand it the
+# task prompt. Run from inside a Regent-managed checkout, in the orchestrator's
+# Rex pane: the worker is told this pane's ids so it can send questions back.
+#
+#   regent-dispatch --branch <effort>/<prefix> [--ref <ref>] <<'EOF'
+#   <full task prompt>
+#   EOF
+set -euo pipefail
+
+WORKER_AGENT="worker"
+WORKER_MODEL="claude-opus-5-5"
+
+branch="" ref=""
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+	--branch) branch="$2"; shift 2 ;;
+	--ref) ref="$2"; shift 2 ;;
+	-h | --help) sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+	*) echo "regent-dispatch: unknown argument: $1" >&2; exit 2 ;;
+	esac
+done
+
+die() { echo "regent-dispatch: $*" >&2; exit 1; }
+
+[[ -n "$branch" ]] || die "--branch is required"
+: "${REX_SESSION:?must run inside a Rex pane (REX_SESSION unset)}"
+: "${REX_BLOCK:?must run inside a Rex pane (REX_BLOCK unset)}"
+
+prompt="$(cat)"
+[[ -n "${prompt//[[:space:]]/}" ]] || die "empty prompt on stdin"
+
+# Regent's session label is <owner>/<repo>@<branch>, taken from the primary
+# checkout at .../github/<owner>/<repo>.
+common_dir="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" ||
+	die "not inside a git repository"
+primary="$(dirname "$common_dir")"
+repo="$(basename "$primary")"
+owner="$(basename "$(dirname "$primary")")"
+
+if git show-ref --verify --quiet "refs/heads/$branch"; then
+	die "branch '$branch' already exists; pick another name"
+fi
+
+regent branch add --name "$branch" ${ref:+--ref "$ref"} >&2 ||
+	die "regent branch add failed for '$branch'"
+
+worktree="$(git worktree list --porcelain | awk -v want="branch refs/heads/$branch" '
+	/^worktree / { path = substr($0, 10) }
+	$0 == want   { print path; exit }')"
+[[ -n "$worktree" && -d "$worktree" ]] || die "created '$branch' but could not find its worktree"
+
+label="$owner/$repo@$branch"
+created="$(rex new "$label" --cwd "$worktree" --window agent --keep-open --json -- \
+	env \
+	ORCHESTRATOR_REX_SESSION="$REX_SESSION" \
+	ORCHESTRATOR_REX_BLOCK="$REX_BLOCK" \
+	REGENT_BRANCH="$branch" \
+	claude --agent "$WORKER_AGENT" --model "$WORKER_MODEL" "$prompt")" ||
+	die "worktree ready at $worktree, but creating Rex session '$label' failed"
+
+session_id="$(jq -r '.session_id' <<<"$created")"
+block_id="$(jq -r '.initial_windows[0].block_ids[0]' <<<"$created")"
+
+jq -n \
+	--arg branch "$branch" --arg worktree "$worktree" --arg label "$label" \
+	--arg session "$session_id" --arg block "$block_id" \
+	'{branch: $branch, worktree: $worktree, rex_session_label: $label, rex_session: $session, agent_block: $block}'

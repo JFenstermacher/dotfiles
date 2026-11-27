@@ -56,3 +56,6 @@ alias s="sessionizer"
 alias sp="sessionizer pull"
 
 alias nvw="cd ~/.journal && NVIM_APPNAME=nvim-writing nvim"
+
+# Claude Code orchestrator (see claude/.claude/agents)
+alias orch='claude --agent orchestrator'

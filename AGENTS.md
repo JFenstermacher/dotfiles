@@ -17,6 +17,7 @@ television/   Interactive tools
 herdr/        Interactive tools
 mise/         mise config + plugin
 git/          .gitconfig, .gitignore_global
+claude/       Claude Code orchestrator/worker agents, dispatch scripts, slash commands (personal machine only, via mise.personal.toml)
 bin/          Scripts
 bootstrap     One-command new-machine setup entry point
 ```

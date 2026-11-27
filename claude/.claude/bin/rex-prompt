@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Paste text into a Rex terminal block and press Enter, the way a person would
+# submit a prompt to an agent TUI running there.
+#
+#   rex-prompt --session <session-id> --block <block-id> [TEXT]
+#   rex-prompt --session <session-id> --block <block-id> <<'EOF'
+#   multi-line text
+#   EOF
+#
+# Uses a bracketed-paste event so embedded newlines do not submit early.
+set -euo pipefail
+
+session="" block="" text=""
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+	-s | --session) session="$2"; shift 2 ;;
+	-b | --block) block="$2"; shift 2 ;;
+	-h | --help) sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+	--) shift; text="$*"; break ;;
+	*) text="$*"; break ;;
+	esac
+done
+
+[[ -n "$session" && -n "$block" ]] || { echo "rex-prompt: --session and --block are required" >&2; exit 2; }
+[[ -n "$text" ]] || text="$(cat)"
+[[ -n "${text//[[:space:]]/}" ]] || { echo "rex-prompt: no text to send" >&2; exit 2; }
+
+payload="$(jq -nc --arg s "$session" --arg b "$block" --arg t "$text" \
+	'{session_id: $s, block_id: $b, event: {type: "paste", payload: {text: $t}}}')"
+
+if ! rex api call -s "$session" block.event "$payload" >/dev/null 2>&1; then
+	# Fallback: plain input. Collapse newlines so they do not submit mid-message.
+	rex send -s "$session" -b "$block" -- "$(tr '\n' ' ' <<<"$text")"
+fi
+
+sleep 0.15
+rex send-key -s "$session" -b "$block" enter

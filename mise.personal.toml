@@ -1,2 +1,6 @@
 [dotfiles]
 "~/.omp/agent/commands" = "omp/.omp/agent/commands"
+"~/.claude/agents" = "claude/.claude/agents"
+"~/.claude/bin" = "claude/.claude/bin"
+"~/.claude/commands" = "claude/.claude/commands"
+"~/.claude/settings.json" = { source = "claude/.claude/settings.json", mode = "copy" }

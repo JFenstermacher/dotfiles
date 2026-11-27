@@ -1,0 +1,128 @@
+#!/usr/bin/env bash
+# Claude Code status line: model · context used · repo ⎇ branch [worktree] git-state · PR
+# Reads the session JSON Claude Code passes on stdin.
+set -uo pipefail
+
+input="$(cat)"
+j() { jq -r "$1 // empty" <<<"$input" 2>/dev/null; }
+
+dim=$'\e[2m' reset=$'\e[0m' cyan=$'\e[36m' magenta=$'\e[35m'
+green=$'\e[32m' yellow=$'\e[33m' red=$'\e[31m'
+
+# Model
+model="$(j '.model.display_name')"
+[[ -n "$model" ]] || model="$(j '.model.id')"
+
+# Context window: use the reported percentage, else compute it from token usage.
+pct="$(j '.context_window.used_percentage')"
+if [[ -z "$pct" ]]; then
+	pct="$(jq -r '
+		.context_window as $c
+		| ($c.current_usage // {}) as $u
+		| (($u.input_tokens // 0) + ($u.cache_creation_input_tokens // 0) + ($u.cache_read_input_tokens // 0)) as $used
+		| if ($c.context_window_size // 0) > 0 and $used > 0 then ($used * 100 / $c.context_window_size) else empty end
+	' <<<"$input" 2>/dev/null)"
+fi
+ctx=""
+if [[ -n "$pct" ]]; then
+	p="${pct%.*}"
+	if ((p >= 80)); then color="$red"; elif ((p >= 50)); then color="$yellow"; else color="$green"; fi
+	ctx="${color}${p}% ctx${reset}"
+fi
+
+# Repository, branch, and whether this is a linked worktree.
+dir="$(j '.workspace.current_dir')"
+[[ -n "$dir" ]] || dir="$(j '.cwd')"
+[[ -n "$dir" ]] || dir="$PWD"
+git_info="" pr_info=""
+if top="$(git -C "$dir" rev-parse --show-toplevel 2>/dev/null)"; then
+	common="$(git -C "$dir" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"
+	gitdir="$(git -C "$dir" rev-parse --path-format=absolute --git-dir 2>/dev/null)"
+	repo="$(basename "$(dirname "$common")")"
+	branch="$(git -C "$dir" branch --show-current 2>/dev/null)"
+	[[ -n "$branch" ]] || branch="$(git -C "$dir" rev-parse --short HEAD 2>/dev/null) (detached)"
+	git_info="${cyan}${repo}${reset} ${magenta}⎇ ${branch}${reset}"
+	if [[ "$gitdir" != "$common" ]]; then
+		git_info+=" ${dim}[worktree: $(basename "$top")]${reset}"
+	fi
+
+	# Working tree state: +staged !modified ?untracked, ↑ahead ↓behind upstream.
+	staged=0 modified=0 untracked=0 conflicts=0 ahead=0 behind=0
+	while IFS= read -r line; do
+		case "$line" in
+		"# branch.ab "*) read -r _ _ a b <<<"$line"; ahead="${a#+}"; behind="${b#-}" ;;
+		"1 "* | "2 "*)
+			xy="${line:2:2}"
+			[[ "${xy:0:1}" != "." ]] && ((staged++))
+			[[ "${xy:1:1}" != "." ]] && ((modified++))
+			;;
+		"u "*) ((conflicts++)) ;;
+		"? "*) ((untracked++)) ;;
+		esac
+	done < <(git -C "$dir" --no-optional-locks status --porcelain=v2 --branch 2>/dev/null)
+
+	state=""
+	((conflicts)) && state+=" ${red}✖${conflicts}${reset}"
+	((staged)) && state+=" ${green}+${staged}${reset}"
+	((modified)) && state+=" ${yellow}!${modified}${reset}"
+	((untracked)) && state+=" ${dim}?${untracked}${reset}"
+	((ahead)) && state+=" ${cyan}↑${ahead}${reset}"
+	((behind)) && state+=" ${cyan}↓${behind}${reset}"
+	git_info+="$state"
+
+	# Pull request for this branch, cached so GitHub is never on the hot path.
+	if [[ -n "$branch" && "$branch" != *"(detached)" ]] && command -v gh >/dev/null; then
+		cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/claude-statusline"
+		mkdir -p "$cache_dir"
+		key="$(printf '%s\n%s' "$common" "$branch" | shasum | cut -c1-16)"
+		cache="$cache_dir/pr-$key"
+		ttl=60
+		now="$(date +%s)"
+		mtime="$(stat -f %m "$cache" 2>/dev/null || stat -c %Y "$cache" 2>/dev/null || echo 0)"
+		if ((now - mtime > ttl)) && mkdir "$cache.lock" 2>/dev/null; then
+			# Refresh in the background; this render uses whatever is cached.
+			(
+				trap 'rmdir "$cache.lock" 2>/dev/null' EXIT
+				json="$(cd "$top" && timeout 10 gh pr view "$branch" \
+					--json number,state,isDraft,reviewDecision,statusCheckRollup 2>/dev/null)" || json='{}'
+				printf '%s' "$json" >"$cache.tmp" && mv "$cache.tmp" "$cache"
+			) </dev/null >/dev/null 2>&1 &
+			disown 2>/dev/null
+		fi
+		pr="$(jq -r '
+			select(.number != null)
+			| (.statusCheckRollup // []) as $checks
+			| ($checks | map(.conclusion // .state // "" | ascii_upcase)) as $res
+			| ($checks | map(.status // "COMPLETED" | ascii_upcase)) as $st
+			| [ "#\(.number)",
+			    (if .state == "MERGED" then "merged"
+			     elif .state == "CLOSED" then "closed"
+			     elif .isDraft then "draft" else "" end),
+			    (if ($checks | length) == 0 then ""
+			     elif ($res | any(. == "FAILURE" or . == "ERROR" or . == "CANCELLED" or . == "TIMED_OUT" or . == "ACTION_REQUIRED")) then "ci:fail"
+			     elif ($st | any(. != "COMPLETED")) or ($res | any(. == "PENDING" or . == "EXPECTED")) then "ci:pending"
+			     else "ci:pass" end),
+			    (if .state != "OPEN" then ""
+			     elif .reviewDecision == "APPROVED" then "approved"
+			     elif .reviewDecision == "CHANGES_REQUESTED" then "changes"
+			     elif .reviewDecision == "REVIEW_REQUIRED" then "review" else "" end)
+			  ] | map(select(. != "")) | join(" ")
+		' "$cache" 2>/dev/null)"
+		if [[ -n "$pr" ]]; then
+			pr="${pr//ci:fail/${red}✗${reset}}"
+			pr="${pr//ci:pending/${yellow}●${reset}}"
+			pr="${pr//ci:pass/${green}✓${reset}}"
+			pr="${pr//approved/${green}approved${reset}}"
+			pr="${pr//changes/${red}changes requested${reset}}"
+			pr="${pr//review/${yellow}review needed${reset}}"
+			pr_info="PR ${pr}"
+		fi
+	fi
+fi
+
+sep=" ${dim}│${reset} "
+out="$model"
+[[ -n "$ctx" ]] && out+="${sep}${ctx}"
+[[ -n "$git_info" ]] && out+="${sep}${git_info}"
+[[ -n "$pr_info" ]] && out+="${sep}${pr_info}"
+printf '%s\n' "$out"

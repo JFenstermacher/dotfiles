@@ -45,6 +45,12 @@ Press `Ctrl-a`, then `p` to open Regent’s repository inventory in a floating p
 
 When creating a session, Regent clones a missing checkout using GitHub SSH. To let the picker switch the visible session, enable **Remote Control** in Rex Settings → **Rex Server**. If checkout or switching fails, the picker keeps the error visible until you press `Enter`.
 
+## Claude Orchestrator
+
+Personal machine only. Run `orch` (`claude --agent orchestrator`, Fable 5.2) inside a Regent-managed checkout. The orchestrator scopes each request and runs `~/.claude/bin/regent-dispatch`, which creates a `<effort>/<prefix>` worktree with `regent branch add`, then opens a Rex session `<owner>/<repo>@<branch>` without switching focus, with an `agent` pane running `claude --agent worker` on Opus 5.5 and the task as its first prompt.
+
+Workers delegate exploration and independent work to subagents. They send only questions back, using `~/.claude/bin/ask-orchestrator`, which pastes the question into the orchestrator's pane. The orchestrator relays each question to you and sends your answer back with `~/.claude/bin/rex-prompt`.
+
 ## Per-Machine Overrides
 
 Shared dotfiles live in the repo and apply to every machine. Where a machine needs to diverge, add a machine-local file that the shared config picks up conditionally:
@@ -67,5 +73,6 @@ Managed under `[dotfiles]` in `mise.toml`:
 | `zsh/` | `~/.config/zsh`, `~/.zshenv` | symlink |
 | `nvim/` | `~/.config/nvim`, `~/.config/nvim-writing` | symlink |
 | `herdr/` | `~/.config/herdr` | symlink-each |
+| `claude/` | `~/.claude/{agents,bin,commands}`, `~/.claude/settings.json` | symlink; copy for `settings.json` (personal only, `mise.personal.toml`) |
 
 Run `mise bootstrap dotfiles apply` after editing any of these to sync them out.

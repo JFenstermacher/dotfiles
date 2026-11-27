@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Ask the orchestrator a question to relay to the user. For worker sessions
+# started by regent-dispatch. The answer arrives later as a new message in
+# this session.
+#
+#   ask-orchestrator <<'EOF'
+#   Should the new endpoint be versioned under /v2, or replace /v1?
+#   EOF
+set -euo pipefail
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+	sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'
+	exit 0
+fi
+
+: "${ORCHESTRATOR_REX_SESSION:?not started by regent-dispatch (no ORCHESTRATOR_REX_SESSION); ask the user directly instead}"
+: "${ORCHESTRATOR_REX_BLOCK:?not started by regent-dispatch (no ORCHESTRATOR_REX_BLOCK); ask the user directly instead}"
+: "${REX_SESSION:?not running inside a Rex pane}"
+: "${REX_BLOCK:?not running inside a Rex pane}"
+
+question="${*:-$(cat)}"
+[[ -n "${question//[[:space:]]/}" ]] || { echo "ask-orchestrator: empty question" >&2; exit 2; }
+
+branch="${REGENT_BRANCH:-$(git branch --show-current 2>/dev/null || echo unknown)}"
+
+"$(dirname "$0")/rex-prompt" --session "$ORCHESTRATOR_REX_SESSION" --block "$ORCHESTRATOR_REX_BLOCK" <<EOF
+[worker question] branch=${branch} session=${REX_SESSION} block=${REX_BLOCK}
+${question}
+EOF
+
+echo "Question sent to the orchestrator. The answer will arrive as a new message in this session."
