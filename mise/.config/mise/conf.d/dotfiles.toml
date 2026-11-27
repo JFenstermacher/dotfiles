@@ -33,3 +33,4 @@ aube = "1.26.0"
 "aqua:ogulcancelik/herdr" = "0.9.0"
 watchexec = "latest"
 awscli = { version = "latest", symlink_bins = "true" }
+opencode = { version = "latest", allow_builds = ["@opencode/cli"] }
